@@ -37,9 +37,12 @@ namespace RPG.Services
 				}
 			},
         };
+        private readonly IDictionary<string, int> _cache = new Dictionary<string, int>();
 
         public int Get(StatId id)
-        {
+		{
+			if (_cache.ContainsKey(id)) return _cache[id];
+
             var stat = Stats[id];
             
 			double result = stat.Base;
@@ -48,10 +51,17 @@ namespace RPG.Services
 				result = modifier.Type.Apply(result, modifier.IntConversionMethod.Convert(Get(modifier.StatId) * modifier.Multiplier));
             }
 
-			return (int) stat.IntConversionMethod.Convert(result);
+			var value = (int) stat.IntConversionMethod.Convert(result);
+
+            _cache.Add(id, value);
+			return value;
 		}
 
-		public bool Add(StatId id, Stat stat) => Stats.TryAdd(id, stat);
+		public bool Add(StatId id, Stat stat)
+		{
+            _cache.Clear();
+			return Stats.TryAdd(id, stat);
+		}
 
 		public bool Exists(StatId id) => Stats.ContainsKey(id);
 	}
