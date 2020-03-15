@@ -1,0 +1,194 @@
+﻿@page "/"
+@using Blazorise
+@using Newtonsoft.Json
+@using RPG.Data
+@using RPG.Services
+@using JsonException = Newtonsoft.Json.JsonException
+@inject StatService StatService
+
+@foreach (var (id, stat) in StatService.Stats)
+{
+    <div>
+        @id: @StatService.Get(id) (@stat.ToString())
+    </div>
+}
+
+<div class="field is-horizontal">
+    <div class="field-label"><label class="label">Name</label></div>
+    <div class="field-body">
+        <div class="field">
+            <TextEdit @bind-Text="@_newStatName"></TextEdit>
+        </div>
+    </div>
+</div>
+<div class="field is-horizontal">
+    <div class="field-label"><label class="label">Base</label></div>
+    <div class="field-body">
+        <div class="field">
+            <NumericEdit TValue="int" @bind-Value="@_newStatBase"></NumericEdit>
+        </div>
+    </div>
+</div>
+<div class="field is-horizontal">
+    <div class="field-label"><label class="label">Modifiers</label></div>
+    <div class="field-body">
+        <div class="field">
+            <TextEdit @bind-Text="@_newStat"></TextEdit>
+        </div>
+    </div>
+</div>
+<button type="button" @onclick=@AddStats>Update</button>
+
+
+@if (!string.IsNullOrWhiteSpace(_errors))
+{
+    <div class="notification is-danger">
+        <button class="delete" @onclick="@ClearErrors"></button>
+        <strong>Error:</strong> @_errors
+    </div>
+}
+
+<MemoEdit Rows="20" @bind-Text="@_rawStats" />
+
+<button type="button" @onclick=@UpdateStats>Update</button>
+
+@code {
+
+    protected override void OnInitialized()
+    {
+        SetJson();
+    }
+
+    private void SetJson()
+    {
+        _errors = null;
+        _rawStats = JsonConvert.SerializeObject(StatService.Stats, Formatting.Indented, new JsonSerializerSettings
+        {
+            NullValueHandling = NullValueHandling.Ignore,
+            DefaultValueHandling = DefaultValueHandling.Ignore,
+        });
+    }
+
+    #region Json
+    private string? _errors = null;
+    private string _rawStats = "";
+
+    private void UpdateStats()
+    {
+        _errors = null;
+        try
+        {
+            StatService.Stats = JsonConvert.DeserializeObject<IDictionary<string, Stat>>(_rawStats, new JsonSerializerSettings
+            {
+                NullValueHandling = NullValueHandling.Ignore,
+                MissingMemberHandling = MissingMemberHandling.Error,
+            });
+        }
+        catch (JsonException e)
+        {
+            _errors = e.Message;
+        }
+
+        StateHasChanged();
+    }
+    #endregion
+
+    #region Human
+
+    private string _newStat = string.Empty;
+    private string _newStatName = string.Empty;
+    private int _newStatBase;
+
+    private void AddStats()
+    {
+        var stat = new Stat
+        {
+            Base = _newStatBase,
+        };
+
+        if (string.IsNullOrWhiteSpace(_newStatName))
+        {
+            _errors += $"Stat must have a name; ";
+            return;
+        }
+        if (!_newStatName.All(char.IsLetter))
+        {
+            _errors += $"Stat name ({_newStatName}) must be letter only";
+            return;
+        }
+        if (StatService.Exists(_newStatName))
+        {
+            _errors += $"Stat already exists: {_newStatName}";
+            return;
+        }
+
+        var rawModifiers = _newStat;
+        if (!string.IsNullOrWhiteSpace(rawModifiers))
+        {
+            rawModifiers = rawModifiers.Trim()
+                                       .Replace("+", " + ")
+                                       .Replace("-", " - ")
+                                       .Replace("*", " * ")
+                                       .Replace("/", " / ")
+            ; // Cleanup
+            if (ModifierType.FromString(rawModifiers[0].ToString()) == null)
+                rawModifiers = "+ " + rawModifiers;
+        }
+
+        var tokens = rawModifiers.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries);
+
+        _errors = "";
+        for (var i = 0; i < tokens.Length; i++)
+        {
+            var type = ModifierType.FromString(tokens[i]);
+            if (type == null)
+            {
+                _errors += $"Unknown modifier {tokens[i]}; ";
+                return;
+            }
+            if (i + 1 >= tokens.Length)
+            {
+                _errors += $"Missing stat identifier after {tokens[i]}; ";
+                return;
+            }
+            i++;
+
+            var statId = tokens[i];
+            if (!StatService.Exists(statId))
+            {
+                _errors += $"Stat does not exists: {statId}; ";
+                return;
+            }
+            i++;
+
+            var multiplier = 1.0;
+            if (i + 1 < tokens.Length)
+            {
+                if (tokens[i] != "*")
+                {
+                    _errors += $"Syntax error: {tokens[i]}; ";
+                    return;
+                }
+                i++;
+                var isNumber = double.TryParse(tokens[i], out multiplier);
+                if (!isNumber)
+                {
+                    _errors += $"Multiplier must be number: {tokens[i]}; ";
+                    return;
+                }
+            }
+
+            var modifier = new Modifier(statId, type, multiplier);
+            stat.Modifiers = stat.Modifiers.Append(modifier);
+        }
+        StatService.Add(_newStatName, stat);
+        _newStat = string.Empty;
+        _newStatName = string.Empty;
+        _newStatBase = default;
+        SetJson();
+    }
+
+    #endregion
+
+    private void ClearErrors() => _errors = default;
+}
