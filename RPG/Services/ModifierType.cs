@@ -12,7 +12,7 @@ namespace RPG.Services
 		public static readonly ModifierType Mult = new ModifierType("*");
 		public static readonly ModifierType Div = new ModifierType("/");
 
-		private ModifierType() { _symbol = "no"; }
+		private ModifierType() => throw new NotSupportedException();
 
 		private ModifierType(string symbol)
 		{

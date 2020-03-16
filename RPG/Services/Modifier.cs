@@ -9,17 +9,17 @@ namespace RPG.Services
 		public readonly ModifierType Type;
 		public readonly double Multiplier;
 		[JsonConverter(typeof(StringEnumConverter))]
-		public readonly IntConversionMethod IntConversionMethod = IntConversionMethod.NoConversion;
+		public readonly RoundingMethod RoundingMethod = RoundingMethod.None;
 		
 		[JsonConstructor]
 		public Modifier(StatId statId,
 						ModifierType type,
 						double multiplier = 1,
-						IntConversionMethod conversionMethod = IntConversionMethod.NoConversion)
+						RoundingMethod conversionMethod = RoundingMethod.None)
 		{
 			StatId = statId;
 			Type = type;
-			IntConversionMethod = conversionMethod;
+			RoundingMethod = conversionMethod;
 			Multiplier = multiplier;
 		}
 
@@ -31,7 +31,7 @@ namespace RPG.Services
 		public readonly ModifierType Type;
 		public readonly double Modifier;
 		[JsonConverter(typeof(StringEnumConverter))]
-		public readonly IntConversionMethod IntConversionMethod = IntConversionMethod.NoConversion;
+		public readonly RoundingMethod RoundingMethod = RoundingMethod.None;
 
 		[JsonConstructor]
 		public StaticModifier(ModifierType type, double modifier)

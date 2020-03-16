@@ -8,22 +8,22 @@ namespace RPG.Services
 {
 	public class Stat
 	{
-		public int Base { get; set; }
+		public double Base { get; set; }
 		public IEnumerable<Modifier> Modifiers { get; set; } = new List<Modifier>();
 
 		[JsonConverter(typeof(StringEnumConverter))]
-		public IntConversionMethod IntConversionMethod
+		public RoundingMethod RoundingMethod
 		{
-			get => _intConversionMethod;
+			get => _roundingMethod;
 			set
 			{
-				if (value == IntConversionMethod.NoConversion) 
-					throw new ArgumentOutOfRangeException(nameof(IntConversionMethod), value, "Stat must be converted to int");
-				_intConversionMethod = value;
+				if (value == RoundingMethod.None) 
+					throw new ArgumentOutOfRangeException(nameof(RoundingMethod), value, "Stat must be converted to int");
+				_roundingMethod = value;
 			}
 		}
 
-		private IntConversionMethod _intConversionMethod = IntConversionMethod.Ceiling;
+		private RoundingMethod _roundingMethod = RoundingMethod.Ceiling;
 
 		public override string ToString() => "{BASE}" + Modifiers.Aggregate("", (res, m) => res + " " + m);
 	}
