@@ -6,23 +6,29 @@ namespace RPG.Services
 	[JsonConverter(typeof(ModifierTypeTypeConvert))]
 	public class ModifierType
 	{
-		private readonly string _symbol;
-		public static readonly ModifierType Add = new ModifierType("+");
-		public static readonly ModifierType Sub = new ModifierType("-");
-		public static readonly ModifierType Mult = new ModifierType("*");
-		public static readonly ModifierType Div = new ModifierType("/");
+		public readonly string Symbol;
+		/// <summary>
+		/// Lower value means higher priority
+		/// </summary>
+		public readonly int Priority;
+
+		public static readonly ModifierType Add = new ModifierType("+", 2);
+		public static readonly ModifierType Sub = new ModifierType("-", 2);
+		public static readonly ModifierType Mult = new ModifierType("*", 1);
+		public static readonly ModifierType Div = new ModifierType("/", 1);
 
 		private ModifierType() => throw new NotSupportedException();
 
-		private ModifierType(string symbol)
+		private ModifierType(string symbol, int priority)
 		{
-			_symbol = symbol;
+			Symbol = symbol;
+			Priority = priority;
 		}
 
-		public static implicit operator string(ModifierType type) => type._symbol;
+		public static implicit operator string(ModifierType type) => type.Symbol;
 
 		public double Apply(double a, double b)
-			=> _symbol switch
+			=> Symbol switch
 			   {
 				   "+" => a + b,
 				   "-" => a - b,
@@ -41,13 +47,13 @@ namespace RPG.Services
 				   _   => null,
 			   };
 
-		public override string ToString() => _symbol;
+		public override string ToString() => Symbol;
 
 		private class ModifierTypeTypeConvert : JsonConverter<ModifierType>
 		{
 			public override void WriteJson(JsonWriter writer, ModifierType value, JsonSerializer serializer)
 			{
-				writer.WriteValue(value._symbol);
+				writer.WriteValue(value.Symbol);
 			}
 
 			public override ModifierType ReadJson(JsonReader reader,
@@ -64,10 +70,15 @@ namespace RPG.Services
 #pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
 #pragma warning disable CS8603 // Possible null reference return.
 #pragma warning disable CS8604 // Possible null reference argument.
-				return ModifierType.FromString((string) reader.Value);
+				var modifier = ModifierType.FromString((string) reader.Value);
 #pragma warning restore CS8604 // Possible null reference argument.
 #pragma warning restore CS8603 // Possible null reference return.
 #pragma warning restore CS8600 // Converting null literal or possible null value to non-nullable type.
+
+				if (modifier == null)
+					throw new JsonSerializationException($"Invalid modifier: {reader.Value}");
+
+				return modifier;
 			}
 		}
 	}

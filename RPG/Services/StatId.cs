@@ -12,6 +12,9 @@ namespace RPG.Services
 		
 		public StatId(string id)
 		{
+			if (!id.IsValidStatId()) 
+				throw new ArgumentException($"Invalid name: {id}", nameof(id));
+
 			_id = id;
 		}
 
@@ -23,6 +26,16 @@ namespace RPG.Services
 
 		public static bool operator !=(StatId a, StatId b) => !(a == b);
 
+		public override bool Equals(object? obj)
+		{
+			if (ReferenceEquals(this, obj)) return true;
+			if (obj is null) return false;
+			if (obj.GetType() != typeof(StatId)) return false;
+			return ((StatId)obj)._id == _id;
+		}
+
+		public override int GetHashCode() => _id.GetHashCode(StringComparison.InvariantCultureIgnoreCase);
+		
 		public override string ToString() => this;
 
 		private class StatIdTypeConvert : JsonConverter<StatId>
@@ -50,6 +63,15 @@ namespace RPG.Services
 #pragma warning restore CS8604 // Possible null reference argument.
 #pragma warning restore CS8600 // Converting null literal or possible null value to non-nullable type.
 			}
+		}
+	}
+	public static class StringExtensions
+	{
+		public static bool IsValidStatId(this string? s)
+		{
+			return !string.IsNullOrEmpty(s) 
+				   && (char.IsLetter(s[0]) 
+					   || s[0] == '{' && s[^1] == '}');
 		}
 	}
 }

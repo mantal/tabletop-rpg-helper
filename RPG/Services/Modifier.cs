@@ -3,42 +3,57 @@ using Newtonsoft.Json.Converters;
 
 namespace RPG.Services
 {
-	public class Modifier
+	public abstract class Modifier
 	{
-		public readonly StatId StatId;
 		public readonly ModifierType Type;
-		public readonly double Multiplier;
 		[JsonConverter(typeof(StringEnumConverter))]
-		public readonly RoundingMethod RoundingMethod = RoundingMethod.None;
+		public readonly RoundingMethod RoundingMethod;
 		
 		[JsonConstructor]
-		public Modifier(StatId statId,
-						ModifierType type,
-						double multiplier = 1,
-						RoundingMethod conversionMethod = RoundingMethod.None)
+		protected Modifier(ModifierType type,
+						   RoundingMethod roundingMethod = RoundingMethod.None)
 		{
-			StatId = statId;
 			Type = type;
-			RoundingMethod = conversionMethod;
-			Multiplier = multiplier;
+			RoundingMethod = roundingMethod;
 		}
 
-		public override string ToString() => $"{Type} {StatId}{(Multiplier == 1 ? "" : $" * {Multiplier}" )}";
+		public abstract double Apply(StatService statService, double value);
+		public abstract override string ToString();
 	}
 
-	public class StaticModifier
+	public class StatModifier : Modifier
 	{
-		public readonly ModifierType Type;
+		public readonly StatId StatId;
+
+		public StatModifier(ModifierType type,
+							StatId statId,
+							RoundingMethod roundingMethod = RoundingMethod.None)
+			: base(type, roundingMethod)
+		{
+			StatId = statId;
+		}
+
+		public override double Apply(StatService statService, double value) 
+			=> RoundingMethod.Convert(Type.Apply(value, statService.Get(StatId)));
+
+		public override string ToString() => $"{Type} {StatId}";
+	}
+
+	public class StaticModifier : Modifier
+	{
 		public readonly double Modifier;
-		[JsonConverter(typeof(StringEnumConverter))]
-		public readonly RoundingMethod RoundingMethod = RoundingMethod.None;
 
 		[JsonConstructor]
-		public StaticModifier(ModifierType type, double modifier)
+		public StaticModifier(ModifierType type,
+							  double modifier,
+							  RoundingMethod roundingMethod = RoundingMethod.None) 
+			: base(type, roundingMethod)
 		{
-			Type = type;
 			Modifier = modifier;
 		}
+
+		public override double Apply(StatService statService, double value)
+			=> RoundingMethod.Convert(Type.Apply(value, Modifier));
 
 		public override string ToString() => $"{Type} {Modifier}";
 	}

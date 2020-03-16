@@ -1,4 +1,4 @@
-﻿@page "/"
+@page "/"
 @using Blazorise
 @using Newtonsoft.Json
 @using RPG.Services
@@ -87,7 +87,7 @@
         {
             _errors = e.Message;
         }
-
+        SetJson();
         StateHasChanged();
     }
     #endregion
@@ -100,87 +100,14 @@
 
     private void AddStats()
     {
-        var stat = new Stat
-        {
-            Base = _newStatBase,
-        };
+        var errors = StatService.Add(_newStatName, _newStatBase, _newStat);
 
-        if (string.IsNullOrWhiteSpace(_newStatName))
+        if (errors.Any())
         {
-            _errors += $"Stat must have a name; ";
-            return;
-        }
-        if (!_newStatName.All(char.IsLetter))
-        {
-            _errors += $"Stat name ({_newStatName}) must be letter only";
-            return;
-        }
-        if (StatService.Exists(_newStatName))
-        {
-            _errors += $"Stat already exists: {_newStatName}";
+            _errors = errors.Aggregate((a, b) => a + b);
             return;
         }
 
-        var rawModifiers = _newStat;
-        if (!string.IsNullOrWhiteSpace(rawModifiers))
-        {
-            rawModifiers = rawModifiers.Trim()
-                                       .Replace("+", " + ")
-                                       .Replace("-", " - ")
-                                       .Replace("*", " * ")
-                                       .Replace("/", " / ")
-            ; // Cleanup
-            if (ModifierType.FromString(rawModifiers[0].ToString()) == null)
-                rawModifiers = "+ " + rawModifiers;
-        }
-
-        var tokens = rawModifiers.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries);
-
-        _errors = "";
-        for (var i = 0; i < tokens.Length; i++)
-        {
-            var type = ModifierType.FromString(tokens[i]);
-            if (type == null)
-            {
-                _errors += $"Unknown modifier {tokens[i]}; ";
-                return;
-            }
-            if (i + 1 >= tokens.Length)
-            {
-                _errors += $"Missing stat identifier after {tokens[i]}; ";
-                return;
-            }
-            i++;
-
-            var statId = tokens[i];
-            if (!StatService.Exists(statId))
-            {
-                _errors += $"Stat does not exists: {statId}; ";
-                return;
-            }
-            i++;
-
-            var multiplier = 1.0;
-            if (i + 1 < tokens.Length)
-            {
-                if (tokens[i] != "*")
-                {
-                    _errors += $"Syntax error: {tokens[i]}; ";
-                    return;
-                }
-                i++;
-                var isNumber = double.TryParse(tokens[i], out multiplier);
-                if (!isNumber)
-                {
-                    _errors += $"Multiplier must be number: {tokens[i]}; ";
-                    return;
-                }
-            }
-
-            var modifier = new Modifier(statId, type, multiplier);
-            stat.Modifiers = stat.Modifiers.Append(modifier);
-        }
-        StatService.Add(_newStatName, stat);
         _newStat = string.Empty;
         _newStatName = string.Empty;
         _newStatBase = default;
