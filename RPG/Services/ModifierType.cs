@@ -16,6 +16,7 @@ namespace RPG.Services
 		public static readonly ModifierType Sub = new ModifierType("-", 2);
 		public static readonly ModifierType Mult = new ModifierType("*", 1);
 		public static readonly ModifierType Div = new ModifierType("/", 1);
+		public const int MinPriority = 2;
 
 		private ModifierType() => throw new NotSupportedException();
 

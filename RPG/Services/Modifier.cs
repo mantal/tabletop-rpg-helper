@@ -17,7 +17,7 @@ namespace RPG.Services
 			RoundingMethod = roundingMethod;
 		}
 
-		public abstract double Apply(StatService statService, double value);
+		public abstract double GetValue(StatService statService);
 		public abstract override string ToString();
 	}
 
@@ -33,8 +33,7 @@ namespace RPG.Services
 			StatId = statId;
 		}
 
-		public override double Apply(StatService statService, double value) 
-			=> RoundingMethod.Convert(Type.Apply(value, statService.Get(StatId)));
+		public override double GetValue(StatService statService) => statService.Get(StatId);
 
 		public override string ToString() => $"{Type} {StatId}";
 	}
@@ -52,8 +51,7 @@ namespace RPG.Services
 			Modifier = modifier;
 		}
 
-		public override double Apply(StatService statService, double value)
-			=> RoundingMethod.Convert(Type.Apply(value, Modifier));
+		public override double GetValue(StatService statService) => Modifier;
 
 		public override string ToString() => $"{Type} {Modifier}";
 	}

@@ -46,21 +46,53 @@ namespace RPG.Services
         };
         private readonly IDictionary<string, double> _cache = new Dictionary<string, double>();
 
-        public double Get(StatId id)
+		public double Get(StatId id)
 		{
 			if (_cache.ContainsKey(id)) return _cache[id];
 
-            var stat = Stats[id];
-            
-			var result = stat.Base;
-			foreach (var modifier in stat.Modifiers)
+			var stat = Stats[id];
+			var value = stat.RoundingMethod.Convert(stat.Base);
+
+			if (stat.Modifiers.Any())
 			{
-				result = modifier.Apply(this, result);
+				var modifiers = new LinkedList<Modifier>(stat.Modifiers);
+				var modifier = modifiers.Last;
+				var priority = 1;
+
+				// List is not empty so First can't be null
+#pragma warning disable CS8604 // Possible null reference argument.
+				modifiers.AddBefore(modifiers.First, new StaticModifier(ModifierType.Add, stat.Base, RoundingMethod.None));
+#pragma warning restore CS8604 // Possible null reference argument.
+				while (modifiers.Count > 1)
+				{
+					while (modifier != null && modifier.Value.Type.Priority > priority)
+						modifier = modifier.Previous;
+					if (modifier?.Previous == null)
+					{
+						priority++;
+						if (priority > ModifierType.MinPriority)
+							break;
+						modifier = modifiers.Last;
+						continue;
+					}
+
+					var prev = modifier.Previous.Value;
+					var current = modifier.Value;
+					var a = prev.GetValue(this);
+					var b = current.GetValue(this);
+					var res = current.RoundingMethod.Convert(current.Type.Apply(a, b));
+				
+					modifiers.AddBefore(modifier.Previous, new StaticModifier(prev.Type, res));
+					modifiers.Remove(prev);
+					modifiers.Remove(current);
+				}
+				// Since count > 1 First can't be null
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
+				value = stat.RoundingMethod.Convert(modifiers.First.Value.GetValue(this));
+#pragma warning restore CS8602 // Dereference of a possibly null reference.
 			}
-
-			var value = stat.RoundingMethod.Convert(result);
-
-            _cache.Add(id, value);
+			
+			_cache.Add(id, value);
 			return value;
 		}
 
@@ -142,6 +174,7 @@ namespace RPG.Services
 					}
 					stat.Modifiers = stat.Modifiers.Append(new StatModifier(type, modRef));
 				}
+				// ReSharper disable once ConditionIsAlwaysTrueOrFalse
 				else if (isNumber)
 					stat.Modifiers = stat.Modifiers.Append(new StaticModifier(type, modValue));
 			}
