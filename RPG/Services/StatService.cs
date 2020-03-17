@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using Hjson;
 using Newtonsoft.Json;
@@ -60,30 +60,36 @@ namespace RPG.Services
 			return value;
 		}
 
-		public bool Add(StatId id, Stat stat)
+		private IEnumerable<string> Add(Stat stat)
 		{
-			var res = Stats.TryAdd(id, stat);
-			if (res)
+			var errors = IsRecursive(stat)
+				.Select(e => $"");
+
+			if (!errors.Any())
+			{
+				Stats.Add(stat.Id, stat);
 				_cache.Clear();
-			return res;
+			}
+
+			return errors;
 		}
 
 		public IEnumerable<string> Add(string id, double @base = 0, string? rawModifiers = null)
 		{
-			var errors = new List<string>();
+			IEnumerable<string> errors = new List<string>();
 			if (string.IsNullOrWhiteSpace(id))
 			{
-				errors.Add($"Name can not be empty");
+				errors = errors.Append($"Name can not be empty");
 				return errors;
 			}
 			if (!id.All(char.IsLetter))
 			{
-				errors.Add($"Name ({id}) must be letters only");
+				errors = errors.Append($"Name ({id}) must be letters only");
 				return errors;
 			}
 			if (Exists(id))
 			{
-				errors.Add($"Stat already exists: {id}");
+				errors = errors.Append($"Stat already exists: {id}");
 				return errors;
 			}
 
@@ -101,7 +107,7 @@ namespace RPG.Services
 						   .ToList();
 
 			if (!errors.Any())
-				Add(id, stat);
+				errors = Add(stat);
 
 			return errors;
 		}
@@ -138,6 +144,25 @@ namespace RPG.Services
 			}
 
 			return null;
+		}
+
+		private IEnumerable<string> IsRecursive(Stat stat, Stack<StatId> stack)
+		{
+			if (stack.Contains(stat.Id))
+				return new[] { $"Circular dependency detected: {stack.Aggregate("", (res, id) => $"->{id}")}" };
+
+			stack.Push(stat.Id);
+			var ids = stat.Modifiers.Where(m => m is StatModifier)
+						  .Cast<StatModifier>()
+						  .SelectMany(m => IsRecursive(Stats[m.StatId], stack));
+			stack.Pop();
+
+			return ids;
+		}
+
+		private IEnumerable<string> IsRecursive(Stat stat)
+		{
+			return IsRecursive(stat, new Stack<StatId>());
 		}
 	}
 }
