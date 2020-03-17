@@ -1,4 +1,4 @@
-﻿using FluentAssertions;
+using FluentAssertions;
 using RPG.Services;
 using Xunit;
 
@@ -9,10 +9,7 @@ namespace RPG.Tests
 		[Fact]
 		public void ConvertToString()
 		{
-			var stat = new Stat
-			{
-				Base = 10,
-			};
+			var stat = new Stat("POW", 10);
 
 			stat.ToString().Should().Be("{BASE}");
 		}
@@ -20,7 +17,7 @@ namespace RPG.Tests
 		[Fact]
 		public void ConvertToStringWithModifier()
 		{
-			var stat = new Stat
+			var stat = new Stat("POW")
 			{
 				Base = 10,
 				Modifiers = new []
@@ -35,7 +32,7 @@ namespace RPG.Tests
 		[Fact]
 		public void ConvertToStringWithModifiers()
 		{
-			var stat = new Stat
+			var stat = new Stat("POW")
 			{
 				Base = 10,
 				Modifiers = new Modifier[]

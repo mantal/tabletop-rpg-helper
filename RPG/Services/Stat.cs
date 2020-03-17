@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -9,6 +9,7 @@ namespace RPG.Services
 {
 	public class Stat
 	{
+		public StatId Id { get; }
 		public double Base { get; set; }
 		public IEnumerable<Modifier> Modifiers { get; set; } = new List<Modifier>();
 
@@ -27,12 +28,18 @@ namespace RPG.Services
 		private RoundingMethod _roundingMethod = RoundingMethod.Ceiling;
 
 		public override string ToString() => $"{Base}" + Modifiers.Aggregate("", (res, m) => res + " " + m);
+
+		public Stat(StatId id, double @base = 0)
+		{
+			Id = id;
+			Base = @base;
+		}
 		
-		public static IEnumerable<string> FromString(out Stat? stat, double @base = 0, string? rawModifiers = null)
+		public static IEnumerable<string> FromString(out Stat? stat, string id, double @base = 0, string? rawModifiers = null)
 		{
 			var errors = new List<string>();
 			
-			stat = new Stat { Base = @base, };
+			stat = new Stat(id, @base);
 			if (string.IsNullOrWhiteSpace(rawModifiers))
 			{
 				stat = null;

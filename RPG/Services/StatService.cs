@@ -11,21 +11,21 @@ namespace RPG.Services
         {
             {
                 "CON",
-                new Stat
+                new Stat("CON")
                 {
                     Base = 10,
                 }
             },
 			{
                 "FOR",
-                new Stat
+                new Stat("FOR")
 				{
                     Base = 10,
 				}
 			},
             {
                 "HP",
-                new Stat
+                new Stat("HP")
                 {
                     Base = 10,
                     Modifiers = new [] { new StatModifier(ModifierType.Add, "CON"), },
@@ -33,7 +33,7 @@ namespace RPG.Services
             },
 			{
 				"ATT",
-				new Stat
+				new Stat("ATT")
 				{
 					Base = 100,
 					Modifiers = new Modifier[]
@@ -123,7 +123,7 @@ namespace RPG.Services
 				return errors;
 			}
 
-			errors = errors.Concat(Stat.FromString(out var stat, @base, rawModifiers)).ToList();
+			errors = errors.Concat(Stat.FromString(out var stat, id, @base, rawModifiers)).ToList();
 
 			if (stat == null)
 				return errors;
