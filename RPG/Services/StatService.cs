@@ -6,45 +6,9 @@ using Newtonsoft.Json;
 namespace RPG.Services
 {
 	public class StatService
-    {
-        public IDictionary<string, Stat> Stats = new Dictionary<string, Stat>
-        {
-            {
-                "CON",
-                new Stat("CON")
-                {
-                    Base = 10,
-                }
-            },
-			{
-                "FOR",
-                new Stat("FOR")
-				{
-                    Base = 10,
-				}
-			},
-            {
-                "HP",
-                new Stat("HP")
-                {
-                    Base = 10,
-                    Modifiers = new [] { new StatModifier(ModifierType.Add, "CON"), },
-                }
-            },
-			{
-				"ATT",
-				new Stat("ATT")
-				{
-					Base = 100,
-					Modifiers = new Modifier[]
-					{
-						new StatModifier(ModifierType.Add, "FOR"),
-						new StaticModifier(ModifierType.Mult, 2), //todo fix prio
-					},
-				}
-			},
-        };
-        private readonly IDictionary<string, double> _cache = new Dictionary<string, double>();
+	{
+		public IDictionary<string, Stat> Stats = new Dictionary<string, Stat>();
+		private readonly IDictionary<string, double> _cache = new Dictionary<string, double>();
 
 		public double Get(StatId id)
 		{
