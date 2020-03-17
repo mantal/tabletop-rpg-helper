@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using Hjson;
 using Newtonsoft.Json;
@@ -98,8 +98,10 @@ namespace RPG.Services
 
 		public bool Add(StatId id, Stat stat)
 		{
-            _cache.Clear();
-			return Stats.TryAdd(id, stat);
+			var res = Stats.TryAdd(id, stat);
+			if (res)
+				_cache.Clear();
+			return res;
 		}
 
 		public IEnumerable<string> Add(string id, double @base = 0, string? rawModifiers = null)
