@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
@@ -25,6 +26,63 @@ namespace RPG.Services
 
 		private RoundingMethod _roundingMethod = RoundingMethod.Ceiling;
 
-		public override string ToString() => "{BASE}" + Modifiers.Aggregate("", (res, m) => res + " " + m);
+		public override string ToString() => $"{Base}" + Modifiers.Aggregate("", (res, m) => res + " " + m);
+		
+		public static IEnumerable<string> FromString(out Stat? stat, double @base = 0, string? rawModifiers = null)
+		{
+			var errors = new List<string>();
+			
+			stat = new Stat { Base = @base, };
+			if (string.IsNullOrWhiteSpace(rawModifiers))
+			{
+				stat = null;
+				return errors;
+			}
+
+			rawModifiers = rawModifiers.Replace("+", " + ", StringComparison.InvariantCultureIgnoreCase)
+									   .Replace("-", " - ", StringComparison.InvariantCultureIgnoreCase)
+									   .Replace("*", " * ", StringComparison.InvariantCultureIgnoreCase)
+									   .Replace("/", " / ", StringComparison.InvariantCultureIgnoreCase)
+									   .Trim()
+				; // Cleanup
+				  // Add implicit +
+			if (ModifierType.FromString(rawModifiers[0].ToString()) == null)
+				rawModifiers = "+ " + rawModifiers;
+
+			var tokens = rawModifiers.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries);
+
+			for (var i = 0; i < tokens.Length; i++)
+			{
+				var type = ModifierType.FromString(tokens[i]);
+				if (type == null)
+				{
+					errors.Add($"Unknown operator: {tokens[i]}, expected one of: '+', '-', '*', '/'");
+					return errors;
+				}
+				if (i + 1 >= tokens.Length)
+				{
+					errors.Add($"Missing identifier after {tokens[i]}");
+					return errors;
+				}
+
+				i++;
+				var modRef = tokens[i];
+				var isId = modRef.IsValidStatId();
+				var isNumber = double.TryParse(modRef, NumberStyles.Float, null, out var modValue);
+				if (!isId && !isNumber)
+				{
+					errors.Add($"Expected a stat id or a number after {type} but found {modRef}");
+					return errors;
+				}
+
+				if (isId)
+					stat.Modifiers = stat.Modifiers.Append(new StatModifier(type, modRef));
+				// ReSharper disable once ConditionIsAlwaysTrueOrFalse
+				else if (isNumber)
+					stat.Modifiers = stat.Modifiers.Append(new StaticModifier(type, modValue));
+			}
+
+			return errors;
+		}
 	}
 }

@@ -61,11 +61,7 @@
     private void SetJson()
     {
         _errors = null;
-        _rawStats = JsonConvert.SerializeObject(StatService.Stats, Formatting.Indented, new JsonSerializerSettings
-        {
-            NullValueHandling = NullValueHandling.Ignore,
-            DefaultValueHandling = DefaultValueHandling.Ignore,
-        });
+        _rawStats = StatService.Serialize();
     }
 
     #region Json
@@ -75,18 +71,7 @@
     private void UpdateStats()
     {
         _errors = null;
-        try
-        {
-            StatService.Stats = JsonConvert.DeserializeObject<IDictionary<string, Stat>>(_rawStats, new JsonSerializerSettings
-            {
-                NullValueHandling = NullValueHandling.Ignore,
-                MissingMemberHandling = MissingMemberHandling.Error,
-            });
-        }
-        catch (JsonException e)
-        {
-            _errors = e.Message;
-        }
+        StatService.Deserialize(_rawStats);
         SetJson();
         StateHasChanged();
     }

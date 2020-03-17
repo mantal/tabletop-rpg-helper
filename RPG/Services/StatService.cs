@@ -1,7 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
+﻿using System.Collections.Generic;
 using System.Linq;
+using Hjson;
+using Newtonsoft.Json;
 
 namespace RPG.Services
 {
@@ -105,7 +105,6 @@ namespace RPG.Services
 		public IEnumerable<string> Add(string id, double @base = 0, string? rawModifiers = null)
 		{
 			var errors = new List<string>();
-
 			if (string.IsNullOrWhiteSpace(id))
 			{
 				errors.Add($"Name can not be empty");
@@ -122,67 +121,57 @@ namespace RPG.Services
 				return errors;
 			}
 
-			var stat = new Stat { Base = @base, };
-			if (string.IsNullOrWhiteSpace(rawModifiers))
-			{
-				Add(id, stat);
+			errors = errors.Concat(Stat.FromString(out var stat, @base, rawModifiers)).ToList();
+
+			if (stat == null)
 				return errors;
-			}
 
-			rawModifiers = rawModifiers.Replace("+", " + ", StringComparison.InvariantCultureIgnoreCase)
-									   .Replace("-", " - ", StringComparison.InvariantCultureIgnoreCase)
-									   .Replace("*", " * ", StringComparison.InvariantCultureIgnoreCase)
-									   .Replace("/", " / ", StringComparison.InvariantCultureIgnoreCase)
-									   .Trim()
-				; // Cleanup
-			// Add implicit +
-			if (ModifierType.FromString(rawModifiers[0].ToString()) == null)
-				rawModifiers = "+ " + rawModifiers;
-
-			var tokens = rawModifiers.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries);
-
-			for (var i = 0; i < tokens.Length; i++)
+			errors = errors.Concat(stat.Modifiers.Select(m =>
 			{
-				var type = ModifierType.FromString(tokens[i]);
-				if (type == null)
-				{
-					errors.Add($"Unknown operator: {tokens[i]}, expected one of: '+', '-', '*', '/'");
-					return errors;
-				}
-				if (i + 1 >= tokens.Length)
-				{
-					errors.Add($"Missing identifier after {tokens[i]}");
-					return errors;
-				}
+				if (m is StatModifier statMod && !Exists(statMod.StatId))
+					return $"Undefined stat: {statMod.StatId}";
+				return string.Empty;
+			}).Where(s => !string.IsNullOrEmpty(s)))
+						   .ToList();
 
-				i++;
-				var modRef = tokens[i];
-				var isId = modRef.IsValidStatId();
-				var isNumber = double.TryParse(modRef, NumberStyles.Float, null, out var modValue);
-				if (!isId && !isNumber)
-				{
-					errors.Add($"Expected a stat id or a number after {type} but found {modRef}");
-					return errors;
-				}
+			if (!errors.Any())
+				Add(id, stat);
 
-				if (isId)
-				{
-					if (!Exists(modRef))
-					{
-						errors.Add($"Unknown stat id: {modRef}");
-						return errors;
-					}
-					stat.Modifiers = stat.Modifiers.Append(new StatModifier(type, modRef));
-				}
-				// ReSharper disable once ConditionIsAlwaysTrueOrFalse
-				else if (isNumber)
-					stat.Modifiers = stat.Modifiers.Append(new StaticModifier(type, modValue));
-			}
-
-			Add(id, stat);
 			return errors;
 		}
 
 		public bool Exists(StatId id) => Stats.ContainsKey(id);
+
+		public string Serialize()
+		{
+			var json = JsonConvert.SerializeObject(this, new JsonSerializerSettings
+			{
+				DefaultValueHandling = DefaultValueHandling.Ignore,
+			});
+			return JsonValue.Parse(json).ToString(Stringify.Hjson);
+		}
+
+		public string? Deserialize(string hjson)
+		{
+			try
+			{
+				var stats = JsonConvert.DeserializeObject<IDictionary<string, Stat>>(HjsonValue.Parse(hjson),
+					new JsonSerializerSettings
+					{
+						NullValueHandling = NullValueHandling.Ignore,
+						MissingMemberHandling = MissingMemberHandling.Error,
+					});
+				if (stats == null)
+					return "json returned null";
+				Stats = stats;
+				_cache.Clear();
+			}
+			catch (JsonSerializationException e)
+			{
+				return e.Message;
+			}
+
+			return null;
+		}
 	}
 }
