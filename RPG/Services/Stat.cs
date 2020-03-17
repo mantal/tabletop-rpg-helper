@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -41,10 +41,7 @@ namespace RPG.Services
 			
 			stat = new Stat(id, @base);
 			if (string.IsNullOrWhiteSpace(rawModifiers))
-			{
-				stat = null;
 				return errors;
-			}
 
 			rawModifiers = rawModifiers.Replace("+", " + ", StringComparison.InvariantCultureIgnoreCase)
 									   .Replace("-", " - ", StringComparison.InvariantCultureIgnoreCase)

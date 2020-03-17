@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using RPG.Services;
 using Xunit;
 
@@ -11,7 +11,7 @@ namespace RPG.Tests
 		{
 			var stat = new Stat("POW", 10);
 
-			stat.ToString().Should().Be("{BASE}");
+			stat.ToString().Should().Be("10");
 		}
 
 		[Fact]
@@ -26,7 +26,7 @@ namespace RPG.Tests
 				},
 			};
 
-			stat.ToString().Should().Be("{BASE} + FOR");
+			stat.ToString().Should().Be("10 + FOR");
 		}
 
 		[Fact]
@@ -43,7 +43,7 @@ namespace RPG.Tests
 				},
 			};
 
-			stat.ToString().Should().Be("{BASE} + FOR + DEX");
+			stat.ToString().Should().Be("10 + FOR + DEX * 2");
 		}
 	}
 }
