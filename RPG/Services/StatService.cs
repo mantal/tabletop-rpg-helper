@@ -10,7 +10,7 @@ namespace RPG.Services
 		public IDictionary<string, Stat> Stats = new Dictionary<string, Stat>();
 		private readonly IDictionary<string, double> _cache = new Dictionary<string, double>();
 
-		public double Get(StatId id)
+		public double GetValue(StatId id)
 		{
 			if (_cache.ContainsKey(id)) return _cache[id];
 
@@ -60,19 +60,7 @@ namespace RPG.Services
 			return value;
 		}
 
-		private IEnumerable<string> Add(Stat stat)
-		{
-			var errors = IsRecursive(stat)
-				.Select(e => $"");
-
-			if (!errors.Any())
-			{
-				Stats.Add(stat.Id, stat);
-				_cache.Clear();
-			}
-
-			return errors;
-		}
+		public Stat Get(StatId id) => Stats[id];
 
 		public IEnumerable<string> Add(string id, double @base = 0, string? rawModifiers = null)
 		{
@@ -88,26 +76,66 @@ namespace RPG.Services
 				return errors;
 			}
 			if (Exists(id))
-			{
 				errors = errors.Append($"Stat already exists: {id}");
-				return errors;
-			}
 
 			errors = errors.Concat(Stat.FromString(out var stat, id, @base, rawModifiers)).ToList();
-
 			if (stat == null)
 				return errors;
 
-			errors = errors.Concat(stat.Modifiers.Select(m =>
-			{
-				if (m is StatModifier statMod && !Exists(statMod.StatId))
-					return $"Undefined stat: {statMod.StatId}";
-				return string.Empty;
-			}).Where(s => !string.IsNullOrEmpty(s)))
-						   .ToList();
+			errors = errors.Concat(AreModifiersValid(stat));
 
 			if (!errors.Any())
-				errors = Add(stat);
+				Stats.Add(stat.Id, stat);
+
+			return errors;
+		}
+
+		public IEnumerable<string> Update(StatId id, double @base = 0, string? rawModifiers = null)
+		{
+			IEnumerable<string> errors = new List<string>();
+
+			if (!Exists(id)) 
+				errors = errors.Append($"{id} does not exists"); //throw??
+
+			errors = errors.Concat(Stat.FromString(out var stat, id, @base, rawModifiers)).ToList();
+			if (stat == null)
+				return errors;
+
+			errors = errors.Concat(AreModifiersValid(stat));
+
+			if (!errors.Any())
+			{
+				Stats[id] = stat;
+				_cache.Clear();
+			}
+
+			return errors;
+		}
+
+		public IEnumerable<string> Remove(StatId id, bool cascade = false)
+		{
+			IEnumerable<string> errors = new List<string>();
+
+			if (!Exists(id))
+				errors = errors.Append($"{id} does not exists"); //throw??
+
+			var deps = Stats.Where(s => s.Value.Id != id)
+							.Where(s => s.Value.Modifiers.Any(m => m is StatModifier sm && sm.StatId == id))
+							.Select(s => s.Key)
+							.ToArray();
+
+			if (!deps.Any())
+			{
+				Stats.Remove(id);
+				return errors;
+			}
+
+			if (!cascade)
+				return errors.Concat(deps.Select(depId => $"Cannot remove {depId} because {depId} depends on it"));
+
+			errors = errors.Concat(deps.SelectMany(d => Remove(d, true)));
+			Stats.Remove(id);
+			_cache.Remove(id);
 
 			return errors;
 		}
@@ -127,12 +155,13 @@ namespace RPG.Services
 		{
 			try
 			{
-				var stats = JsonConvert.DeserializeObject<IDictionary<string, Stat>>(HjsonValue.Parse(hjson),
-					new JsonSerializerSettings
-					{
-						NullValueHandling = NullValueHandling.Ignore,
-						MissingMemberHandling = MissingMemberHandling.Error,
-					});
+				var settings = new JsonSerializerSettings
+				{
+					NullValueHandling = NullValueHandling.Ignore,
+					MissingMemberHandling = MissingMemberHandling.Error,
+				};
+				var stats = JsonConvert.DeserializeObject<IDictionary<string, Stat>>(HjsonValue.Parse(hjson), settings);
+
 				if (stats == null)
 					return "json returned null";
 				Stats = stats;
@@ -146,6 +175,26 @@ namespace RPG.Services
 			return null;
 		}
 
+		private IEnumerable<string> AreModifiersValid(Stat stat)
+		{
+			var errors = stat.Modifiers.Select(m =>
+				  {
+					  if (m is StatModifier statMod && !Exists(statMod.StatId))
+						  return $"Undefined stat: {statMod.StatId}";
+					  return string.Empty;
+				  }).Where(s => !string.IsNullOrEmpty(s));
+
+			if (errors.Any())
+				return errors;
+
+			return errors.Concat(IsRecursive(stat));
+		}
+
+		private IEnumerable<string> IsRecursive(Stat stat)
+		{
+			return IsRecursive(stat, new Stack<StatId>());
+		}
+
 		private IEnumerable<string> IsRecursive(Stat stat, Stack<StatId> stack)
 		{
 			if (stack.Contains(stat.Id))
@@ -154,15 +203,11 @@ namespace RPG.Services
 			stack.Push(stat.Id);
 			var ids = stat.Modifiers.Where(m => m is StatModifier)
 						  .Cast<StatModifier>()
-						  .SelectMany(m => IsRecursive(Stats[m.StatId], stack));
+						  .SelectMany(m => IsRecursive(Stats[m.StatId], stack))
+						  .ToList();
 			stack.Pop();
 
 			return ids;
-		}
-
-		private IEnumerable<string> IsRecursive(Stat stat)
-		{
-			return IsRecursive(stat, new Stack<StatId>());
 		}
 	}
 }

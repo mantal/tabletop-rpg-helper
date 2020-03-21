@@ -33,7 +33,7 @@ namespace RPG.Services
 			StatId = statId;
 		}
 
-		public override double GetValue(StatService statService) => statService.Get(StatId);
+		public override double GetValue(StatService statService) => statService.GetValue(StatId);
 
 		public override string ToString() => $"{Type} {StatId}";
 	}
