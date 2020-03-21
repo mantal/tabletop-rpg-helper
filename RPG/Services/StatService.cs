@@ -20,7 +20,6 @@ namespace RPG.Services
 			if (stat.Modifiers.Any())
 			{
 				var modifiers = new LinkedList<Modifier>(stat.Modifiers);
-				var modifier = modifiers.Last;
 				var priority = 1;
 
 				// List is not empty so First can't be null
@@ -29,6 +28,7 @@ namespace RPG.Services
 #pragma warning restore CS8604 // Possible null reference argument.
 				while (modifiers.Count > 1)
 				{
+					var modifier = modifiers.Last;
 					while (modifier != null && modifier.Value.Type.Priority > priority)
 						modifier = modifier.Previous;
 					if (modifier?.Previous == null)

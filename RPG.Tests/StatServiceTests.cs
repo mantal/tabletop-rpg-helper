@@ -74,7 +74,7 @@ namespace RPG.Tests
 
         #endregion
 
-        #region Update
+#region Update
 
 		[Fact]
 		public void Update()
@@ -133,9 +133,9 @@ namespace RPG.Tests
 			_statService.Update("A", 0, "B + C + D").Should().HaveCount(1);
 		}
 
-        #endregion
+#endregion
 
-        #region Delete
+#region Delete
 
         [Fact]
 		public void Delete()
@@ -170,6 +170,41 @@ namespace RPG.Tests
 			_statService.Exists("FOR").Should().BeTrue();
 		}
 
-        #endregion
-    }
+#endregion
+
+#region Resolve
+
+		[Fact]
+		public void ResolveWithoutModifier()
+		{
+			_statService.Add("A", 1);
+			_statService.GetValue("A").Should().Be(1);
+		}
+
+		[Fact]
+		public void ResolveWithStaticModifier()
+		{
+			_statService.Add("A", 1, "1");
+			_statService.GetValue("A").Should().Be(2);
+		}
+
+		[Fact]
+		public void ResolveWithStatModifier()
+		{
+			_statService.Add("A", 1);
+			_statService.Add("B", 1, "A");
+			_statService.GetValue("B").Should().Be(2);
+		}
+
+		[Fact]
+		public void ResolveWithMixedModifiers()
+		{
+			_statService.Add("A", 5);
+			_statService.Add("B", 2);
+			_statService.Add("C", 0, "A * B + A * B - A * 2 / 1");
+			_statService.GetValue("C").Should().Be(10);
+		}
+
+		#endregion
+	}
 }
