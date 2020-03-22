@@ -9,41 +9,40 @@ namespace RPG.Tests
 		[Fact]
 		public void ConvertToString()
 		{
-			var stat = new Stat("POW", 10);
+			Stat.FromString(out var stat, "FOR").Should().BeEmpty();
 
-			stat.ToString().Should().Be("10");
+			stat.ToString().Should().Be("");
 		}
 
 		[Fact]
-		public void ConvertToStringWithModifier()
+		public void ConvertToStringWithStaticModifier()
 		{
-			var stat = new Stat("POW")
-			{
-				Base = 10,
-				Modifiers = new []
-				{
-					new StatModifier(ModifierType.Add, "FOR"), 
-				},
-			};
+			Stat.FromString(out var stat, "FOR", "10").Should().BeEmpty();
 
-			stat.ToString().Should().Be("10 + FOR");
+			stat.ToString().Should().Be(" + 10");
 		}
 
+		[Fact]
+		public void ConvertToStringWithStatModifier()
+		{
+			Stat.FromString(out var stat, "ATT", "FOR").Should().BeEmpty();
+
+			stat.ToString().Should().Be(" + FOR");
+		}
+
+		[Fact]
+		public void ConvertToStringWithInnerStatModifier()
+		{
+			Stat.FromString(out var stat, "ATT", ":Base").Should().BeEmpty();
+
+			stat.ToString().Should().Be(" + ATT:Base");
+		}
 		[Fact]
 		public void ConvertToStringWithModifiers()
 		{
-			var stat = new Stat("POW")
-			{
-				Base = 10,
-				Modifiers = new Modifier[]
-				{
-					new StatModifier(ModifierType.Add, "FOR"),
-					new StatModifier(ModifierType.Add, "DEX"),
-					new StaticModifier(ModifierType.Mult, 2), 
-				},
-			};
+			Stat.FromString(out var stat, "ATT", ":Base + 20 + POW * 2").Should().BeEmpty();
 
-			stat.ToString().Should().Be("10 + FOR + DEX * 2");
+			stat.ToString().Should().Be(" + ATT:Base + 20 + POW * 2");
 		}
 	}
 }

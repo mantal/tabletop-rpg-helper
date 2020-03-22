@@ -10,22 +10,21 @@ namespace RPG.Services
 		public IDictionary<string, Stat> Stats = new Dictionary<string, Stat>();
 		private readonly IDictionary<string, double> _cache = new Dictionary<string, double>();
 
+		public Stat Get(StatId id) => Stats[id];
+
 		public double GetValue(StatId id)
 		{
+			if (id.InnerId != null) return Stats[id].GetInner(id);
 			if (_cache.ContainsKey(id)) return _cache[id];
 
 			var stat = Stats[id];
-			var value = stat.RoundingMethod.Convert(stat.Base);
+			var value = .0;
 
 			if (stat.Modifiers.Any())
 			{
 				var modifiers = new LinkedList<Modifier>(stat.Modifiers);
 				var priority = 1;
 
-				// List is not empty so First can't be null
-#pragma warning disable CS8604 // Possible null reference argument.
-				modifiers.AddBefore(modifiers.First, new StaticModifier(ModifierType.Add, stat.Base, RoundingMethod.None));
-#pragma warning restore CS8604 // Possible null reference argument.
 				while (modifiers.Count > 1)
 				{
 					var modifier = modifiers.Last;
@@ -36,7 +35,6 @@ namespace RPG.Services
 						priority++;
 						if (priority > ModifierType.MinPriority)
 							break;
-						modifier = modifiers.Last;
 						continue;
 					}
 
@@ -60,25 +58,33 @@ namespace RPG.Services
 			return value;
 		}
 
-		public Stat Get(StatId id) => Stats[id];
+		//todo reflechier a la de/serialization
+		public IEnumerable<string> Add(string id, double @base, string? rawModifiers = null)
+		{
+			var errors = Add(id, $"+ :base {rawModifiers}");
 
-		public IEnumerable<string> Add(string id, double @base = 0, string? rawModifiers = null)
+			if (errors.Any())
+				return errors;
+
+			Get(id).AddOrUpdateInner("base", @base);
+
+			return errors;
+		}
+
+		public IEnumerable<string> Add(string id, IEnumerable<(string, double)> innerStats, string? rawModifiers = null)
 		{
 			IEnumerable<string> errors = new List<string>();
-			if (string.IsNullOrWhiteSpace(id))
+
+			if (!id.IsValidStatId())
 			{
-				errors = errors.Append($"Name can not be empty");
-				return errors;
-			}
-			if (!id.All(char.IsLetter))
-			{
-				errors = errors.Append($"Name ({id}) must be letters only");
+				//TODO better msg
+				errors = errors.Append($"Invalid stat id: {id}");
 				return errors;
 			}
 			if (Exists(id))
 				errors = errors.Append($"Stat already exists: {id}");
 
-			errors = errors.Concat(Stat.FromString(out var stat, id, @base, rawModifiers)).ToList();
+			errors = errors.Concat(Stat.FromString(out var stat, id, rawModifiers)).ToList();
 			if (stat == null)
 				return errors;
 
@@ -90,14 +96,14 @@ namespace RPG.Services
 			return errors;
 		}
 
-		public IEnumerable<string> Update(StatId id, double @base = 0, string? rawModifiers = null)
+		public IEnumerable<string> Update(StatId id, string? rawModifiers = null)
 		{
 			IEnumerable<string> errors = new List<string>();
 
 			if (!Exists(id)) 
 				errors = errors.Append($"{id} does not exists"); //throw??
 
-			errors = errors.Concat(Stat.FromString(out var stat, id, @base, rawModifiers)).ToList();
+			errors = errors.Concat(Stat.FromString(out var stat, id, rawModifiers)).ToList();
 			if (stat == null)
 				return errors;
 
@@ -140,7 +146,14 @@ namespace RPG.Services
 			return errors;
 		}
 
-		public bool Exists(StatId id) => Stats.ContainsKey(id);
+		public bool Exists(StatId id)
+		{
+			if (!Stats.ContainsKey(id))
+				return false;
+			if (id.InnerId == null)
+				return true;
+			return Stats[id.Id].TryGetInner(id.InnerId) != null;
+		}
 
 		public string Serialize()
 		{

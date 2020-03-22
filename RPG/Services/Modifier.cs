@@ -24,16 +24,24 @@ namespace RPG.Services
 	public class StatModifier : Modifier
 	{
 		public readonly StatId StatId;
+		public readonly StatId? InnerStatId;
 
 		public StatModifier(ModifierType type,
 							StatId statId,
+							StatId? innerStatId = null,
 							RoundingMethod roundingMethod = RoundingMethod.None)
 			: base(type, roundingMethod)
 		{
 			StatId = statId;
+			InnerStatId = innerStatId;
 		}
 
-		public override double GetValue(StatService statService) => statService.GetValue(StatId);
+		public override double GetValue(StatService stats)
+		{
+			if (InnerStatId == null)
+				return stats.GetValue(StatId);
+			return stats.Get(StatId).GetInner(InnerStatId);
+		}
 
 		public override string ToString() => $"{Type} {StatId}";
 	}

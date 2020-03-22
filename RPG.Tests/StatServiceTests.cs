@@ -19,8 +19,24 @@ namespace RPG.Tests
         public void AddWithModifier()
         {
             _statService.Add("DEX");
-            _statService.Add("FOR", 0, "DEX").Should().BeEmpty();
+            _statService.Add("FOR", "DEX").Should().BeEmpty();
         }
+
+		[Fact]
+		public void AddWithSelfInnerStatModifier()
+		{
+			_statService.Add("FOR", ":Base").Should().BeEmpty();
+			_statService.Get("FOR").TryGetInner("Base").Should().Be(0);
+		}
+
+		[Fact]
+		public void AddWithInnerStatModifier()
+		{
+			_statService.Add("DEX", ":Base").Should().BeEmpty();
+			_statService.Add("FOR", "DEX:Base").Should().BeEmpty();
+
+			_statService.Get("FOR").TryGetInner("Base").Should().BeNull();
+		}
 
 		[Fact]
 		public void AddWithModifiers()
@@ -38,38 +54,45 @@ namespace RPG.Tests
 		[Fact]
         public void AddNotAndDetectUnknownId()
         {
-            _statService.Add("FOR", 0, "DEX").Should().HaveCount(1);
+            _statService.Add("FOR", "DEX").Should().HaveCount(1);
         }
 
 		[Fact]
 		public void AddNotAndDetectInvalidId()
 		{
-			_statService.Add("1FOR", 0, "DEX").Should().HaveCount(1);
+			_statService.Add("1FOR", "DEX").Should().HaveCount(1);
 		}
 
-        [Fact]
+		[Fact]
+		public void AddNotAndDetectInvalidInnerId()
+		{
+			_statService.Add("DEX");
+			_statService.Add("FOR", "DEX:no").Should().HaveCount(1);
+		}
+
+		[Fact]
 		public void AddNotAndDetectDuplicateId()
 		{
 			_statService.Add("FOR");
-			_statService.Add("FOR", 0, "DEX").Should().HaveCount(2);
+			_statService.Add("FOR", "DEX").Should().HaveCount(2);
 		}
 
         [Fact]
         public void AddNotAndDetectFirstLevelCircularDependency()
         {
-            _statService.Add("FOR", 0, "FOR").Should().HaveCount(1);
+            _statService.Add("FOR", "FOR").Should().HaveCount(1);
         }
 
         [Fact]
         public void AndNotAndDetectDeepCircularDependency()
         {
-            _statService.Add("B", 0, "3");
-            _statService.Add("E", 0, "B");
-            _statService.Add("C", 0, "E");
-            _statService.Add("F", 0, "A");
-            _statService.Add("D", 0, "F");
+            _statService.Add("B", "3");
+            _statService.Add("E", "B");
+            _statService.Add("C", "E");
+            _statService.Add("F", "A");
+            _statService.Add("D", "F");
 
-            _statService.Add("A", 0, "B + C + D").Should().HaveCount(1);
+            _statService.Add("A", "B + C + D").Should().HaveCount(1);
         }
 
         #endregion
@@ -80,17 +103,17 @@ namespace RPG.Tests
 		public void Update()
 		{
 			_statService.Add("FOR");
-			_statService.Update("FOR", 418).Should().BeEmpty();
+			_statService.Update("FOR", "418").Should().BeEmpty();
 			_statService.Get("FOR").ToString().Should().Be("418");
 		}
 
 		[Fact]
-		public void UpdateWithModifier()
+		public void UpdateWithStatModifier()
 		{
 			_statService.Add("FOR");
 			_statService.Add("DEX");
-			_statService.Update("FOR", 418, "DEX").Should().BeEmpty();
-			_statService.Get("FOR").ToString().Should().Be("418 + DEX");
+			_statService.Update("FOR", "DEX").Should().BeEmpty();
+			_statService.Get("FOR").ToString().Should().Be("DEX");
 		}
 
 		[Fact]
@@ -103,8 +126,8 @@ namespace RPG.Tests
 			_statService.Add("C");
 			_statService.Add("D");
 			_statService.Add("E");
-			_statService.Update("A", 418, modifiers).Should().BeEmpty();
-			_statService.Get("A").ToString().Should().Be("418 " + modifiers);
+			_statService.Update("A", modifiers).Should().BeEmpty();
+			_statService.Get("A").ToString().Should().Be(modifiers);
 		}
 
 		[Fact]
@@ -117,20 +140,20 @@ namespace RPG.Tests
 		public void UpdateNotAndDetectFirstLevelCircularDependency()
 		{
 			_statService.Add("FOR");
-			_statService.Update("FOR", 0, "FOR").Should().HaveCount(1);
+			_statService.Update("FOR", "FOR").Should().HaveCount(1);
 		}
 
 		[Fact]
 		public void UpdateNotAndDetectDeepCircularDependency()
 		{
 			_statService.Add("A");
-			_statService.Add("B", 0, "3");
-			_statService.Add("E", 0, "B");
-			_statService.Add("C", 0, "E");
-			_statService.Add("F", 0, "A");
-			_statService.Add("D", 0, "F");
+			_statService.Add("B", "3");
+			_statService.Add("E", "B");
+			_statService.Add("C", "E");
+			_statService.Add("F", "A");
+			_statService.Add("D", "F");
 
-			_statService.Update("A", 0, "B + C + D").Should().HaveCount(1);
+			_statService.Update("A", "B + C + D").Should().HaveCount(1);
 		}
 
 #endregion
@@ -149,7 +172,7 @@ namespace RPG.Tests
 		public void DeleteAndCascade()
 		{
 			_statService.Add("FOR");
-			_statService.Add("DEX", 0, "FOR");
+			_statService.Add("DEX", "FOR");
 			_statService.Remove("FOR", true).Should().BeEmpty();
 			_statService.Exists("FOR").Should().BeFalse();
 			_statService.Exists("DEX").Should().BeFalse();
@@ -165,7 +188,7 @@ namespace RPG.Tests
 		public void DeleteNotAndDetectDependencies()
 		{
 			_statService.Add("FOR");
-			_statService.Add("DEX", 0, "FOR");
+			_statService.Add("DEX", "FOR");
 			_statService.Remove("FOR", false).Should().HaveCount(1);
 			_statService.Exists("FOR").Should().BeTrue();
 		}

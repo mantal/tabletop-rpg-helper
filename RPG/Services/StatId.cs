@@ -1,28 +1,43 @@
 ﻿using System;
-using System.Diagnostics;
+using System.Linq;
 using Newtonsoft.Json;
 
 namespace RPG.Services
 {
+	// TODO => StatRef = StatId + InnerStatId
 	[JsonConverter(typeof(StatIdTypeConvert))]
-	[DebuggerDisplay("{_id}")]
 	public class StatId
 	{
-		private readonly string _id;
+		public readonly string Id;
+		public readonly string? InnerId;
 		
 		public StatId(string id)
 		{
 			if (!id.IsValidStatId()) 
 				throw new ArgumentException($"Invalid name: {id}", nameof(id));
 
-			_id = id;
+			if (!id.Contains(':', StringComparison.InvariantCultureIgnoreCase))
+				Id = id;
+			else
+			{
+				var s = id.Split(':');
+				Id = s[0];
+				InnerId = s[1];
+			}
 		}
 
-		public static implicit operator string(StatId id) => id._id;
 		public static implicit operator StatId(string id) => new StatId(id.ToUpperInvariant());
+		public static implicit operator string(StatId id) => $"{id.Id}{(id.InnerId == null ? "" : $":{id.InnerId}")}";
 
-		public static bool operator ==(StatId a, StatId b) 
-			=> string.Compare(a._id, b._id, StringComparison.InvariantCultureIgnoreCase) == 0;
+		public static bool operator ==(StatId? a, StatId? b)
+		{
+			if (a is null || b is null)
+				return a is null && b is null;
+			if (a.InnerId == null || b.InnerId == null)
+				return a.InnerId == null && b.InnerId == null;
+			return string.Compare(a.Id, b.Id, StringComparison.InvariantCultureIgnoreCase) == 0
+				&& string.Compare(a.InnerId, b.InnerId, StringComparison.InvariantCultureIgnoreCase) == 0;
+		}
 
 		public static bool operator !=(StatId a, StatId b) => !(a == b);
 
@@ -31,13 +46,15 @@ namespace RPG.Services
 			if (ReferenceEquals(this, obj)) return true;
 			if (obj is null) return false;
 			if (obj.GetType() != typeof(StatId)) return false;
-			return ((StatId)obj)._id == _id;
+			return ((StatId) obj).Id == Id
+				   && ((StatId) obj).InnerId == InnerId;
 		}
 
-		public override int GetHashCode() => _id.GetHashCode(StringComparison.InvariantCultureIgnoreCase);
+		public override int GetHashCode() => (_id: Id, _innerId: InnerId).GetHashCode();
 		
 		public override string ToString() => this;
 
+		//TODO fix serialization w/ innerId
 		private class StatIdTypeConvert : JsonConverter<StatId>
 		{
 			public override void WriteJson(JsonWriter writer, StatId value, JsonSerializer serializer)
@@ -65,13 +82,22 @@ namespace RPG.Services
 			}
 		}
 	}
+
 	public static class StringExtensions
 	{
 		public static bool IsValidStatId(this string? s)
 		{
-			return !string.IsNullOrEmpty(s) 
-				   && (char.IsLetter(s[0]) 
-					   || s[0] == '{' && s[^1] == '}');
+			if (string.IsNullOrEmpty(s))
+				return false;
+
+			return s[^1] != ':'
+				   && s.All(c => char.IsLetter(c) || c == ':')
+				   && s.Count(c => c == ':') <= 1;
 		}
+
+		/// <summary>
+		/// Expand statId, ex:":innerId" to "STAT:innerId"
+		/// </summary>
+		public static string ExpandStatId(this string s, StatId parentId) => s[0] != ':' ? s : parentId + s;
 	}
 }
