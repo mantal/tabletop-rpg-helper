@@ -1,5 +1,6 @@
 ﻿using FluentAssertions;
-using RPG.Services;
+using RPG.Engine.Ids;
+using RPG.Engine.Modifiers;
 using Xunit;
 
 namespace RPG.Tests

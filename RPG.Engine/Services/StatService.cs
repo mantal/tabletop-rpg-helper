@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using Hjson;
-using Newtonsoft.Json;
+using RPG.Engine.Ids;
+using RPG.Engine.Modifiers;
 
-namespace RPG.Services
+namespace RPG.Engine.Services
 {
 	//TODO check if string overloads are useful outside of tests
 	public class StatService
@@ -105,7 +105,7 @@ namespace RPG.Services
 			if (stat == null)
 				return errors;
 
-			errors = errors.Concat(AreModifiersValid(stat));
+			errors = errors.Concat(AreModifierTargetsValid(stat));
 
 			if (!errors.Any())
 				Stats.Add(stat.Id, stat);
@@ -138,7 +138,7 @@ namespace RPG.Services
 			if (stat == null)
 				return errors;
 
-			errors = errors.Concat(AreModifiersValid(stat));
+			errors = errors.Concat(AreModifierTargetsValid(stat));
 
 			if (!errors.Any())
 			{
@@ -203,40 +203,7 @@ namespace RPG.Services
 			return Stats[id.StatId].TryGetVariable(id) != null;
 		}
 
-		public string Serialize()
-		{
-			var json = JsonConvert.SerializeObject(this, new JsonSerializerSettings
-			{
-				DefaultValueHandling = DefaultValueHandling.Ignore,
-			});
-			return JsonValue.Parse(json).ToString(Stringify.Hjson);
-		}
-
-		public string? Deserialize(string hjson)
-		{
-			try
-			{
-				var settings = new JsonSerializerSettings
-				{
-					NullValueHandling = NullValueHandling.Ignore,
-					MissingMemberHandling = MissingMemberHandling.Error,
-				};
-				var stats = JsonConvert.DeserializeObject<IDictionary<StatId, Stat>>(HjsonValue.Parse(hjson), settings);
-
-				if (stats == null)
-					return "json returned null";
-				Stats = stats;
-				_cache.Clear();
-			}
-			catch (JsonSerializationException e)
-			{
-				return e.Message;
-			}
-
-			return null;
-		}
-
-		private IEnumerable<string> AreModifiersValid(Stat stat)
+		private IEnumerable<string> AreModifierTargetsValid(Stat stat)
 		{
 			var errors = stat.Modifiers.Select(m =>
 				  {

@@ -1,14 +1,14 @@
 @page "/"
 @using Blazorise
 @using Newtonsoft.Json
-@using RPG.Services
+@using RPG.Engine.Services
 @using JsonException = Newtonsoft.Json.JsonException
 @inject StatService StatService
 
 @foreach (var (id, stat) in StatService.Stats)
 {
     <div>
-        @id: @StatService.Get(id) (@stat.ToString())
+        @id: @StatService.GetValue(id) (@stat.ToString())
     </div>
 }
 
@@ -61,7 +61,7 @@
     private void SetJson()
     {
         _errors = null;
-        _rawStats = StatService.Serialize();
+        //_rawStats = StatService.Serialize();
     }
 
     #region Json
@@ -71,7 +71,7 @@
     private void UpdateStats()
     {
         _errors = null;
-        StatService.Deserialize(_rawStats);
+        //StatService.Deserialize(_rawStats);
         SetJson();
         StateHasChanged();
     }

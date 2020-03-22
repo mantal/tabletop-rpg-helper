@@ -1,7 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using RPG.Engine.Ids;
 
-namespace RPG.Services
+namespace RPG.Engine.Utils
 {
 	public static class StringUtils
 	{

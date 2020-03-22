@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace RPG.Services
+namespace RPG.Engine.Modifiers
 {
 	public enum RoundingMethod
 	{

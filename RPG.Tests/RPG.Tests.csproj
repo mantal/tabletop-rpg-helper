@@ -22,6 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\RPG.Engine\RPG.Engine.csproj" />
     <ProjectReference Include="..\RPG\RPG.csproj" />
   </ItemGroup>
 

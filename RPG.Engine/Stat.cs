@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
+using RPG.Engine.Ids;
+using RPG.Engine.Modifiers;
+using RPG.Engine.Utils;
 
-namespace RPG.Services
+namespace RPG.Engine
 {
 	[DebuggerDisplay("{Id} = {ToString()}")]
 	public class Stat
@@ -14,7 +15,6 @@ namespace RPG.Services
 		public readonly StatId Id;
 		public IEnumerable<Modifier> Modifiers { get; set; } = new List<Modifier>();
 
-		[JsonConverter(typeof(StringEnumConverter))]
 		public RoundingMethod RoundingMethod
 		{
 			get => _roundingMethod;
