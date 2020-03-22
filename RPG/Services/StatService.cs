@@ -115,7 +115,11 @@ namespace RPG.Services
 
 		public IEnumerable<string> AddOrUpdate(VariableId id, double value)
 		{
-			Stats[id.StatId].AddOrUpdateVariable(id, value);
+			var stat = Stats[id.StatId];
+
+			if (stat.TryGetVariable(id) != null)
+				_cache.Clear();
+			stat.AddOrUpdateVariable(id, value);
 
 			return System.Array.Empty<string>();
 		}
