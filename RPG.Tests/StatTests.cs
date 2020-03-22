@@ -19,7 +19,7 @@ namespace RPG.Tests
 		{
 			Stat.FromString(out var stat, "FOR", "10").Should().BeEmpty();
 
-			stat.ToString().Should().Be(" + 10");
+			stat.ToString().Should().Be("10");
 		}
 
 		[Fact]
@@ -27,22 +27,22 @@ namespace RPG.Tests
 		{
 			Stat.FromString(out var stat, "ATT", "FOR").Should().BeEmpty();
 
-			stat.ToString().Should().Be(" + FOR");
+			stat.ToString().Should().Be("FOR");
 		}
 
 		[Fact]
-		public void ConvertToStringWithInnerStatModifier()
+		public void ConvertToStringWithVariableModifier()
 		{
 			Stat.FromString(out var stat, "ATT", ":Base").Should().BeEmpty();
 
-			stat.ToString().Should().Be(" + ATT:Base");
+			stat.ToString().Should().Be("ATT:Base");
 		}
 		[Fact]
 		public void ConvertToStringWithModifiers()
 		{
 			Stat.FromString(out var stat, "ATT", ":Base + 20 + POW * 2").Should().BeEmpty();
 
-			stat.ToString().Should().Be(" + ATT:Base + 20 + POW * 2");
+			stat.ToString().Should().Be("ATT:Base + 20 + POW * 2");
 		}
 	}
 }

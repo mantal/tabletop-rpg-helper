@@ -28,35 +28,38 @@ namespace RPG.Services
 
 		private RoundingMethod _roundingMethod = RoundingMethod.Ceiling;
 
-		public readonly IDictionary<StatId, double> InnerStats = new Dictionary<StatId, double>();
+		public readonly IDictionary<VariableId, double> Variables = new Dictionary<VariableId, double>();
 
 		public Stat(StatId id)
 		{
 			Id = id;
 		}
 
-		public double GetInner(StatId innerId)
+		public double GetVariable(VariableId id)
 		{
-			var value = TryGetInner(innerId);
+			if (id.StatId != Id)
+				throw new ArgumentOutOfRangeException(nameof(id), id, "");
+
+			var value = TryGetVariable(id);
 			if (value == null)
-				throw new ArgumentOutOfRangeException(nameof(innerId), innerId, $"No inner stat with id {innerId} were found in {Id}. Registered inner stats are: {{{InnerStats.Keys.Aggregate("", (s, id) => s + id)}}}");
+				throw new ArgumentOutOfRangeException(nameof(id), id, $"No variable with id {id} were found in {Id}. Registered inner stats are: {{{Variables.Keys.AsString()}}}");
 			return (double) value;
 		}
 
-		public double? TryGetInner(StatId innerId)
+		public double? TryGetVariable(VariableId id)
 		{
-			if (!InnerStats.ContainsKey(innerId))
+			if (!Variables.ContainsKey(id))
 				return null;
-			return InnerStats[innerId];
+			return Variables[id];
 		}
 
-		public void AddOrUpdateInner(StatId innerId, double value) => InnerStats[innerId] = value;
+		public void AddOrUpdateVariable(VariableId id, double value) => Variables[id] = value;
 
 		public static IEnumerable<string> FromString(out Stat? stat, string id, string? rawModifiers = null)
 		{
 			var errors = new List<string>();
 			
-			stat = new Stat(id);
+			stat = new Stat((StatId) id);
 			if (string.IsNullOrWhiteSpace(rawModifiers))
 				return errors;
 
@@ -68,7 +71,7 @@ namespace RPG.Services
 				; // Cleanup
 
 			// Add implicit +
-			if (ModifierType.FromString(rawModifiers[0].ToString()) == null)
+			if (ModifierType.FromString(rawModifiers[0].ToString(CultureInfo.InvariantCulture)) == null)
 				rawModifiers = "+ " + rawModifiers;
 
 			var tokens = rawModifiers.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries);
@@ -89,30 +92,50 @@ namespace RPG.Services
 
 				i++;
 				var operand = tokens[i];
-				var isId = operand.IsValidStatId();
-				var isNumber = double.TryParse(operand, NumberStyles.Float, null, out var modValue);
-				if (!isId && !isNumber)
-				{
-					errors.Add($"Expected a stat id or a number after {type} but found {operand}");
-					return errors;
-				}
 
-				if (isId)
+				var operandType = GetModifierType(operand);
+				if (operandType == typeof(StatModifier))
 				{
-					var refId = new StatId(operand.ExpandStatId(stat.Id));
-					if (refId.Id == stat.Id && refId.InnerId != null)
-						stat.InnerStats[refId.InnerId] = 0;
-
-					stat.Modifiers = stat.Modifiers.Append(new StatModifier(type, refId));
+					var statId = new StatId(operand);
+					stat.Modifiers = stat.Modifiers.Append(new StatModifier(type, statId));
 				}
-				// ReSharper disable once ConditionIsAlwaysTrueOrFalse
-				else if (isNumber)
+				else if (operandType == typeof(VariableModifier))
+				{
+					var variableId = new VariableId(operand, stat.Id);
+					stat.Variables[variableId] = 0;
+					stat.Modifiers = stat.Modifiers.Append(new VariableModifier(type, variableId));
+				}
+				else if (operandType == typeof(StaticModifier))
+				{
+					var isNumber = double.TryParse(operand, NumberStyles.Float, null, out var modValue);
+					if (!isNumber)
+					{
+						errors.Add($"Expected a stat id or a number after {type} but found {operand}");
+						return errors;
+					}
+
 					stat.Modifiers = stat.Modifiers.Append(new StaticModifier(type, modValue));
+				}
 			}
 
 			return errors;
 		}
 
-		public override string ToString() => Modifiers.Aggregate("", (res, m) => res + " " + m);
+		public override string ToString()
+		{
+			var s = Modifiers.Aggregate("", (res, m) => res + " " + m);
+			if (s.Length > 1 && s[1] == '+')
+				s = s.Substring(2);
+			return s.Trim();
+		}
+
+		//TODO proper parser
+		private static Type? GetModifierType(string s)
+		{
+			if (s.IsValidStatId()) return typeof(StatModifier);
+			if (s.IsValidVariableId()) return typeof(VariableModifier);
+			if (double.TryParse(s, NumberStyles.Float, null, out _)) return typeof(StaticModifier);
+			return null;
+		}
 	}
 }

@@ -23,19 +23,19 @@ namespace RPG.Tests
         }
 
 		[Fact]
-		public void AddWithSelfInnerStatModifier()
+		public void AddWithSelfVariableModifier()
 		{
 			_statService.Add("FOR", ":Base").Should().BeEmpty();
-			_statService.Get("FOR").TryGetInner("Base").Should().Be(0);
+			_statService.GetValue("FOR:Base").Should().Be(0);
 		}
 
 		[Fact]
-		public void AddWithInnerStatModifier()
+		public void AddWithVariableModifier()
 		{
 			_statService.Add("DEX", ":Base").Should().BeEmpty();
 			_statService.Add("FOR", "DEX:Base").Should().BeEmpty();
 
-			_statService.Get("FOR").TryGetInner("Base").Should().BeNull();
+			_statService.GetValue("FOR").Should().Be(0);
 		}
 
 		[Fact]
@@ -47,8 +47,10 @@ namespace RPG.Tests
 			_statService.Add("C");
 			_statService.Add("D");
 			_statService.Add("E");
+
 			_statService.Add("A", 418, modifiers).Should().BeEmpty();
-			_statService.Get("A").ToString().Should().Be("418 " + modifiers);
+
+			_statService.Get("A").ToString().Should().Be("A:base " + modifiers);
 		}
 
 		[Fact]
@@ -64,7 +66,7 @@ namespace RPG.Tests
 		}
 
 		[Fact]
-		public void AddNotAndDetectInvalidInnerId()
+		public void AddNotAndDetectVariableId()
 		{
 			_statService.Add("DEX");
 			_statService.Add("FOR", "DEX:no").Should().HaveCount(1);
@@ -103,7 +105,9 @@ namespace RPG.Tests
 		public void Update()
 		{
 			_statService.Add("FOR");
+
 			_statService.Update("FOR", "418").Should().BeEmpty();
+
 			_statService.Get("FOR").ToString().Should().Be("418");
 		}
 
@@ -112,21 +116,25 @@ namespace RPG.Tests
 		{
 			_statService.Add("FOR");
 			_statService.Add("DEX");
+
 			_statService.Update("FOR", "DEX").Should().BeEmpty();
+
 			_statService.Get("FOR").ToString().Should().Be("DEX");
 		}
 
 		[Fact]
 		public void UpdateWithModifiers()
 		{
-			const string modifiers = "+ B - C * D / E + 1 - 2 * 3 / 4";
+			const string modifiers = "B - C * D / E + 1 - 2 * 3 / 4";
 
 			_statService.Add("A");
 			_statService.Add("B");
 			_statService.Add("C");
 			_statService.Add("D");
 			_statService.Add("E");
+
 			_statService.Update("A", modifiers).Should().BeEmpty();
+
 			_statService.Get("A").ToString().Should().Be(modifiers);
 		}
 
@@ -200,23 +208,34 @@ namespace RPG.Tests
 		[Fact]
 		public void ResolveWithoutModifier()
 		{
-			_statService.Add("A", 1);
-			_statService.GetValue("A").Should().Be(1);
+			_statService.Add("A");
+
+			_statService.GetValue("A").Should().Be(0);
 		}
 
 		[Fact]
 		public void ResolveWithStaticModifier()
 		{
-			_statService.Add("A", 1, "1");
+			_statService.Add("A", "2");
+
 			_statService.GetValue("A").Should().Be(2);
 		}
 
 		[Fact]
 		public void ResolveWithStatModifier()
 		{
-			_statService.Add("A", 1);
-			_statService.Add("B", 1, "A");
+			_statService.Add("A", 2);
+			_statService.Add("B", "A");
+
 			_statService.GetValue("B").Should().Be(2);
+		}
+
+		[Fact]
+		public void ResolveWithVariableModifier()
+		{
+			_statService.Add("A", 1);
+
+			_statService.GetValue("A").Should().Be(1);
 		}
 
 		[Fact]
@@ -225,6 +244,7 @@ namespace RPG.Tests
 			_statService.Add("A", 5);
 			_statService.Add("B", 2);
 			_statService.Add("C", 0, "A * B + A * B - A * 2 / 1");
+
 			_statService.GetValue("C").Should().Be(10);
 		}
 

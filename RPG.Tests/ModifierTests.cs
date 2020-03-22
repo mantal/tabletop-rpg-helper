@@ -9,9 +9,17 @@ namespace RPG.Tests
 		[Fact]
 		public void ConvertStatModifierToString()
 		{
-			var modifier = new StatModifier(ModifierType.Add, "FOR");
+			var modifier = new StatModifier(ModifierType.Add, (StatId) "FOR");
 
 			modifier.ToString().Should().Be("+ FOR");
+		}
+
+		[Fact]
+		public void ConvertVariableModifierToString()
+		{
+			var modifier = new VariableModifier(ModifierType.Add, (VariableId) "FOR:Base");
+
+			modifier.ToString().Should().Be("+ FOR:Base");
 		}
 
 		[Fact]
