@@ -59,7 +59,10 @@ namespace RPG.Engine.Ids
 		public static bool IsValidVariableId(this string? s)
 			=> !string.IsNullOrEmpty(s)
 			   && s[^1] != ':'
-			   && s.All(c => char.IsLetter(c) || c == ':')
-			   && s.Count(c => c == ':') <= 1;
+			   && s.All(c => char.IsLetterOrDigit(c) 
+							 || c == ':'
+							 || c == '_'
+							 || c == '-')
+			   && s.Count(c => c == ':') == 1;
 	}
 }

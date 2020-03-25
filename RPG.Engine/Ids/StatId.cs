@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 
 namespace RPG.Engine.Ids
@@ -43,6 +43,9 @@ namespace RPG.Engine.Ids
 	public static class StatIdStringExtensions
 	{
 		public static bool IsValidStatId(this string? s) 
-			=> !string.IsNullOrEmpty(s) && s.All(char.IsLetter);
+			=> !string.IsNullOrEmpty(s)
+			   && s.All(c => char.IsLetterOrDigit(c)
+							 || c == '_'
+							 || c == '-');
 	}
 }

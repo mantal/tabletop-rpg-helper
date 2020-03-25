@@ -1,7 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using RPG.Engine.Ids;
 using RPG.Engine.Modifiers;
+using RPG.Engine.Parser;
 
 namespace RPG.Engine.Services
 {
@@ -10,6 +12,7 @@ namespace RPG.Engine.Services
 	{
 		public IDictionary<StatId, Stat> Stats = new Dictionary<StatId, Stat>();
 		private readonly IDictionary<StatId, double> _cache = new Dictionary<StatId, double>();
+		private readonly Parser.Parser _parser = new Parser.Parser();
 
 		public Stat Get(string id) => Stats[(StatId) id];
 
@@ -29,42 +32,27 @@ namespace RPG.Engine.Services
 			if (_cache.ContainsKey(id)) return _cache[id];
 
 			var stat = Stats[id];
-			var value = .0;
-
-			if (stat.Modifiers.Any())
-			{
-				var modifiers = new LinkedList<Modifier>(stat.Modifiers);
-				var priority = 1;
-
-				while (modifiers.Count > 1)
-				{
-					var modifier = modifiers.Last;
-					while (modifier != null && modifier.Value.Type.Priority > priority)
-						modifier = modifier.Previous;
-					if (modifier?.Previous == null)
-					{
-						priority++;
-						if (priority > ModifierType.MinPriority)
-							break;
-						continue;
-					}
-
-					var prev = modifier.Previous.Value;
-					var current = modifier.Value;
-					var a = prev.GetValue(this);
-					var b = current.GetValue(this);
-					var res = current.RoundingMethod.Convert(current.Type.Apply(a, b));
-				
-					modifiers.AddBefore(modifier.Previous, new StaticModifier(prev.Type, res));
-					modifiers.Remove(prev);
-					modifiers.Remove(current);
-				}
-				// Since count > 1 First can't be null
-#pragma warning disable CS8602 // Dereference of a possibly null reference.
-				value = stat.RoundingMethod.Convert(modifiers.First.Value.GetValue(this));
-#pragma warning restore CS8602 // Dereference of a possibly null reference.
-			}
 			
+			var nodes = stat.Expression;
+			var priority = Node.MaxPriority;
+			while (nodes.Count > 1)
+			{
+				var node = nodes.First;
+				while (node != null && node.Value.Priority < priority)
+					node = node.Next;
+				if (node?.Next == null)
+				{
+					priority--;
+					if (priority < Node.MinPriority)
+						break;
+					continue;
+				}
+
+				node.Value.Apply(node);
+			}
+
+			var value = ((ValueNode) nodes.First.Value).GetValue();
+
 			_cache.Add(id, value);
 			return value;
 		}
@@ -74,9 +62,20 @@ namespace RPG.Engine.Services
 			var errors = Add(id, rawModifiers);
 			if (errors.Any())
 				return errors;
+
 			Get((StatId) id).AddOrUpdateVariable(new VariableId(":base", (StatId) id), @base);
 			var stat = Get(id);
-			stat.Modifiers = stat.Modifiers.Prepend(new VariableModifier(ModifierType.Add, new VariableId(":base", (StatId) id)));
+			var context = new ParsingContext
+			{
+				StatService = this,
+				StatId = new StatId(id),
+			};
+
+			if (stat.Expression.First.Value is NumberNode n && Math.Abs(n.GetValue()) < 0.001)
+				stat.Expression.RemoveFirst();
+			else
+				stat.Expression.AddFirst(Node.FromString("+", context));
+			stat.Expression.AddFirst(Node.FromString(":base", context));
 
 			return errors;
 		}
@@ -101,19 +100,32 @@ namespace RPG.Engine.Services
 			if (Exists(id))
 				errors = errors.Append($"Stat already exists: {id}");
 
-			errors = errors.Concat(Stat.FromString(out var stat, id.ToString(), rawModifiers)).ToList();
+			var context = new ParsingContext
+			{
+				StatService = this,
+				StatId = id,
+			};
+			errors = errors.Concat(_parser.Parse(out var stat, context, id.ToString(), rawModifiers));
 			if (stat == null)
 				return errors;
 
 			errors = errors.Concat(AreModifierTargetsValid(stat));
 
-			if (!errors.Any())
-				Stats.Add(stat.Id, stat);
+			if (errors.Any())
+				return errors;
+
+			Stats.Add(stat.Id, stat);
+			foreach (var node in stat.Expression)
+			{
+				if (node is VariableNode variableNode
+					&& variableNode.Id.StatId == id)
+					AddOrUpdate(variableNode.Id);
+			}
 
 			return errors;
 		}
 
-		public IEnumerable<string> AddOrUpdate(VariableId id, double value)
+		public IEnumerable<string> AddOrUpdate(VariableId id, double value = 0)
 		{
 			var stat = Stats[id.StatId];
 
@@ -134,7 +146,12 @@ namespace RPG.Engine.Services
 			if (!Exists(id)) 
 				errors = errors.Append($"{id} does not exists"); //throw??
 
-			errors = errors.Concat(Stat.FromString(out var stat, id.ToString(), rawModifiers)).ToList();
+			var context = new ParsingContext
+			{
+				StatService = this,
+				StatId = id,
+			};
+			errors = errors.Concat(_parser.Parse(out var stat, context, id.ToString(), rawModifiers));
 			if (stat == null)
 				return errors;
 
@@ -160,11 +177,11 @@ namespace RPG.Engine.Services
 				errors = errors.Append($"{id} does not exists"); //throw??
 
 			var deps = Stats.Where(s => s.Value.Id != id)
-							.Where(s => s.Value.Modifiers.Any(m =>
+							.Where(s => s.Value.Expression.Any(node =>
 							{
-								if (m is StatModifier sm && sm.StatId == id) 
+								if (node is StatNode sn && sn.Id == id)
 									return true;
-								if (m is VariableModifier vm && vm.VariableId.StatId == id)
+								if (node is VariableNode vn && vn.Id.StatId == id)
 									return true;
 								return false;
 							}))
@@ -205,27 +222,7 @@ namespace RPG.Engine.Services
 
 		private IEnumerable<string> AreModifierTargetsValid(Stat stat)
 		{
-			var errors = stat.Modifiers.Select(m =>
-				  {
-					  if (m is StatModifier statMod)
-					  {
-						  if (!Exists(statMod.StatId))
-							return $"Undefined stat: {statMod.StatId}";
-					  }
-					  else if (m is VariableModifier varMod && varMod.VariableId.StatId != stat.Id)
-					  {
-						  if (!Exists(varMod.VariableId.StatId))
-							  return $"Undefined stat: {varMod.VariableId.StatId}";
-						  if (!Exists(varMod.VariableId))
-							  return $"Undefined variable: {varMod.VariableId}";
-					  }
-					  return string.Empty;
-				  }).Where(s => !string.IsNullOrEmpty(s));
-
-			if (errors.Any())
-				return errors;
-
-			return errors.Concat(IsRecursive(stat));
+			return IsRecursive(stat);
 		}
 
 		private IEnumerable<string> IsRecursive(Stat stat)
@@ -239,14 +236,14 @@ namespace RPG.Engine.Services
 				return new[] { $"Circular dependency detected: {stack.Aggregate("", (res, id) => $"->{id}")}" };
 
 			stack.Push(stat.Id);
-			var ids = stat.Modifiers.Select(m => m switch
+			var ids = stat.Expression.Select(node => node switch
 												 {
-													 StatModifier statMod => statMod.StatId,
-													 VariableModifier varMod when varMod.VariableId.StatId != stat.Id 
-														=> varMod.VariableId.StatId,
+													 StatNode statNode => statNode.Id,
+													 VariableNode varNode when varNode.Id.StatId != stat.Id 
+														=> varNode.Id.StatId,
 													 _ => null
 												 })
-						  .Where(id => id != null)
+						  .Where(id => id != null && Exists(id))
 #pragma warning disable CS8604 // Possible null reference argument.
 						  .SelectMany(id => IsRecursive(Stats[id], stack))
 #pragma warning restore CS8604 // Possible null reference argument.

@@ -41,7 +41,7 @@ namespace RPG.Tests
 		[Fact]
 		public void AddWithModifiers()
 		{
-			const string modifiers = "+ B - C * D / E + 1 - 2 * 3 / 4";
+			const string modifiers = "B - C * D / E + 1 - 2 * 3 / 4";
 
 			_statService.Add("B");
 			_statService.Add("C");
@@ -50,7 +50,7 @@ namespace RPG.Tests
 
 			_statService.Add("A", 418, modifiers).Should().BeEmpty();
 
-			_statService.Get("A").ToString().Should().Be("A:base " + modifiers);
+			_statService.Get("A").ToString().Should().Be("A:base + " + modifiers);
 		}
 
 		[Fact]
@@ -224,7 +224,7 @@ namespace RPG.Tests
 		[Fact]
 		public void ResolveWithStatModifier()
 		{
-			_statService.Add("A", 2);
+			_statService.Add("A", "2");
 			_statService.Add("B", "A");
 
 			_statService.GetValue("B").Should().Be(2);

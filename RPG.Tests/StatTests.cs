@@ -1,23 +1,30 @@
 ﻿using FluentAssertions;
-using RPG.Engine;
+using RPG.Engine.Ids;
+using RPG.Engine.Parser;
+using RPG.Engine.Services;
 using Xunit;
 
 namespace RPG.Tests
 {
 	public class StatTests
 	{
+		private static readonly Parser _parser = new Parser();
+		private readonly ParsingContext _context = new ParsingContext { StatService = new StatService() };
+
 		[Fact]
 		public void ConvertToString()
 		{
-			Stat.FromString(out var stat, "FOR").Should().BeEmpty();
+			_context.StatId = new StatId("FOR");
+			_parser.Parse(out var stat, _context, "FOR").Should().BeEmpty();
 
-			stat.ToString().Should().Be("");
+			stat.ToString().Should().Be("0");
 		}
 
 		[Fact]
 		public void ConvertToStringWithStaticModifier()
 		{
-			Stat.FromString(out var stat, "FOR", "10").Should().BeEmpty();
+			_context.StatId = new StatId("FOR");
+			_parser.Parse(out var stat, _context, "FOR", "10").Should().BeEmpty();
 
 			stat.ToString().Should().Be("10");
 		}
@@ -25,7 +32,9 @@ namespace RPG.Tests
 		[Fact]
 		public void ConvertToStringWithStatModifier()
 		{
-			Stat.FromString(out var stat, "ATT", "FOR").Should().BeEmpty();
+			_context.StatService.Add("FOR");
+			_context.StatId = new StatId("ATT");
+			_parser.Parse(out var stat, _context, "ATT", "FOR").Should().BeEmpty();
 
 			stat.ToString().Should().Be("FOR");
 		}
@@ -33,16 +42,19 @@ namespace RPG.Tests
 		[Fact]
 		public void ConvertToStringWithVariableModifier()
 		{
-			Stat.FromString(out var stat, "ATT", ":Base").Should().BeEmpty();
+			_context.StatId = new StatId("ATT");
+			_parser.Parse(out var stat, _context, "ATT", ":base").Should().BeEmpty();
 
-			stat.ToString().Should().Be("ATT:Base");
+			stat.ToString().Should().Be("ATT:base");
 		}
 		[Fact]
 		public void ConvertToStringWithModifiers()
 		{
-			Stat.FromString(out var stat, "ATT", ":Base + 20 + POW * 2").Should().BeEmpty();
+			_context.StatService.Add("POW");
+			_context.StatId = new StatId("ATT");
+			_parser.Parse(out var stat, _context, "ATT", ":base + 20 + POW * 2").Should().BeEmpty();
 
-			stat.ToString().Should().Be("ATT:Base + 20 + POW * 2");
+			stat.ToString().Should().Be("ATT:base + 20 + POW * 2");
 		}
 	}
 }
