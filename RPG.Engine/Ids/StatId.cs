@@ -15,8 +15,7 @@ namespace RPG.Engine.Ids
 			Id = id;
 		}
 
-		public static explicit operator StatId(string id) => new StatId(id.ToUpperInvariant());
-		public static explicit operator string(StatId id) => id.Id;
+		public static explicit operator StatId(string id) => new StatId(id);
 
 		public static bool operator ==(StatId? a, StatId? b)
 		{
@@ -37,7 +36,7 @@ namespace RPG.Engine.Ids
 
 		public override int GetHashCode() => Id.GetHashCode(StringComparison.InvariantCultureIgnoreCase);
 		
-		public override string ToString() => (string) this;
+		public override string ToString() => Id;
 	}
 
 	public static class StatIdStringExtensions

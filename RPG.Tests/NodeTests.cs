@@ -1,4 +1,4 @@
-﻿using FluentAssertions;
+using FluentAssertions;
 using RPG.Engine.Ids;
 using RPG.Engine.Parser;
 using Xunit;
@@ -41,6 +41,15 @@ namespace RPG.Tests
 			var node = Node.FromString(":b_as-e", _context);
 
 			node.Should().BeOfType<VariableNode>();
+		}
+
+		[Fact]
+		public void DetectInvalidVariable()
+		{
+			_context.StatId = new StatId("F_O-R");
+			var node = Node.FromString(":b_as:-e", _context);
+
+			node.Should().BeOfType<InvalidNode>();
 		}
 
 		[Fact]

@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using RPG.Engine.Ids;
 using RPG.Engine.Services;
@@ -51,16 +51,7 @@ namespace RPG.Engine.Parser
 
 			for (var t = tokens.First; t != null; t = t.Next) 
 				errors = errors.Concat(t.Value.IsValid(t, context)).ToList();
-
-			//if (!errors.Any())
-			//{
-			//	foreach (var token in tokens)
-			//	{
-			//		if (token is VariableNode v)
-			//			context.StatService.AddOrUpdate(v.Id);
-			//	}
-			//}
-
+			
 			return errors;
 		}
 	}

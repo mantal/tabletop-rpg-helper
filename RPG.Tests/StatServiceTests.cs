@@ -10,27 +10,27 @@ namespace RPG.Tests
 
 #region Add
         [Fact]
-        public void Add()
+        public void AddEmpty()
         {
             _statService.Add("FOR").Should().BeEmpty();
         }
 
         [Fact]
-        public void AddWithModifier()
+        public void AddStat()
         {
             _statService.Add("DEX");
             _statService.Add("FOR", "DEX").Should().BeEmpty();
         }
 
 		[Fact]
-		public void AddWithSelfVariableModifier()
+		public void AddShortVariable()
 		{
 			_statService.Add("FOR", ":Base").Should().BeEmpty();
 			_statService.GetValue("FOR:Base").Should().Be(0);
 		}
 
 		[Fact]
-		public void AddWithVariableModifier()
+		public void AddVariable()
 		{
 			_statService.Add("DEX", ":Base").Should().BeEmpty();
 			_statService.Add("FOR", "DEX:Base").Should().BeEmpty();
@@ -39,7 +39,7 @@ namespace RPG.Tests
 		}
 
 		[Fact]
-		public void AddWithModifiers()
+		public void AddMixed()
 		{
 			const string modifiers = "B - C * D / E + 1 - 2 * 3 / 4";
 
@@ -112,7 +112,7 @@ namespace RPG.Tests
 		}
 
 		[Fact]
-		public void UpdateWithStatModifier()
+		public void UpdateStat()
 		{
 			_statService.Add("FOR");
 			_statService.Add("DEX");
@@ -123,7 +123,7 @@ namespace RPG.Tests
 		}
 
 		[Fact]
-		public void UpdateWithModifiers()
+		public void UpdateMixed()
 		{
 			const string modifiers = "B - C * D / E + 1 - 2 * 3 / 4";
 
@@ -206,7 +206,7 @@ namespace RPG.Tests
 #region Resolve
 
 		[Fact]
-		public void ResolveWithoutModifier()
+		public void ResolveEmpty()
 		{
 			_statService.Add("A");
 
@@ -214,7 +214,7 @@ namespace RPG.Tests
 		}
 
 		[Fact]
-		public void ResolveWithStaticModifier()
+		public void ResolveNumber()
 		{
 			_statService.Add("A", "2");
 
@@ -222,7 +222,7 @@ namespace RPG.Tests
 		}
 
 		[Fact]
-		public void ResolveWithStatModifier()
+		public void ResolveStat()
 		{
 			_statService.Add("A", "2");
 			_statService.Add("B", "A");
@@ -231,7 +231,7 @@ namespace RPG.Tests
 		}
 
 		[Fact]
-		public void ResolveWithVariableModifier()
+		public void ResolveVariable()
 		{
 			_statService.Add("A", 1);
 
@@ -239,7 +239,7 @@ namespace RPG.Tests
 		}
 
 		[Fact]
-		public void ResolveWithMixedModifiers()
+		public void ResolveMixed()
 		{
 			_statService.Add("A", 5);
 			_statService.Add("B", 2);

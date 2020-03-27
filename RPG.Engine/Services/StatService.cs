@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using RPG.Engine.Ids;
-using RPG.Engine.Modifiers;
 using RPG.Engine.Parser;
 
 namespace RPG.Engine.Services
@@ -10,7 +9,7 @@ namespace RPG.Engine.Services
 	//TODO check if string overloads are useful outside of tests
 	public class StatService
 	{
-		public IDictionary<StatId, Stat> Stats = new Dictionary<StatId, Stat>();
+		public readonly IDictionary<StatId, Stat> Stats = new Dictionary<StatId, Stat>();
 		private readonly IDictionary<StatId, double> _cache = new Dictionary<StatId, double>();
 		private readonly Parser.Parser _parser = new Parser.Parser();
 
