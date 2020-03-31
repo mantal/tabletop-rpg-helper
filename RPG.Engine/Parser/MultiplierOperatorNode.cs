@@ -77,6 +77,8 @@ namespace RPG.Engine.Parser
 			return result;
 		}
 
+		public override bool IsExpression() => false;
+
 		public override string ToString() => _symbol.ToString();
 	}
 }

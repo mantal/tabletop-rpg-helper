@@ -28,7 +28,6 @@ namespace RPG.Engine.Ids
 		}
 
 		public static explicit operator VariableId(string id) => new VariableId(id);
-		public static explicit operator string(VariableId id) => $"{id.StatId}:{id.Id}";
 
 		public static bool operator ==(VariableId? a, VariableId? b)
 		{
@@ -51,7 +50,7 @@ namespace RPG.Engine.Ids
 
 		public override int GetHashCode() => (Id, StatId).GetHashCode();
 
-		public override string ToString() => (string) this;
+		public override string ToString() => $"{StatId}:{Id}";
 	}
 
 	public static class VariableIdStringExtensions

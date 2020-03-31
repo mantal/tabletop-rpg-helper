@@ -15,6 +15,8 @@ namespace RPG.Engine.Parser
 			Text = text;
 		}
 
+		public override bool IsExpression() => Type == NodeType.LeftParenthesis;
+
 		public override IEnumerable<string> IsValid(LinkedListNode<Node> token, ParsingContext context)
 			=> Enumerable.Empty<string>();
 

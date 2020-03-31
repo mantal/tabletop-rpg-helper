@@ -13,7 +13,7 @@ namespace RPG.Engine
 	public class Stat
 	{
 		public readonly StatId Id;
-		public LinkedList<Node> Expression { get; }
+		public Expression Expression { get; }
 
 		public RoundingMethod RoundingMethod
 		{
@@ -30,7 +30,7 @@ namespace RPG.Engine
 
 		public readonly IDictionary<VariableId, double> Variables = new Dictionary<VariableId, double>();
 
-		public Stat(StatId id, LinkedList<Node> expression)
+		public Stat(StatId id, Expression expression)
 		{
 			Id = id;
 			Expression = expression;
@@ -56,7 +56,6 @@ namespace RPG.Engine
 
 		public void AddOrUpdateVariable(VariableId id, double value) => Variables[id] = value;
 		
-		public override string ToString() 
-			=> string.Join(' ', Expression.Select(e => e.ToString()));
+		public override string ToString() => Expression.ToString();
 	}
 }

@@ -9,9 +9,15 @@ namespace RPG.Engine.Services
 	//TODO check if string overloads are useful outside of tests
 	public class StatService
 	{
+		private readonly FunctionService _functionService;
 		public readonly IDictionary<StatId, Stat> Stats = new Dictionary<StatId, Stat>();
 		private readonly IDictionary<StatId, double> _cache = new Dictionary<StatId, double>();
 		private readonly Parser.Parser _parser = new Parser.Parser();
+
+		public StatService(FunctionService functionService)
+		{
+			_functionService = functionService;
+		}
 
 		public Stat Get(string id) => Stats[(StatId) id];
 
@@ -30,53 +36,10 @@ namespace RPG.Engine.Services
 		{
 			if (_cache.ContainsKey(id)) return _cache[id];
 
-			var stat = Stats[id];
-			
-			var nodes = stat.Expression;
-			var priority = Node.MaxPriority;
-			while (nodes.Count > 1)
-			{
-				var node = nodes.First;
-				while (node != null && node.Value.Priority < priority)
-					node = node.Next;
-				if (node?.Next == null)
-				{
-					priority--;
-					if (priority < Node.MinPriority)
-						break;
-					continue;
-				}
-
-				node.Value.Apply(node);
-			}
-
-			var value = ((ValueNode) nodes.First.Value).GetValue();
+			var value = Stats[id].Expression.Resolve();
 
 			_cache.Add(id, value);
 			return value;
-		}
-
-		public IEnumerable<string> Add(string id, double @base, string? rawModifiers = null)
-		{
-			var errors = Add(id, rawModifiers);
-			if (errors.Any())
-				return errors;
-
-			Get((StatId) id).AddOrUpdateVariable(new VariableId(":base", (StatId) id), @base);
-			var stat = Get(id);
-			var context = new ParsingContext
-			{
-				StatService = this,
-				StatId = new StatId(id),
-			};
-
-			if (stat.Expression.First.Value is NumberNode n && Math.Abs(n.GetValue()) < 0.001)
-				stat.Expression.RemoveFirst();
-			else
-				stat.Expression.AddFirst(Node.FromString("+", context));
-			stat.Expression.AddFirst(Node.FromString(":base", context));
-
-			return errors;
 		}
 
 		public IEnumerable<string> Add(string id, string? rawModifiers = null)
@@ -102,6 +65,7 @@ namespace RPG.Engine.Services
 			var context = new ParsingContext
 			{
 				StatService = this,
+				FunctionService = _functionService,
 				StatId = id,
 			};
 			errors = errors.Concat(_parser.Parse(out var stat, context, id.ToString(), rawModifiers));
@@ -114,7 +78,7 @@ namespace RPG.Engine.Services
 				return errors;
 
 			Stats.Add(stat.Id, stat);
-			foreach (var node in stat.Expression)
+			foreach (var node in stat.Expression.Nodes)
 			{
 				if (node is VariableNode variableNode
 					&& variableNode.Id.StatId == id)
@@ -176,7 +140,7 @@ namespace RPG.Engine.Services
 				errors = errors.Append($"{id} does not exists"); //throw??
 
 			var deps = Stats.Where(s => s.Value.Id != id)
-							.Where(s => s.Value.Expression.Any(node =>
+							.Where(s => s.Value.Expression.Nodes.Any(node =>
 							{
 								if (node is StatNode sn && sn.Id == id)
 									return true;
@@ -235,17 +199,27 @@ namespace RPG.Engine.Services
 				return new[] { $"Circular dependency detected: {stack.Aggregate("", (res, id) => $"->{id}")}" };
 
 			stack.Push(stat.Id);
-			var ids = stat.Expression.Select(node => node switch
+
+			var ids = stat.Expression.Nodes
+						  .SelectMany(node => node switch
 												 {
-													 StatNode statNode => statNode.Id,
-													 VariableNode varNode when varNode.Id.StatId != stat.Id 
-														=> varNode.Id.StatId,
-													 _ => null
+													 StatNode statNode => new[] { statNode.Id },
+													 VariableNode varNode when varNode.Id.StatId != stat.Id
+														=> new[] { varNode.Id.StatId },
+													 FunctionNode funcNode => funcNode
+																			  .Arguments.SelectMany(
+																				  a => a.Nodes.Select(n => n switch
+																										   {
+																											   StatNode statNode => statNode.Id,
+																											   VariableNode varNode when varNode.Id.StatId != stat.Id
+																											   => varNode.Id.StatId,
+																											   _ => null!,
+																										   })
+																						.Where(id => id != null)),
+													 _ => Enumerable.Empty<StatId>()
 												 })
-						  .Where(id => id != null && Exists(id))
-#pragma warning disable CS8604 // Possible null reference argument.
+						  .Where(Exists)
 						  .SelectMany(id => IsRecursive(Stats[id], stack))
-#pragma warning restore CS8604 // Possible null reference argument.
 						  .ToList();
 			stack.Pop();
 

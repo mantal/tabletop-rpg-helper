@@ -85,7 +85,7 @@
 
     private void AddStats()
     {
-        var errors = StatService.Add(_newStatName, _newStatBase, _newStat);
+        var errors = StatService.Add(_newStatName, _newStat);
 
         if (errors.Any())
         {

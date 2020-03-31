@@ -9,12 +9,14 @@ namespace RPG.Engine.Parser
 	{
 		private readonly double _value;
 
-		public NumberNode(StatService statService, string token) : base(statService, NodeType.Number)
+		public NumberNode(StatService statService, string token) 
+			: base(statService, NodeType.Number, -1)
 		{
 			_value = double.Parse(token, NumberStyles.Float, null);
 		}
 
-		public NumberNode(StatService statService, double value) : base(statService, NodeType.Number)
+		public NumberNode(StatService statService, double value) 
+			: base(statService, NodeType.Number, -1)
 		{
 			_value = value;
 		}

@@ -9,7 +9,10 @@ namespace RPG.Tests
 	public class StatTests
 	{
 		private static readonly Parser _parser = new Parser();
-		private readonly ParsingContext _context = new ParsingContext { StatService = new StatService() };
+		private readonly ParsingContext _context = new ParsingContext
+		{
+			StatService = new StatService(new FunctionService()),
+		};
 
 		[Fact]
 		public void ConvertToString()

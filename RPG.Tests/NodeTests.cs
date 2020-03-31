@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using RPG.Engine.Ids;
 using RPG.Engine.Parser;
 using Xunit;
@@ -58,6 +58,22 @@ namespace RPG.Tests
 			var node = Node.FromString("$F-UN_C", _context);
 
 			node.Should().BeOfType<FunctionNode>();
+		}
+
+		[Fact]
+		public void DetectInvalidFunction()
+		{
+			var node = Node.FromString("$", _context);
+
+			node.Should().BeOfType<InvalidNode>();
+		}
+
+		[Fact]
+		public void DetectInvalidFunction2()
+		{
+			var node = Node.FromString("$a.", _context);
+
+			node.Should().BeOfType<InvalidNode>();
 		}
 
 		[Fact]

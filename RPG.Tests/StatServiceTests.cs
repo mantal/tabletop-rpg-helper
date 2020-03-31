@@ -6,7 +6,7 @@ namespace RPG.Tests
 {
     public class StatServiceTests
     {
-        private readonly StatService _statService = new StatService();
+        private readonly StatService _statService = new StatService(new FunctionService());
 
 #region Add
         [Fact]
@@ -41,23 +41,36 @@ namespace RPG.Tests
 		[Fact]
 		public void AddMixed()
 		{
-			const string modifiers = "B - C * D / E + 1 - 2 * 3 / 4";
+			const string modifiers = "A:base + B - C * D / E + 1 - 2 * 3 / 4";
 
 			_statService.Add("B");
 			_statService.Add("C");
 			_statService.Add("D");
 			_statService.Add("E");
 
-			_statService.Add("A", 418, modifiers).Should().BeEmpty();
+			_statService.Add("A", modifiers).Should().BeEmpty();
 
-			_statService.Get("A").ToString().Should().Be("A:base + " + modifiers);
+			_statService.Get("A").ToString().Should().Be(modifiers);
 		}
 
 		[Fact]
-        public void AddNotAndDetectUnknownId()
+        public void AddNotAndDetectUnknownStat()
         {
             _statService.Add("FOR", "DEX").Should().HaveCount(1);
         }
+
+		[Fact]
+		public void AddNotAndDetectUnknownVariable()
+		{
+			_statService.Add("DEX");
+			_statService.Add("FOR", "DEX:no").Should().HaveCount(1);
+		}
+
+		[Fact]
+		public void AddNotAndDetectUnknownStatVariable()
+		{
+			_statService.Add("FOR", "DEX:no").Should().HaveCount(1);
+		}
 
 		[Fact]
 		public void AddNotAndDetectInvalidId()
@@ -66,17 +79,10 @@ namespace RPG.Tests
 		}
 
 		[Fact]
-		public void AddNotAndDetectVariableId()
-		{
-			_statService.Add("DEX");
-			_statService.Add("FOR", "DEX:no").Should().HaveCount(1);
-		}
-
-		[Fact]
 		public void AddNotAndDetectDuplicateId()
 		{
 			_statService.Add("FOR");
-			_statService.Add("FOR", "DEX").Should().HaveCount(2);
+			_statService.Add("FOR").Should().HaveCount(1);
 		}
 
         [Fact]
@@ -233,7 +239,15 @@ namespace RPG.Tests
 		[Fact]
 		public void ResolveVariable()
 		{
-			_statService.Add("A", 1);
+			_statService.Add("A", "1");
+
+			_statService.GetValue("A").Should().Be(1);
+		}
+
+		[Fact]
+		public void ResolveFunction()
+		{
+			_statService.Add("A", "$MAX{0, 1}");
 
 			_statService.GetValue("A").Should().Be(1);
 		}
@@ -241,9 +255,9 @@ namespace RPG.Tests
 		[Fact]
 		public void ResolveMixed()
 		{
-			_statService.Add("A", 5);
-			_statService.Add("B", 2);
-			_statService.Add("C", 0, "A * B + A * B - A * 2 / 1");
+			_statService.Add("A", "5");
+			_statService.Add("B", "2");
+			_statService.Add("C", "A * B + A * B - A * 2 / 1 + $MIN {$ZERO{}, 1}");
 
 			_statService.GetValue("C").Should().Be(10);
 		}

@@ -8,16 +8,43 @@ namespace RPG.Engine.Parser
 	public class AdditionOperatorNode : Node
 	{
 		private readonly char _symbol;
+		private readonly bool _isUnary;
 
 		public AdditionOperatorNode(StatService statService, NodeType type) 
 			: base(statService, type, 2)
 		{
-			if (type == NodeType.PlusOperator)
-				_symbol = '+';
-			else if (type == NodeType.MinusOperator)
-				_symbol = '-';
-			else
-				throw new ArgumentException();
+			switch (type)
+			{
+				case NodeType.PlusOperator:  
+					_symbol = '+';
+					_isUnary = false;
+					break;
+				case NodeType.UnaryPlusOperator:
+					_symbol = '+';
+					_isUnary = true;
+					break;
+				case NodeType.MinusOperator: 
+					_symbol = '-';
+					_isUnary = false;
+					break;
+				case NodeType.UnaryMinusOperator:
+					_symbol = '-';
+					_isUnary = true;
+					break;
+				default:
+					throw new ArgumentException(nameof(type));
+			}
+		}
+
+		public override LinkedListNode<Node> Transform(LinkedListNode<Node> token)
+		{
+			var isUnary = token.Previous == null || !token.Previous.Value.IsExpression();
+			if (!isUnary)
+				return token;
+
+			var type = Type == NodeType.PlusOperator ? NodeType.UnaryPlusOperator : NodeType.UnaryMinusOperator;
+
+			return new LinkedListNode<Node>(new AdditionOperatorNode(StatService, type));
 		}
 
 		public override IEnumerable<string> IsValid(LinkedListNode<Node> token, ParsingContext context)
@@ -29,9 +56,9 @@ namespace RPG.Engine.Parser
 
 			var next = token.Next.Value;
 
-			if (next is GrammarNode grammarNode)
+			if (!next.IsExpression())
 			{
-				errors.Add($"Expected operand after operator '{_symbol}' but found '{grammarNode.Text}'");
+				errors.Add($"Expected operand after operator '{_symbol}' but found '{next}'");
 				return errors;
 			}
 			
@@ -40,12 +67,11 @@ namespace RPG.Engine.Parser
 
 		public override LinkedListNode<Node> Apply(LinkedListNode<Node> node)
 		{
-			var previous = node.Previous?.Value as ValueNode;
-			var isBinary = previous != null;
+			var previous = node.Previous?.Value;
 
 			var a = 0d;
-			if (isBinary)
-				a = previous.GetValue();
+			if (!_isUnary)
+				a = ((ValueNode)previous).GetValue();
 
 			// should never happen so let it blow
 			// ReSharper disable once PossibleNullReferenceException
@@ -55,7 +81,7 @@ namespace RPG.Engine.Parser
 
 			var result = node.List.AddAfter(node.Next, value);
 
-			if (isBinary)
+			if (!_isUnary)
 				result.List.Remove(result.Previous.Previous.Previous);
 			result.List.Remove(result.Previous.Previous);
 			result.List.Remove(result.Previous);
@@ -64,5 +90,7 @@ namespace RPG.Engine.Parser
 		}
 
 		public override string ToString() => _symbol.ToString();
+
+		public override bool IsExpression() => _isUnary;
 	}
 }
