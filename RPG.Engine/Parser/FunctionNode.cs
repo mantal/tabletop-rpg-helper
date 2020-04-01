@@ -74,7 +74,7 @@ namespace RPG.Engine.Parser
 			if (token != null && token.Value.Type == NodeType.RightBracket)
 			{
 				token.List.Remove(token);
-				// make sure we don't accidentally reuse token after it's removed
+				// make sure we don't accidentally reuse the token after it's removed
 				token = null;
 			}
 

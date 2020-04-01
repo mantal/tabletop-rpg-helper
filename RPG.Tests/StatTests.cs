@@ -1,4 +1,4 @@
-﻿using FluentAssertions;
+using FluentAssertions;
 using RPG.Engine.Ids;
 using RPG.Engine.Parser;
 using RPG.Engine.Services;
@@ -24,7 +24,7 @@ namespace RPG.Tests
 		}
 
 		[Fact]
-		public void ConvertToStringWithStaticModifier()
+		public void ConvertToStringWithNumber()
 		{
 			_context.StatId = new StatId("FOR");
 			_parser.Parse(out var stat, _context, "FOR", "10").Should().BeEmpty();
@@ -33,7 +33,7 @@ namespace RPG.Tests
 		}
 
 		[Fact]
-		public void ConvertToStringWithStatModifier()
+		public void ConvertToStringWithStat()
 		{
 			_context.StatService.Add("FOR");
 			_context.StatId = new StatId("ATT");
@@ -43,7 +43,7 @@ namespace RPG.Tests
 		}
 
 		[Fact]
-		public void ConvertToStringWithVariableModifier()
+		public void ConvertToStringWithVariable()
 		{
 			_context.StatId = new StatId("ATT");
 			_parser.Parse(out var stat, _context, "ATT", ":base").Should().BeEmpty();
@@ -51,7 +51,7 @@ namespace RPG.Tests
 			stat.ToString().Should().Be("ATT:base");
 		}
 		[Fact]
-		public void ConvertToStringWithModifiers()
+		public void ConvertToStringWithMixed()
 		{
 			_context.StatService.Add("POW");
 			_context.StatId = new StatId("ATT");

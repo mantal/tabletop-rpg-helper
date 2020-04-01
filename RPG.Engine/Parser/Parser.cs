@@ -24,7 +24,7 @@ namespace RPG.Engine.Parser
 			errors = errors.Concat(Parse(out var expression, rawExpression, context));
 			
 			if (!errors.Any())
-				stat = new Stat(new StatId(id), expression);
+				stat = new Stat(new StatId(id), expression!);
 
 			return errors;
 		}
