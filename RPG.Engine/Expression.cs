@@ -1,10 +1,10 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using RPG.Engine.Parser;
 
 namespace RPG.Engine
 {
-    public class Expression
+	public class Expression
 	{
 		public LinkedList<Node> Nodes { get; }
 
@@ -41,5 +41,18 @@ namespace RPG.Engine
 
 		public override string ToString()
 			=> string.Join(' ', Nodes.Select(e => e.ToString()));
+	}
+
+	public class NamedExpression : Expression
+	{
+		public string Name { get; }
+
+		public NamedExpression(string name, LinkedList<Node> nodes) 
+			: base(nodes)
+		{
+			Name = name;
+		}
+
+		public override string ToString() => $"[{Name}, {base.ToString()}]";
 	}
 }

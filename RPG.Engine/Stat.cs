@@ -13,7 +13,8 @@ namespace RPG.Engine
 	public class Stat
 	{
 		public readonly StatId Id;
-		public Expression Expression { get; }
+		//TODO exposer un IEnumerable + garder IList en private pour rester immutable
+		public IList<NamedExpression> Expressions { get; }
 
 		public RoundingMethod RoundingMethod
 		{
@@ -29,11 +30,78 @@ namespace RPG.Engine
 		private RoundingMethod _roundingMethod = RoundingMethod.Ceiling;
 
 		public readonly IDictionary<VariableId, double> Variables = new Dictionary<VariableId, double>();
+		private readonly VariableId _lastValueId;
 
 		public Stat(StatId id, Expression expression)
+			: this(id, new List<NamedExpression> { new NamedExpression("0", expression.Nodes) })
+		{ }
+
+		public Stat(StatId id, List<NamedExpression> expressions)
 		{
 			Id = id;
-			Expression = expression;
+			Expressions = expressions;
+			_lastValueId = new VariableId(":value", Id);
+			Variables[_lastValueId] = 0;
+			foreach (var node in Expressions.SelectMany(e => e.Nodes))
+			{
+				if (node is VariableNode variableNode
+					&& variableNode.Id.StatId == id)
+					AddOrUpdateVariable(variableNode.Id, 0);
+			}
+		}
+
+		public double Resolve()
+		{
+			Variables[_lastValueId] = 0;
+			var result = 0d;
+			foreach (var expression in Expressions)
+			{
+				result = expression.Resolve();
+				Variables[_lastValueId] = result;
+			}
+
+			return result;
+		}
+
+		public IEnumerable<string> AddExpression(Expression expression, string name, int position = -1)
+		{
+			var exists = Expressions.Any(e => e.Name == name);
+			if (exists)
+				return new[] { $"Expression {Id}:{name} already exists" };
+
+			position = position >= Expressions.Count ? Expressions.Count - 1 : position;
+			position = position >= 0 ? position : Expressions.Count + position + 1;
+			position = position <= 0 ? 0 : position;
+
+			Expressions.Insert(position, new NamedExpression(name, expression.Nodes));
+
+			return Enumerable.Empty<string>();
+		}
+
+		public IEnumerable<string> UpdateExpression(Expression expression, string name)
+		{
+			var previousExpression = Expressions.FirstOrDefault(e => e.Name == name);
+			if (previousExpression == null)
+				return new[] { $"Expression {Id}:{name} doesn't exists" };
+
+			var index = Expressions.IndexOf(previousExpression);
+			Expressions[index] = new NamedExpression(name, expression.Nodes);
+
+			return Enumerable.Empty<string>();
+		}
+
+		public IEnumerable<string> RemoveExpression(string name)
+		{
+			var expression = Expressions.FirstOrDefault(e => e.Name == name);
+			if (expression == null)
+				return new[] { $"Expression doesn't {Id}:{name} exists" };
+
+			Expressions.Remove(expression);
+
+			if (!Expressions.Any())
+				Expressions.Add(new NamedExpression("0", new LinkedList<Node>(new Node[] { new NumberNode(null!, 0), })));
+
+			return Enumerable.Empty<string>();
 		}
 
 		public double GetVariable(VariableId id)
@@ -43,7 +111,7 @@ namespace RPG.Engine
 
 			var value = TryGetVariable(id);
 			if (value == null)
-				throw new ArgumentOutOfRangeException(nameof(id), id, $"No variable with id {id} were found in {Id}. Registered inner stats are: {{{Variables.Keys.AsString()}}}");
+				throw new ArgumentOutOfRangeException(nameof(id), id, $"No variable with id {id} were found in {Id}. Registered inner stats are: {{{Variables.Keys.Join()}}}");
 			return (double) value;
 		}
 
@@ -56,6 +124,7 @@ namespace RPG.Engine
 
 		public void AddOrUpdateVariable(VariableId id, double value) => Variables[id] = value;
 		
-		public override string ToString() => Expression.ToString();
+		//TODO
+		public override string ToString() => Expressions.Select(e => e.ToString()).Join();
 	}
 }

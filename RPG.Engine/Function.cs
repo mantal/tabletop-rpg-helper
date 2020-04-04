@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using RPG.Engine.Ids;
 
 namespace RPG.Engine.Services

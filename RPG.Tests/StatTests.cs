@@ -1,4 +1,6 @@
+﻿using System.Linq;
 using FluentAssertions;
+using RPG.Engine;
 using RPG.Engine.Ids;
 using RPG.Engine.Parser;
 using RPG.Engine.Services;
@@ -20,7 +22,7 @@ namespace RPG.Tests
 			_context.StatId = new StatId("FOR");
 			_parser.Parse(out var stat, _context, "FOR").Should().BeEmpty();
 
-			stat.ToString().Should().Be("0");
+			stat!.ToString().Should().Be("[0, 0]");
 		}
 
 		[Fact]
@@ -29,7 +31,7 @@ namespace RPG.Tests
 			_context.StatId = new StatId("FOR");
 			_parser.Parse(out var stat, _context, "FOR", "10").Should().BeEmpty();
 
-			stat.ToString().Should().Be("10");
+			stat!.ToString().Should().Be("[0, 10]");
 		}
 
 		[Fact]
@@ -39,7 +41,7 @@ namespace RPG.Tests
 			_context.StatId = new StatId("ATT");
 			_parser.Parse(out var stat, _context, "ATT", "FOR").Should().BeEmpty();
 
-			stat.ToString().Should().Be("FOR");
+			stat!.ToString().Should().Be("[0, FOR]");
 		}
 
 		[Fact]
@@ -48,7 +50,7 @@ namespace RPG.Tests
 			_context.StatId = new StatId("ATT");
 			_parser.Parse(out var stat, _context, "ATT", ":base").Should().BeEmpty();
 
-			stat.ToString().Should().Be("ATT:base");
+			stat!.ToString().Should().Be("[0, ATT:base]");
 		}
 		[Fact]
 		public void ConvertToStringWithMixed()
@@ -57,7 +59,75 @@ namespace RPG.Tests
 			_context.StatId = new StatId("ATT");
 			_parser.Parse(out var stat, _context, "ATT", ":base + 20 + POW * 2").Should().BeEmpty();
 
-			stat.ToString().Should().Be("ATT:base + 20 + POW * 2");
+			stat!.ToString().Should().Be("[0, ATT:base + 20 + POW * 2]");
+		}
+
+		[Fact]
+		public void ConvertToStringWithMultipleExpressions()
+		{
+			_context.StatId = new StatId("FOR");
+			var expressions = new Expression[2];
+			_parser.Parse(out expressions[0]!, "2", _context);
+			_parser.Parse(out expressions[1]!, ":value + 2", _context);
+
+			var namedExpressions = new NamedExpression[]
+			{
+				new NamedExpression("0", expressions[0].Nodes), 
+				new NamedExpression("1", expressions[1].Nodes),
+			};
+			new Stat(new StatId("FOR"), namedExpressions.ToList())
+				.ToString()
+				.Should()
+				.Be("[0, 2][1, FOR:value + 2]");
+		}
+
+		[Fact]
+		public void AddExpression()
+		{
+			_context.StatId = new StatId("FOR");
+			_parser.Parse(out var stat, _context, "FOR", "2").Should().BeEmpty();
+
+			_parser.Parse(out var expression, "FOR:value + 2", _context);
+			stat!.AddExpression(expression!, "1").Should().BeEmpty();
+
+			stat!.ToString().Should().Be("[0, 2][1, FOR:value + 2]");
+		}
+
+		[Fact]
+		public void AddExpressionWithExplicitPosition()
+		{
+			_context.StatId = new StatId("FOR");
+			_parser.Parse(out var stat, _context, "FOR", "2").Should().BeEmpty();
+
+			_parser.Parse(out var expression, "FOR:value + 2", _context);
+			stat!.AddExpression(expression!, "2").Should().BeEmpty();
+			_parser.Parse(out expression, "FOR:value + 2", _context);
+			stat!.AddExpression(expression!, "1", 1).Should().BeEmpty();
+
+			stat!.ToString().Should().Be("[0, 2][1, FOR:value + 2][2, FOR:value + 2]");
+		}
+
+		[Fact]
+		public void UpdateExpression()
+		{
+			_context.StatId = new StatId("FOR");
+			_parser.Parse(out var stat, _context, "FOR", "2").Should().BeEmpty();
+
+			_parser.Parse(out var expression, "3", _context);
+			stat!.UpdateExpression(expression!, "0");
+
+			stat!.ToString().Should().Be("[0, 3]");
+		}
+
+		[Fact]
+		public void RemoveExpression()
+		{
+			_context.StatId = new StatId("FOR");
+			_parser.Parse(out var stat, _context, "FOR", "2").Should().BeEmpty();
+
+			stat!.RemoveExpression("0");
+
+			stat!.ToString().Should().Be("[0, 0]");
 		}
 	}
 }

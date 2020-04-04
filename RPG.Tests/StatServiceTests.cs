@@ -50,7 +50,7 @@ namespace RPG.Tests
 
 			_statService.Add("A", modifiers).Should().BeEmpty();
 
-			_statService.Get("A").ToString().Should().Be(modifiers);
+			_statService.Get("A").ToString().Should().Be($"[0, {modifiers}]");
 		}
 
 		[Fact]
@@ -114,7 +114,7 @@ namespace RPG.Tests
 
 			_statService.Update("FOR", "418").Should().BeEmpty();
 
-			_statService.Get("FOR").ToString().Should().Be("418");
+			_statService.Get("FOR").ToString().Should().Be("[0, 418]");
 		}
 
 		[Fact]
@@ -125,7 +125,7 @@ namespace RPG.Tests
 
 			_statService.Update("FOR", "DEX").Should().BeEmpty();
 
-			_statService.Get("FOR").ToString().Should().Be("DEX");
+			_statService.Get("FOR").ToString().Should().Be("[0, DEX]");
 		}
 
 		[Fact]
@@ -141,7 +141,7 @@ namespace RPG.Tests
 
 			_statService.Update("A", modifiers).Should().BeEmpty();
 
-			_statService.Get("A").ToString().Should().Be(modifiers);
+			_statService.Get("A").ToString().Should().Be($"[0, {modifiers}]");
 		}
 
 		[Fact]

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using RPG.Engine.Ids;
 using RPG.Engine.Parser;
@@ -36,7 +35,7 @@ namespace RPG.Engine.Services
 		{
 			if (_cache.ContainsKey(id)) return _cache[id];
 
-			var value = Stats[id].Expression.Resolve();
+			var value = Stats[id].Resolve();
 
 			_cache.Add(id, value);
 			return value;
@@ -78,12 +77,6 @@ namespace RPG.Engine.Services
 				return errors;
 
 			Stats.Add(stat.Id, stat);
-			foreach (var node in stat.Expression.Nodes)
-			{
-				if (node is VariableNode variableNode
-					&& variableNode.Id.StatId == id)
-					AddOrUpdate(variableNode.Id);
-			}
 
 			return errors;
 		}
@@ -140,7 +133,8 @@ namespace RPG.Engine.Services
 				errors = errors.Append($"{id} does not exists"); //throw??
 
 			var deps = Stats.Where(s => s.Value.Id != id)
-							.Where(s => s.Value.Expression.Nodes.Any(node =>
+							.Where(s => s.Value.Expressions.SelectMany(e => e.Nodes)
+										 .Any(node =>
 							{
 								if (node is StatNode sn && sn.Id == id)
 									return true;
@@ -200,7 +194,8 @@ namespace RPG.Engine.Services
 
 			stack.Push(stat.Id);
 
-			var ids = stat.Expression.Nodes
+			var ids = stat.Expressions
+						  .SelectMany(e => e.Nodes)
 						  .SelectMany(node => node switch
 												 {
 													 StatNode statNode => new[] { statNode.Id },
