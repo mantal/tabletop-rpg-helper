@@ -25,6 +25,22 @@ namespace RPG.Engine.Services
 				new FunctionId("$MAX"),
 				new Function(new FunctionId("$MAX"), 2, parameters => parameters.Max())
 			},
+			{
+				//TODO gerer des cas plus complexes que l'égalité / ajouter une valeur par défaut
+				new FunctionId("$IFZ"),
+				new Function(new FunctionId("$IFZ"), 3, null, 2, 
+							 args =>
+							 {
+								 var v = args[0];
+								 for (var i = 1; i < args.Length; i += 2)
+								 {
+									 if (Math.Abs(v - args[i]) < 0.0001)
+										 return args[i + 1];
+								 }
+
+								 return 0;
+							 })
+			},
 		};
 
 		public Function Get(FunctionId id) => _functions[id];

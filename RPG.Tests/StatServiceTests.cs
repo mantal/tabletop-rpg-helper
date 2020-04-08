@@ -252,6 +252,24 @@ namespace RPG.Tests
 			_statService.GetValue("A").Should().Be(1);
 		}
 
+		//TODo ,ove
+		[Fact]
+		public void ResolveFunctionIfzYes()
+		{
+			_statService.Add("A", "$IFZ{3, 3, 1}");
+
+			_statService.GetValue("A").Should().Be(1);
+		}
+
+		//TODo ,ove
+		[Fact]
+		public void ResolveFunctionIfzNo()
+		{
+			_statService.Add("A", "$IFZ{1, 3, 1}");
+
+			_statService.GetValue("A").Should().Be(0);
+		}
+
 		[Fact]
 		public void ResolveMixed()
 		{

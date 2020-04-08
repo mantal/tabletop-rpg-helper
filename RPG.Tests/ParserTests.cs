@@ -25,7 +25,7 @@ namespace RPG.Tests
 		{
 			_parser.Parse(out var expression, "$MAX{0, 1}", _parsingContext).Should().BeEmpty();
 
-			expression.ToString().Should().Be("$MAX{0, 1}");
+			expression!.ToString().Should().Be("$MAX{0, 1}");
 		}
 
 		[Fact]
@@ -33,7 +33,7 @@ namespace RPG.Tests
 		{
 			_parser.Parse(out var expression, "$MAX{0, $MAX{0,1}}", _parsingContext).Should().BeEmpty();
 
-			expression.ToString().Should().Be("$MAX{0, $MAX{0, 1}}");
+			expression!.ToString().Should().Be("$MAX{0, $MAX{0, 1}}");
 		}
 
 		[Fact]
@@ -41,7 +41,7 @@ namespace RPG.Tests
 		{
 			_parser.Parse(out var expression, "$ZERO{}", _parsingContext).Should().BeEmpty();
 
-			expression.ToString().Should().Be("$ZERO");
+			expression!.ToString().Should().Be("$ZERO");
 		}
 
 		[Fact]
@@ -49,7 +49,7 @@ namespace RPG.Tests
 		{
 			_parser.Parse(out var expression, "$ZERO", _parsingContext).Should().BeEmpty();
 
-			expression.ToString().Should().Be("$ZERO");
+			expression!.ToString().Should().Be("$ZERO");
 		}
 
 		[Fact]
@@ -57,7 +57,25 @@ namespace RPG.Tests
 		{
 			_parser.Parse(out var expression, "$ABS 1", _parsingContext).Should().BeEmpty();
 
-			expression.ToString().Should().Be("$ABS 1");
+			expression!.ToString().Should().Be("$ABS 1");
+		}
+
+		[Fact]
+		public void ParseWithNotEnoughArguments()
+		{
+			_parser.Parse(out _, "$ABS", _parsingContext).Should().HaveCount(1);
+		}
+
+		[Fact]
+		public void ParseWithTooManyArguments()
+		{
+			_parser.Parse(out _, "$ZERO 1", _parsingContext).Should().HaveCount(1);
+		}
+
+		[Fact]
+		public void ParseWithWrongBatchArguments()
+		{
+			_parser.Parse(out _, "$IFZ{1, 1, 2, 3}", _parsingContext).Should().HaveCount(1);
 		}
 	}
 }
