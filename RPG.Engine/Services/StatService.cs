@@ -81,6 +81,16 @@ namespace RPG.Engine.Services
 			return errors;
 		}
 
+		public IEnumerable<string> Add(Stat stat)
+		{
+			if (Exists(stat.Id))
+				return new [] { $"Stat already exists: {stat.Id}" };
+
+			Stats[stat.Id] = stat;
+
+			return Enumerable.Empty<string>();
+		}
+
 		public IEnumerable<string> AddOrUpdate(VariableId id, double value = 0)
 		{
 			var stat = Stats[id.StatId];

@@ -6,6 +6,8 @@ namespace RPG.Engine
 {
 	public class Expression
 	{
+		public static Expression Default { get; } = new Expression(new LinkedList<Node>(new [] { new NumberNode(null!, 0), }));
+
 		public LinkedList<Node> Nodes { get; }
 
 		public Expression(LinkedList<Node> nodes)
@@ -46,6 +48,11 @@ namespace RPG.Engine
 	public class NamedExpression : Expression
 	{
 		public string Name { get; }
+
+		public NamedExpression(string name, Expression expression) : base(expression.Nodes)
+		{
+			Name = name;
+		}
 
 		public NamedExpression(string name, LinkedList<Node> nodes) 
 			: base(nodes)

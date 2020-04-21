@@ -8,7 +8,7 @@ namespace RPG.Tests
     public class NodeTests
     {
 		private readonly ParsingContext _context = new ParsingContext();
-
+		
 		[Fact]
 		public void ParseNumber()
 		{
