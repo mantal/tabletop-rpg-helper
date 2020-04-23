@@ -18,6 +18,8 @@ namespace RPG.Tests
 			_book = new Book(_statService, _functionService);
 		}
 
+		//TODO test errors
+
 		[Fact]
 		public void ImportStat()
 		{
