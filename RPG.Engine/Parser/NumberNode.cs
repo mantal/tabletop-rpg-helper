@@ -27,5 +27,7 @@ namespace RPG.Engine.Parser
 		public override double GetValue() => _value;
 
 		public override string ToString() => _value.ToString(CultureInfo.InvariantCulture);
+
+		public override Node Clone() => new NumberNode(StatService, _value);
 	}
 }

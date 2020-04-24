@@ -93,6 +93,8 @@ namespace RPG.Engine.Parser
 			UnaryPlusOperator = 15,
 			UnaryMinusOperator = 16,
 		}
+
+		public abstract Node Clone();
 	}
 
 	public abstract class ValueNode : Node
@@ -127,6 +129,7 @@ namespace RPG.Engine.Parser
 
 		public override string ToString() => _text;
 		public override bool IsExpression() => false;
+		public override Node Clone() => new InvalidNode(StatService, _text);
 	}
 
 	public static class LinkedListNodeExtensions

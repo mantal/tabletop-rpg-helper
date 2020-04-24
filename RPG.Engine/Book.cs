@@ -46,7 +46,8 @@ namespace RPG.Engine
 				StatService = _statService,
 			};
 			
-			errors = errors.Concat(AddSection(reader, context, "#root")).ToList();
+			_defaults["#root"] = new Stat(new StatId("root_default"), Expression.Default);
+			errors = errors.Concat(AddSection(reader, context, "#root", "#root")).ToList();
 
 			return errors;
 		}
@@ -54,7 +55,7 @@ namespace RPG.Engine
 		private readonly IDictionary<string, Stat> _defaults = new Dictionary<string, Stat>();
 		private readonly IList<string> _sections = new List<string>();
 
-		private IEnumerable<string> AddSection(JsonTextReader reader, ParsingContext context, string sectionId)
+		private IEnumerable<string> AddSection(JsonTextReader reader, ParsingContext context, string parentSectionId, string sectionId)
 		{
 			var errors = new List<string>();
 
@@ -71,17 +72,18 @@ namespace RPG.Engine
 			}
 
 			_sections.Add(sectionId);
+			_defaults[parentSectionId] = new Stat(_defaults[parentSectionId]);
 			while (reader.ReadSkipComments() && reader.TokenType != JsonToken.EndObject)
 			{
 				var id = (string) reader.Value!;
 				if (id.StartsWith('#'))
-					errors = errors.Concat(AddSection(reader, context, id)).ToList();
+					errors = errors.Concat(AddSection(reader, context, sectionId, id)).ToList();
 				else if (id.IsEquivalentTo("$Default"))
-					; //TODO
+					errors = errors.Concat(SetDefault(reader, context, parentSectionId, sectionId)).ToList();
 				else if (id.IsValidFunctionId())
 					errors = errors.Concat(AddFunction(reader, context, id)).ToList();
 				else if (id.IsValidStatId())
-					errors = errors.Concat(AddStat(reader, context, id)).ToList();
+					errors = errors.Concat(AddStat(reader, context, sectionId, id)).ToList();
 				else
 				{
 					errors.Add(reader, $"expected a valid function or stat id but found {id}");
@@ -109,18 +111,41 @@ namespace RPG.Engine
 			return errors;
 		}
 
-		private IEnumerable<string> AddStat(JsonTextReader reader, ParsingContext context, string id)
+		private IEnumerable<string> SetDefault(JsonTextReader reader, ParsingContext context, string parentSectionId, string sectionId)
+		{
+			var errors = ParseStat(reader, context, sectionId, "default", out var stat).ToList();
+
+			if (errors.Any())
+				return errors;
+
+			_defaults[sectionId] = stat!; //TODO gerer par path => sect1#A != sect2#A
+
+			return errors;
+		}
+
+		private IEnumerable<string> AddStat(JsonTextReader reader, ParsingContext context, string sectionId, string id)
+		{
+			var errors = ParseStat(reader, context, sectionId, id, out var stat);
+
+			if (!errors.Any())
+				_statService.Add(stat!);
+
+			return errors;
+		}
+
+		private IEnumerable<string> ParseStat(JsonTextReader reader, ParsingContext context, string sectionId, string id, out Stat? stat)
 		{
 			var errors = new List<string>();
 
 			context.StatId = new StatId(id);
+			stat = new Stat(_defaults[sectionId]);
 
 			reader.ReadSkipComments();
 
 			if (reader.TokenType.IsValue())
 			{
 				var expr = (string) reader.Value!;
-				var statErrors = _parser.Parse(out var stat, context, id, expr).FormatErrors(reader);
+				var statErrors = _parser.Parse(out stat, context, id, expr).FormatErrors(reader);
 				errors = errors.Concat(statErrors).ToList();
 				if (statErrors.Any())
 					return errors;
@@ -128,8 +153,7 @@ namespace RPG.Engine
 			}
 			else if (reader.TokenType == JsonToken.StartObject)
 			{
-				var hasError = false;
-				var stat = new Stat(context.StatId, Expression.Default);
+				stat = new Stat(context.StatId, Expression.Default);
 				while (reader.ReadSkipComments() && reader.TokenType == JsonToken.PropertyName)
 				{
 					var expressionName = (string) reader.Value!;
@@ -145,8 +169,6 @@ namespace RPG.Engine
 						statErrors = stat.AddExpression(expression!, expressionName).FormatErrors(reader);
 						//TODO AddOrUpdate
 						errors = errors.Concat(statErrors).ToList();
-						if (statErrors.Any())
-							hasError = true;
 					}
 					else if (reader.TokenType == JsonToken.StartObject)
 					{
@@ -158,7 +180,6 @@ namespace RPG.Engine
 						{
 							//TODO better msg
 							errors.Add(reader, $"expression {expressionName} should have an \"Expression\" property");
-							hasError = true;
 							props["Expression"] = "+0"; //default value so we can get detect other errors
 						}
 						if (props.ContainsKey("Position"))
@@ -169,7 +190,6 @@ namespace RPG.Engine
 								//TODO fix line number / char pos
 								//TODO better msg
 								errors.Add(reader, $"expected position to be an integer but found {props["Position"]}");
-								hasError = true;
 								position = -1; //default value so we can get detect other errors
 							}
 						}
@@ -181,8 +201,6 @@ namespace RPG.Engine
 						exprErrors = stat.AddExpression(expression!, expressionName, position).FormatErrors(reader);
 						errors = errors.Concat(exprErrors).ToList();
 						//TODO AddOrUpdate
-						if (exprErrors.Any())
-							hasError = true;
 					}
 					else
 					{
@@ -190,9 +208,6 @@ namespace RPG.Engine
 						return errors; // TODO continue on error
 					}
 				}
-
-				if (!hasError)
-					_statService.Add(stat);
 			}
 
 			return errors;

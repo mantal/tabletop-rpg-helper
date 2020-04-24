@@ -101,6 +101,8 @@ namespace RPG.Engine.Parser
 
 		public override bool IsExpression() => true;
 
+		public override Node Clone() => new FunctionNode(StatService, _functionService, Id.Id);
+
 		private string GetArgumentNumberErrorMessage(Function function)
 		{
 			if (function.RequiredParameterNumber == 0)

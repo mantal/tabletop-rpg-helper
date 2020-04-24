@@ -50,6 +50,13 @@ namespace RPG.Engine
 			}
 		}
 
+		public Stat(Stat stat)
+		{
+			Id = new StatId(stat.Id);
+			Expressions = stat.Expressions.Select(e => new NamedExpression(e)).ToList();
+			_lastValueId = new VariableId(stat._lastValueId);
+		}
+
 		public double Resolve()
 		{
 			Variables[_lastValueId] = 0;

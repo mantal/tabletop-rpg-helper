@@ -15,6 +15,11 @@ namespace RPG.Engine
 			Nodes = nodes;
 		}
 
+		public Expression(Expression expression)
+		{
+			Nodes = new LinkedList<Node>(expression.Nodes.Select(n => n.Clone()));
+		}
+
 		public double Resolve()
 		{
 			var nodes = new LinkedList<Node>(Nodes);
@@ -49,7 +54,8 @@ namespace RPG.Engine
 	{
 		public string Name { get; }
 
-		public NamedExpression(string name, Expression expression) : base(expression.Nodes)
+		public NamedExpression(string name, Expression expression) 
+			: base(expression.Nodes)
 		{
 			Name = name;
 		}
@@ -58,6 +64,12 @@ namespace RPG.Engine
 			: base(nodes)
 		{
 			Name = name;
+		}
+
+		public NamedExpression(NamedExpression expression)
+			: base(expression)
+		{
+			Name = expression.Name;
 		}
 
 		public override string ToString() => $"[{Name}, {base.ToString()}]";

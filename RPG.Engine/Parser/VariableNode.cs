@@ -9,10 +9,10 @@ namespace RPG.Engine.Parser
 	{
 		public readonly VariableId Id;
 
-		public VariableNode(StatService statService, string text, StatId parentId)
+		public VariableNode(StatService statService, string id, StatId parentId)
 			: base(statService, NodeType.Stat, 0)
 		{
-			Id = new VariableId(text, parentId);
+			Id = new VariableId(id, parentId);
 		}
 
 		public override IEnumerable<string> IsValid(LinkedListNode<Node> token, ParsingContext context)
@@ -25,5 +25,6 @@ namespace RPG.Engine.Parser
 		public override double GetValue() => StatService.GetValue(Id);
 
 		public override string ToString() => Id.ToString();
+		public override Node Clone() => new VariableNode(StatService, Id.Id, Id.StatId);
 	}
 }

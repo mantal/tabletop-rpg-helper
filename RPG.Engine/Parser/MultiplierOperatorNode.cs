@@ -80,5 +80,7 @@ namespace RPG.Engine.Parser
 		public override bool IsExpression() => false;
 
 		public override string ToString() => _symbol.ToString();
+
+		public override Node Clone() => new MultiplierOperatorNode(StatService, Type);
 	}
 }

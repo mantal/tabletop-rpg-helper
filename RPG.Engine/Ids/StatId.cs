@@ -15,6 +15,11 @@ namespace RPG.Engine.Ids
 			Id = id;
 		}
 
+		public StatId(StatId id)
+		{
+			Id = id.Id;
+		}
+
 		public static explicit operator StatId(string id) => new StatId(id);
 
 		public static bool operator ==(StatId? a, StatId? b)

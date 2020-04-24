@@ -24,5 +24,7 @@ namespace RPG.Engine.Parser
 			=> throw new InvalidOperationException();
 
 		public override string ToString() => Text;
+
+		public override Node Clone() => new GrammarNode(StatService, Text, Type, Priority);
 	}
 }

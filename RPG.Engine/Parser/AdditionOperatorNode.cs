@@ -92,5 +92,7 @@ namespace RPG.Engine.Parser
 		public override string ToString() => _symbol.ToString();
 
 		public override bool IsExpression() => _isUnary;
+
+		public override Node Clone() => new AdditionOperatorNode(StatService, Type);
 	}
 }

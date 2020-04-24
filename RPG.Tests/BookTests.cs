@@ -58,5 +58,13 @@ namespace RPG.Tests
 				 .Should().BeEmpty();
 			_statService.GetValue("FOR").Should().Be(17);
 		}
+
+		[Fact]
+		public void ImportStatWithDefault()
+		{
+			_book.PopulateFromFile(@"{""$default"": ""2"", ""FOR"": "":value + 2""}")
+				 .Should().BeEmpty();
+			_statService.GetValue("FOR").Should().Be(2);
+		}
 	}
 }

@@ -27,6 +27,12 @@ namespace RPG.Engine.Ids
 			}
 		}
 
+		public VariableId(VariableId id)
+		{
+			Id = id.Id;
+			StatId = id.StatId;
+		}
+
 		public static explicit operator VariableId(string id) => new VariableId(id);
 
 		public static bool operator ==(VariableId? a, VariableId? b)
