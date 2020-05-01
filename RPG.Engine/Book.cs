@@ -24,7 +24,7 @@ namespace RPG.Engine
 		}
 
 		//TODO static? / DI
-		public IEnumerable<string> PopulateFromFile(string json)
+		public IEnumerable<string> Populate(string json)
 		{
 			var errors = new List<string>();
 			var reader = new JsonTextReader(new StringReader(json));

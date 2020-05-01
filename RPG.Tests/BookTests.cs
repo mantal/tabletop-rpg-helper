@@ -23,14 +23,14 @@ namespace RPG.Tests
 		[Fact]
 		public void ImportStat()
 		{
-			_book.PopulateFromFile(@"{""FOR"": ""2""}").Should().BeEmpty();
+			_book.Populate(@"{""FOR"": ""2""}").Should().BeEmpty();
 			_statService.GetValue("FOR").Should().Be(2);
 		}
 
 		[Fact]
 		public void ImportStats()
 		{
-			_book.PopulateFromFile(@"{""FOR"": ""2"", ""DEX"": ""3""}").Should().BeEmpty();
+			_book.Populate(@"{""FOR"": ""2"", ""DEX"": ""3""}").Should().BeEmpty();
 			_statService.GetValue("FOR").Should().Be(2);
 			_statService.GetValue("DEX").Should().Be(3);
 		}
@@ -38,14 +38,14 @@ namespace RPG.Tests
 		[Fact]
 		public void ImportMultiExpressionStat()
 		{
-			_book.PopulateFromFile(@"{""FOR"": { ""expr0"": ""2"", ""expr1"": "":value + 2"" } }").Should().BeEmpty();
+			_book.Populate(@"{""FOR"": { ""expr0"": ""2"", ""expr1"": "":value + 2"" } }").Should().BeEmpty();
 			_statService.GetValue("FOR").Should().Be(4);
 		}
 
 		[Fact]
 		public void ImportMultiExpressionStats()
 		{
-			_book.PopulateFromFile(@"{""FOR"": { ""expr0"": ""2"", ""expr1"": "":value + 2"" }, ""DEX"": { ""expr0"": ""2"", ""expr1"": ""FOR + :value"" } }")
+			_book.Populate(@"{""FOR"": { ""expr0"": ""2"", ""expr1"": "":value + 2"" }, ""DEX"": { ""expr0"": ""2"", ""expr1"": ""FOR + :value"" } }")
 				 .Should().BeEmpty();
 			_statService.GetValue("FOR").Should().Be(4);
 			_statService.GetValue("DEX").Should().Be(6);
@@ -54,7 +54,7 @@ namespace RPG.Tests
 		[Fact]
 		public void ImportMultiExpressionWithPositionStat()
 		{
-			_book.PopulateFromFile(@"{""FOR"": { ""expr0"": ""17"", ""expr1"": { ""Position"": -2, ""Expression"": "":value + 2"" } }")
+			_book.Populate(@"{""FOR"": { ""expr0"": ""17"", ""expr1"": { ""Position"": -2, ""Expression"": "":value + 2"" } }")
 				 .Should().BeEmpty();
 			_statService.GetValue("FOR").Should().Be(17);
 		}
@@ -62,9 +62,42 @@ namespace RPG.Tests
 		[Fact]
 		public void ImportStatWithDefault()
 		{
-			_book.PopulateFromFile(@"{""$default"": ""2"", ""FOR"": "":value + 2""}")
+			_book.Populate(@"{""$default"": ""2"", ""FOR"": "":value + 2""}")
 				 .Should().BeEmpty();
 			_statService.GetValue("FOR").Should().Be(2);
 		}
+
+		[Fact]
+		public void DefaultShouldCascade()
+		{
+			_book.Populate(@"{""$default"": ""2"", ""FOR"": "":value + 2""}")
+				 .Should().BeEmpty();
+			_statService.GetValue("FOR").Should().Be(2);
+		}
+
+		#region Errors
+
+		[Fact]
+		public void HandleEmptyJson()
+		{
+			_book.Populate(@"")
+				 .Should().HaveCount(1);
+		}
+
+		[Fact]
+		public void HandleEmptyBody()
+		{
+			_book.Populate(@"{}")
+				 .Should().BeEmpty();
+		}
+
+		[Fact]
+		public void HandleDuplicateStats()
+		{
+			_book.Populate(@"{""FOR"": ""2"", ""FOR"": ""3""}")
+				 .Should().HaveCount(1);
+		}
+
+		#endregion
 	}
 }
