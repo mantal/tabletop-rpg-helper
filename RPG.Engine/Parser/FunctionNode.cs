@@ -32,8 +32,8 @@ namespace RPG.Engine.Parser
 				|| (function.MaxParameterNumber != null
 					&& _argumentCount > function.MaxParameterNumber))
 				return new[] { $"Function {Id} should have {GetArgumentNumberErrorMessage(function)} but found {_argumentCount}" };
-			if ((_argumentCount - function.RequiredParameterNumber) % function.ParameterBatchSize != 0)
-				return new[] { $"Function {Id} have an invalid number of arguments ({_argumentCount}. Arguments after the {function.RequiredParameterNumber}th should come in {function.ParameterBatchSize}" };
+			if (function.ParameterBatchSize != null && (_argumentCount - function.RequiredParameterNumber) % function.ParameterBatchSize != 0)
+				return new[] { $"Function {Id} have an invalid number of arguments ({_argumentCount}. Arguments after the {function.RequiredParameterNumber}th should come in batch of {function.ParameterBatchSize}" };
 
 			return Enumerable.Empty<string>();
 		}
