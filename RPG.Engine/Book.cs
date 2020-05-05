@@ -11,7 +11,10 @@ using RPG.Engine.Utils;
 namespace RPG.Engine
 {
     public class Book
-    {
+	{
+		public IEnumerable<Section> Sections => _sections.Values;
+		private readonly IDictionary<string, Section> _sections = new Dictionary<string, Section>();
+
 		private readonly StatService _statService;
 		private readonly FunctionService _functionService;
 		private readonly Parser.Parser _parser;
@@ -45,17 +48,13 @@ namespace RPG.Engine
 				FunctionService = _functionService,
 				StatService = _statService,
 			};
-			
-			_defaults["#root"] = new Stat(new StatId("root_default"), Expression.Default);
-			errors = errors.Concat(AddSection(reader, context, "#root", "#root")).ToList();
+
+			errors = errors.Concat(AddSection(reader, context, "#root", null)).ToList();
 
 			return errors;
 		}
-		
-		private readonly IDictionary<string, Stat> _defaults = new Dictionary<string, Stat>();
-		private readonly IList<string> _sections = new List<string>();
 
-		private IEnumerable<string> AddSection(JsonTextReader reader, ParsingContext context, string parentSectionId, string sectionId)
+		private IEnumerable<string> AddSection(JsonTextReader reader, ParsingContext context, string sectionId, string? parentSectionId)
 		{
 			var errors = new List<string>();
 
@@ -64,15 +63,17 @@ namespace RPG.Engine
 				errors.Add(reader, "section id should start with '#'");
 				return errors;
 			}
-			if (_sections.Contains(sectionId))
+			if (_sections.ContainsKey(sectionId))
 			{
 				//TODO continue after error
 				errors.Add(reader, $"section already exists: {sectionId}");
 				return errors;
 			}
 
-			_sections.Add(sectionId);
-			_defaults[parentSectionId] = new Stat(_defaults[parentSectionId]);
+			if (parentSectionId == null)
+				_sections[sectionId] = new Section(sectionId, new Stat(new StatId("RootDefault"), Expression.Default));
+			else
+				_sections[sectionId] = new Section(sectionId, _sections[parentSectionId].Default);
 			while (reader.ReadSkipComments() && reader.TokenType != JsonToken.EndObject)
 			{
 				var id = (string) reader.Value!;
@@ -118,7 +119,7 @@ namespace RPG.Engine
 			if (errors.Any())
 				return errors;
 
-			_defaults[sectionId] = stat!; //TODO gerer par path => sect1#A != sect2#A
+			_sections[sectionId].Default = stat!; //TODO gerer par path => sect1#A != sect2#A
 
 			return errors;
 		}
@@ -138,7 +139,7 @@ namespace RPG.Engine
 			var errors = new List<string>();
 
 			context.StatId = new StatId(id);
-			stat = new Stat(_defaults[sectionId]);
+			stat = new Stat(_sections[sectionId].Default);
 
 			reader.ReadSkipComments();
 
@@ -274,5 +275,19 @@ namespace RPG.Engine
 				   JsonToken.Bytes            => true,
 				   _                          => throw new ArgumentOutOfRangeException(nameof(token), token, null)
 			   };
+	}
+
+	public class Section
+	{
+		public string Name { get; }
+		public Stat Default { get; set; }
+		public IEnumerable<Stat> Stats { get; set; }
+
+		public Section(string name, Stat? @default = null)
+		{
+			Name = name;
+			Default = @default ?? new Stat(new StatId(name.Substring(1) + "_default"), Expression.Default);
+			Stats = new List<Stat>();
+		}
 	}
 }
