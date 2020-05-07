@@ -87,10 +87,11 @@ namespace RPG.Tests
 			_context.StatId = new StatId("FOR");
 			_parser.Parse(out var stat, _context, "FOR", "2").Should().BeEmpty();
 
-			_parser.Parse(out var expression, "FOR:value + 2", _context);
+			_parser.Parse(out var expression, "FOR:var + 2", _context);
 			stat!.AddExpression(expression!, "1").Should().BeEmpty();
 
-			stat!.ToString().Should().Be("[0, 2][1, FOR:value + 2]");
+			stat!.ToString().Should().Be("[0, 2][1, FOR:var + 2]");
+			stat.TryGetVariable(new VariableId("FOR:var")).Should().Be(0);
 		}
 
 		[Fact]
@@ -111,23 +112,26 @@ namespace RPG.Tests
 		public void UpdateExpression()
 		{
 			_context.StatId = new StatId("FOR");
-			_parser.Parse(out var stat, _context, "FOR", "2").Should().BeEmpty();
+			_parser.Parse(out var stat, _context, "FOR", ":old").Should().BeEmpty();
 
-			_parser.Parse(out var expression, "3", _context);
+			_parser.Parse(out var expression, ":new", _context);
 			stat!.UpdateExpression(expression!, "0");
 
-			stat!.ToString().Should().Be("[0, 3]");
+			stat!.ToString().Should().Be("[0, FOR:new]");
+			stat.TryGetVariable(new VariableId("FOR:old")).Should().Be(null);
+			stat.TryGetVariable(new VariableId("FOR:new")).Should().Be(0);
 		}
 
 		[Fact]
 		public void RemoveExpression()
 		{
 			_context.StatId = new StatId("FOR");
-			_parser.Parse(out var stat, _context, "FOR", "2").Should().BeEmpty();
+			_parser.Parse(out var stat, _context, "FOR", ":var + 2").Should().BeEmpty();
 
 			stat!.RemoveExpression("0");
 
 			stat!.ToString().Should().Be("[0, 0]");
+			stat!.TryGetVariable(new VariableId("FOR:var")).Should().BeNull();
 		}
 	}
 }

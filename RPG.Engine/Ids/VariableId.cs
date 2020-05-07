@@ -27,7 +27,7 @@ namespace RPG.Engine.Ids
 			}
 		}
 
-		public VariableId(VariableId id)
+		public VariableId(VariableId id) //TODO + StatId
 		{
 			Id = id.Id;
 			StatId = id.StatId;

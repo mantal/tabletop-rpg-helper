@@ -50,11 +50,24 @@ namespace RPG.Engine
 			}
 		}
 
-		public Stat(Stat stat)
+		public Stat(Stat stat, StatId? id = null)
 		{
-			Id = new StatId(stat.Id);
-			Expressions = stat.Expressions.Select(e => new NamedExpression(e)).ToList();
-			_lastValueId = new VariableId(stat._lastValueId);
+			Id = id ?? new StatId(stat.Id);
+			_lastValueId = new VariableId(":" + stat._lastValueId.Id, Id);
+			Variables = stat.Variables
+							.Select(var => (Id: new VariableId(":" + var.Key.Id, Id), Value: var.Value))
+							.ToDictionary(v => v.Id, v => v.Value);
+			Expressions = stat.Expressions.Select(e 
+													  => new NamedExpression(e.Name,
+																			 new LinkedList<Node>(e.Nodes.Select(node =>
+																					 {
+																						 if (node is VariableNode variableNode
+																							 && variableNode.Id.StatId == stat.Id)
+																							 return variableNode.Clone(Id);
+																						 return node;
+																					 })
+																				 )))
+							  .ToList();
 		}
 
 		public double Resolve()
@@ -82,6 +95,15 @@ namespace RPG.Engine
 
 			Expressions.Insert(position, new NamedExpression(name, expression.Nodes));
 
+			foreach (var node in expression.Nodes)
+			{
+				if (node is VariableNode variableNode
+					&& variableNode.Id.StatId == Id
+					&& !Variables.ContainsKey(variableNode.Id))
+					AddOrUpdateVariable(variableNode.Id, 0);
+
+			}
+
 			return Enumerable.Empty<string>();
 		}
 
@@ -93,6 +115,8 @@ namespace RPG.Engine
 
 			var index = Expressions.IndexOf(previousExpression);
 			Expressions[index] = new NamedExpression(name, expression.Nodes);
+
+			//TODO remove unused variables
 
 			return Enumerable.Empty<string>();
 		}
@@ -108,6 +132,8 @@ namespace RPG.Engine
 			if (!Expressions.Any())
 				Expressions.Add(new NamedExpression("0", new LinkedList<Node>(new Node[] { new NumberNode(null!, 0), })));
 
+			//TODO remove unused variables
+
 			return Enumerable.Empty<string>();
 		}
 
@@ -118,7 +144,7 @@ namespace RPG.Engine
 
 			var value = TryGetVariable(id);
 			if (value == null)
-				throw new ArgumentOutOfRangeException(nameof(id), id, $"No variable with id {id} were found in {Id}. Registered inner stats are: {{{Variables.Keys.Join()}}}");
+				throw new ArgumentOutOfRangeException(nameof(id), id, $"No variable with id {id} were found in {Id}. Registered variables are: {{{Variables.Keys.Join()}}}");
 			return (double) value;
 		}
 

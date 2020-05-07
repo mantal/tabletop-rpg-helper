@@ -12,7 +12,8 @@ namespace RPG.Engine
 {
     public class Book
 	{
-		public IEnumerable<Section> Sections => _sections.Values;
+		//public IEnumerable<Section> Sections => _sections.Values; //TODO
+		public IReadOnlyDictionary<string, Section> Sections => (IReadOnlyDictionary<string, Section>) _sections;
 		private readonly IDictionary<string, Section> _sections = new Dictionary<string, Section>();
 
 		private readonly StatService _statService;
@@ -31,23 +32,14 @@ namespace RPG.Engine
 		{
 			var errors = new List<string>();
 			var reader = new JsonTextReader(new StringReader(json));
-			
-			if (!reader.ReadSkipComments())
-			{
-				errors.Add(reader, "empty json");
-				return errors;
-			}
-			if (reader.TokenType != JsonToken.StartObject)
-			{
-				errors.Add(reader, "expected section start");
-				return errors;
-			}
-			
 			var context = new ParsingContext
 			{
 				FunctionService = _functionService,
 				StatService = _statService,
 			};
+
+			if (string.IsNullOrWhiteSpace(json))
+				return new[] { "Empty json" };
 
 			errors = errors.Concat(AddSection(reader, context, "#root", null)).ToList();
 
@@ -74,13 +66,27 @@ namespace RPG.Engine
 				_sections[sectionId] = new Section(sectionId, new Stat(new StatId("RootDefault"), Expression.Default));
 			else
 				_sections[sectionId] = new Section(sectionId, _sections[parentSectionId].Default);
+
+			reader.ReadSkipComments();
+			if (reader.TokenType != JsonToken.StartObject)
+			{
+				errors.Add(reader, $"expected section start but got: {(string?)reader.Value}");
+				return errors; //TODO continue after error
+			}
+
 			while (reader.ReadSkipComments() && reader.TokenType != JsonToken.EndObject)
 			{
+				if (reader.TokenType != JsonToken.PropertyName)
+				{
+					errors.Add(reader, $"expected stat, function or section name but got: {(string?)reader.Value}");
+					return errors; //TODO continue after error
+				}
+
 				var id = (string) reader.Value!;
 				if (id.StartsWith('#'))
-					errors = errors.Concat(AddSection(reader, context, sectionId, id)).ToList();
+					errors = errors.Concat(AddSection(reader, context, id, sectionId)).ToList();
 				else if (id.IsEquivalentTo("$Default"))
-					errors = errors.Concat(SetDefault(reader, context, parentSectionId, sectionId)).ToList();
+					errors = errors.Concat(SetDefault(reader, context, sectionId, parentSectionId)).ToList();
 				else if (id.IsValidFunctionId())
 					errors = errors.Concat(AddFunction(reader, context, id)).ToList();
 				else if (id.IsValidStatId())
@@ -108,11 +114,11 @@ namespace RPG.Engine
 				errors.Add(reader, "expected function object");
 				return errors;
 			}
-			errors.Add("custom function are not implemented");
+			errors.Add("custom functions are not implemented yet");
 			return errors;
 		}
 
-		private IEnumerable<string> SetDefault(JsonTextReader reader, ParsingContext context, string parentSectionId, string sectionId)
+		private IEnumerable<string> SetDefault(JsonTextReader reader, ParsingContext context, string sectionId, string? parentSectionId)
 		{
 			var errors = ParseStat(reader, context, sectionId, "default", out var stat).ToList();
 
@@ -129,7 +135,9 @@ namespace RPG.Engine
 			var errors = ParseStat(reader, context, sectionId, id, out var stat);
 
 			if (!errors.Any())
-				_statService.Add(stat!);
+				errors = errors.Concat(_statService.Add(stat!).FormatErrors(reader));
+			if (!errors.Any())
+				_sections[sectionId].Stats.Add(stat!);
 
 			return errors;
 		}
@@ -139,37 +147,38 @@ namespace RPG.Engine
 			var errors = new List<string>();
 
 			context.StatId = new StatId(id);
-			stat = new Stat(_sections[sectionId].Default);
+			stat = new Stat(_sections[sectionId].Default, context.StatId);
 
 			reader.ReadSkipComments();
 
 			if (reader.TokenType.IsValue())
 			{
-				var expr = (string) reader.Value!;
-				var statErrors = _parser.Parse(out stat, context, id, expr).FormatErrors(reader);
-				errors = errors.Concat(statErrors).ToList();
-				if (statErrors.Any())
+				var rawExpression = (string) reader.Value!;
+				errors = _parser.Parse(out var expression, rawExpression, context).FormatErrors(reader).ToList();
+				if (errors.Any())
 					return errors;
-				return errors.Concat(_statService.Add(stat!).FormatErrors(reader)).ToList();
+
+				stat.AddExpression(expression!, "last"); //TODO expression name??
+				return errors;
 			}
 			else if (reader.TokenType == JsonToken.StartObject)
 			{
-				stat = new Stat(context.StatId, Expression.Default);
 				while (reader.ReadSkipComments() && reader.TokenType == JsonToken.PropertyName)
 				{
 					var expressionName = (string) reader.Value!;
 					reader.ReadSkipComments();
 
+					//TODO handle variables
 					if (reader.TokenType.IsValue())
 					{
 						var rawExpression = (string) reader.Value!;
-						var statErrors = _parser.Parse(out var expression, rawExpression, context).FormatErrors(reader);
-						errors = errors.Concat(statErrors).ToList();
-						if (statErrors.Any())
+						var exprErrors = _parser.Parse(out var expression, rawExpression, context).FormatErrors(reader);
+						errors = errors.Concat(exprErrors).ToList();
+						if (exprErrors.Any())
 							continue;
-						statErrors = stat.AddExpression(expression!, expressionName).FormatErrors(reader);
+						exprErrors = stat.AddExpression(expression!, expressionName).FormatErrors(reader);
 						//TODO AddOrUpdate
-						errors = errors.Concat(statErrors).ToList();
+						errors = errors.Concat(exprErrors).ToList();
 					}
 					else if (reader.TokenType == JsonToken.StartObject)
 					{
@@ -281,7 +290,7 @@ namespace RPG.Engine
 	{
 		public string Name { get; }
 		public Stat Default { get; set; }
-		public IEnumerable<Stat> Stats { get; set; }
+		public IList<Stat> Stats { get; set; }
 
 		public Section(string name, Stat? @default = null)
 		{

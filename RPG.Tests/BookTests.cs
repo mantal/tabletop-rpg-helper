@@ -68,6 +68,24 @@ namespace RPG.Tests
 		}
 
 		[Fact]
+		public void ImportStatWithComplexDefault()
+		{
+			_book.Populate(@"{""$default"": { ""expr0"": "":base + 2"", ""expr1"": "":value - 2"" }, ""FOR"": "":value + 2""}")
+				 .Should().BeEmpty();
+			_statService.GetValue("FOR").Should().Be(2);
+		}
+
+		[Fact]
+		public void ImportSection()
+		{
+			_book.Populate(@"{ ""#section"": { ""FOR"": ""2"" } }")
+				 .Should().BeEmpty();
+			_statService.GetValue("FOR").Should().Be(2);
+			_book.Sections.ContainsKey("#section").Should().BeTrue("it should have imported the section");
+			_book.Sections["#section"].Stats.Should().HaveCount(1);
+		}
+
+		[Fact]
 		public void DefaultShouldCascade()
 		{
 			_book.Populate(@"{""$default"": ""2"", ""FOR"": "":value + 2""}")
@@ -75,7 +93,7 @@ namespace RPG.Tests
 			_statService.GetValue("FOR").Should().Be(2);
 		}
 
-		#region Errors
+#region Errors
 
 		[Fact]
 		public void HandleEmptyJson()
@@ -98,6 +116,20 @@ namespace RPG.Tests
 				 .Should().HaveCount(1);
 		}
 
-		#endregion
+		[Fact]
+		public void HandleInvalidSection()
+		{
+			_book.Populate(@"{ ""section"": {""FOR"": ""2"", ""FOR"": ""3""} }")
+				 .Should().HaveCount(1);
+		}
+
+		[Fact]
+		public void HandleInvalidStat()
+		{
+			_book.Populate(@"{ ""FOR"": [] }")
+				 .Should().HaveCount(1);
+		}
+
+#endregion
 	}
 }
