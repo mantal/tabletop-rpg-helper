@@ -60,19 +60,27 @@ namespace RPG.Tests
 		}
 
 		[Fact]
-		public void ImportStatWithDefault()
+		public void ImportDefault()
 		{
 			_book.Populate(@"{""$default"": ""2"", ""FOR"": "":value + 2""}")
 				 .Should().BeEmpty();
-			_statService.GetValue("FOR").Should().Be(2);
+			_statService.GetValue("FOR").Should().Be(4);
 		}
 
 		[Fact]
-		public void ImportStatWithComplexDefault()
+		public void ImportDefaultWithVariable()
 		{
-			_book.Populate(@"{""$default"": { ""expr0"": "":base + 2"", ""expr1"": "":value - 2"" }, ""FOR"": "":value + 2""}")
+			_book.Populate(@"{""$default"": { "":var"": 2 }, ""FOR"": "":var + 2""}")
 				 .Should().BeEmpty();
-			_statService.GetValue("FOR").Should().Be(2);
+			_statService.GetValue("FOR").Should().Be(4);
+		}
+
+		[Fact]
+		public void ImportMultiExpressionDefault()
+		{
+			_book.Populate(@"{""$default"": { ""expr0"": "":base + 1"", ""expr1"": "":value + 1"" }, ""FOR"": "":value + 2""}")
+				 .Should().BeEmpty();
+			_statService.GetValue("FOR").Should().Be(4);
 		}
 
 		[Fact]
@@ -90,7 +98,7 @@ namespace RPG.Tests
 		{
 			_book.Populate(@"{""$default"": ""2"", ""FOR"": "":value + 2""}")
 				 .Should().BeEmpty();
-			_statService.GetValue("FOR").Should().Be(2);
+			_statService.GetValue("FOR").Should().Be(4);
 		}
 
 #region Errors

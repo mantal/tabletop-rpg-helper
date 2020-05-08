@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -164,8 +164,8 @@ namespace RPG.Engine
 				if (errors.Any())
 					return errors;
 
-				stat.AddExpression(expression!, "last"); //TODO expression name??
-				return errors;
+				//TODO AddOrUpdate
+				return errors.Concat(stat.AddExpression(expression!, sectionId.Replace("#", "_") + stat.Id)).FormatErrors(reader);
 			}
 			else if (reader.TokenType == JsonToken.StartObject)
 			{
@@ -180,7 +180,7 @@ namespace RPG.Engine
 						var rawExpression = GetValueAsString(reader);
 						if (rawExpression == null)
 						{
-							errors.Add(reader, $"expected a string or a number but got {reader.Value?.ToString()}");
+							errors.Add(reader, $"expected a string or a number after expression declaration but got {reader.Value?.ToString()}");
 							continue;
 						}
 						var exprErrors = _parser.Parse(out var expression, rawExpression, context).FormatErrors(reader);
