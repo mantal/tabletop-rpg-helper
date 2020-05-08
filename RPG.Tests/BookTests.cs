@@ -1,4 +1,4 @@
-﻿using FluentAssertions;
+using FluentAssertions;
 using RPG.Engine;
 using RPG.Engine.Services;
 using Xunit;
@@ -130,6 +130,22 @@ namespace RPG.Tests
 				 .Should().HaveCount(1);
 		}
 
-#endregion
+		[Fact]
+		public void HandleInteger()
+		{
+			_book.Populate(@"{ ""FOR"": 1 }")
+				 .Should().HaveCount(0);
+			_statService.GetValue("FOR").Should().Be(1);
+		}
+
+		[Fact]
+		public void HandleFloat()
+		{
+			_book.Populate(@"{ ""FOR"": .5 }")
+				 .Should().HaveCount(0);
+			_statService.GetValue("FOR").Should().Be(.5);
+		}
+
+		#endregion
 	}
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using Newtonsoft.Json;
@@ -153,7 +154,12 @@ namespace RPG.Engine
 
 			if (reader.TokenType.IsValue())
 			{
-				var rawExpression = (string) reader.Value!;
+				var rawExpression = GetValueAsString(reader);
+				if (rawExpression == null)
+				{
+					errors.Add(reader, $"expected a string or a number but got {reader.Value?.ToString()}");
+					return errors;
+				}
 				errors = _parser.Parse(out var expression, rawExpression, context).FormatErrors(reader).ToList();
 				if (errors.Any())
 					return errors;
@@ -171,7 +177,12 @@ namespace RPG.Engine
 					//TODO handle variables
 					if (reader.TokenType.IsValue())
 					{
-						var rawExpression = (string) reader.Value!;
+						var rawExpression = GetValueAsString(reader);
+						if (rawExpression == null)
+						{
+							errors.Add(reader, $"expected a string or a number but got {reader.Value?.ToString()}");
+							continue;
+						}
 						var exprErrors = _parser.Parse(out var expression, rawExpression, context).FormatErrors(reader);
 						errors = errors.Concat(exprErrors).ToList();
 						if (exprErrors.Any())
@@ -235,6 +246,16 @@ namespace RPG.Engine
 
 			return props;
 		}
+
+		private string? GetValueAsString(JsonReader reader)
+			=> reader.TokenType switch
+			   {
+				   _ when reader.Value == null => null,
+				   JsonToken.String            => (string) reader.Value,
+				   JsonToken.Integer           => ((long) reader.Value).ToString(NumberFormatInfo.InvariantInfo),
+				   JsonToken.Float             => ((double) reader.Value).ToString(NumberFormatInfo.InvariantInfo),
+				   _                           => null
+			   };
 	}
 
 	//TODO make an Errors class
