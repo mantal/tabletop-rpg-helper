@@ -1,5 +1,6 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using RPG.Engine;
+using RPG.Engine.Ids;
 using RPG.Engine.Services;
 using Xunit;
 
@@ -25,6 +26,14 @@ namespace RPG.Tests
 		{
 			_book.Populate(@"{""FOR"": ""2""}").Should().BeEmpty();
 			_statService.GetValue("FOR").Should().Be(2);
+		}
+
+		[Fact]
+		public void ImportStatWithVariable()
+		{
+			_book.Populate(@"{""FOR"": { "":var"": 33, ""base"": ""2"" } }").Should().BeEmpty();
+			_statService.GetValue("FOR").Should().Be(2);
+			_statService.Get("FOR").TryGetVariable(new VariableId("FOR:var")).Should().Be(33);
 		}
 
 		[Fact]

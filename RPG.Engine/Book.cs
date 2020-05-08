@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -174,7 +174,21 @@ namespace RPG.Engine
 					var expressionName = (string) reader.Value!;
 					reader.ReadSkipComments();
 
-					//TODO handle variables
+					if (expressionName.StartsWith(':'))
+					{
+						if (!expressionName.IsValidVariableId())
+						{
+							errors.Add(reader, $"{expressionName} looks like a variable declaration (starts with ':') but is not a valid variable id");
+							continue;
+						}
+						var rawValue = GetValueAsString(reader);
+						if (rawValue == null || !double.TryParse(rawValue, NumberStyles.Float, null, out var value))
+						{
+							errors.Add(reader, $"expected a number after variable declaration but got {reader.Value?.ToString()}");
+							continue;
+						}
+						stat.AddOrUpdateVariable(new VariableId(expressionName, stat.Id), value);
+					}
 					if (reader.TokenType.IsValue())
 					{
 						var rawExpression = GetValueAsString(reader);
