@@ -93,6 +93,14 @@ namespace RPG.Tests
 		}
 
 		[Fact]
+		public void OverrideDefaultVariable()
+		{
+			_book.Populate(@"{""$default"": { "":var"": 2, ""expr"": "":var"" }, ""FOR"": { "":var"": 4 } }")
+				 .Should().BeEmpty();
+			_statService.GetValue("FOR").Should().Be(4);
+		}
+
+		[Fact]
 		public void ImportSection()
 		{
 			_book.Populate(@"{ ""#section"": { ""FOR"": ""2"" } }")
@@ -133,17 +141,32 @@ namespace RPG.Tests
 				 .Should().HaveCount(1);
 		}
 
-		[Fact]
-		public void HandleInvalidSection()
+		//TODO
+		[Fact(Skip = "not_impl")]
+		public void HandleDuplicateExpressionInSameBlock()
 		{
-			_book.Populate(@"{ ""section"": {""FOR"": ""2"", ""FOR"": ""3""} }")
+			_book.Populate(@"{ ""FOR"": {""expr"": ""2"", ""expr"": ""3""} }")
 				 .Should().HaveCount(1);
 		}
 
 		[Fact]
-		public void HandleInvalidStat()
+		public void HandleInvalidStatBody()
 		{
 			_book.Populate(@"{ ""FOR"": [] }")
+				 .Should().HaveCount(1);
+		}
+
+		[Fact]
+		public void HandleInvalidShortStatId()
+		{
+			_book.Populate(@"{ ""F°R"": 1 }")
+				 .Should().HaveCount(1);
+		}
+
+		[Fact]
+		public void HandleInvalidStatId()
+		{
+			_book.Populate(@"{ ""F°R"": {} }")
 				 .Should().HaveCount(1);
 		}
 

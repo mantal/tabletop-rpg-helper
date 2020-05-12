@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -83,6 +83,15 @@ namespace RPG.Engine
 			return result;
 		}
 
+		public bool Exists(string expressionName) => Expressions.Any(e => e.Name == expressionName);
+
+		public IEnumerable<string> AddOrUpdateExpression(Expression expression, string name, int? position = null)
+		{
+			if (Exists(name))
+				return UpdateExpression(expression, name);
+			return AddExpression(expression, name, position ?? -1);
+		}
+
 		public IEnumerable<string> AddExpression(Expression expression, string name, int position = -1)
 		{
 			var exists = Expressions.Any(e => e.Name == name);
@@ -95,14 +104,7 @@ namespace RPG.Engine
 
 			Expressions.Insert(position, new NamedExpression(name, expression.Nodes));
 
-			foreach (var node in expression.Nodes)
-			{
-				if (node is VariableNode variableNode
-					&& variableNode.Id.StatId == Id
-					&& !Variables.ContainsKey(variableNode.Id))
-					AddOrUpdateVariable(variableNode.Id, 0);
-
-			}
+			AddVariables(expression);
 
 			return Enumerable.Empty<string>();
 		}
@@ -115,6 +117,8 @@ namespace RPG.Engine
 
 			var index = Expressions.IndexOf(previousExpression);
 			Expressions[index] = new NamedExpression(name, expression.Nodes);
+
+			AddVariables(expression);
 
 			//TODO remove unused variables
 
@@ -159,5 +163,17 @@ namespace RPG.Engine
 		
 		//TODO
 		public override string ToString() => Expressions.Select(e => e.ToString()).Join();
+
+		private void AddVariables(Expression expression)
+		{
+			foreach (var node in expression.Nodes)
+			{
+				if (node is VariableNode variableNode
+					&& variableNode.Id.StatId == Id
+					&& !Variables.ContainsKey(variableNode.Id))
+					AddOrUpdateVariable(variableNode.Id, 0);
+
+			}
+		}
 	}
 }

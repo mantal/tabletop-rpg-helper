@@ -165,7 +165,7 @@ namespace RPG.Engine
 					return errors;
 
 				//TODO AddOrUpdate
-				return errors.Concat(stat.AddExpression(expression!, sectionId.Replace("#", "_") + stat.Id)).FormatErrors(reader);
+				return errors.Concat(stat.AddOrUpdateExpression(expression!, sectionId.Replace("#", "_") + stat.Id)).FormatErrors(reader);
 			}
 			else if (reader.TokenType == JsonToken.StartObject)
 			{
@@ -201,7 +201,7 @@ namespace RPG.Engine
 						errors = errors.Concat(exprErrors).ToList();
 						if (exprErrors.Any())
 							continue;
-						exprErrors = stat.AddExpression(expression!, expressionName).FormatErrors(reader);
+						exprErrors = stat.AddOrUpdateExpression(expression!, expressionName).FormatErrors(reader);
 						//TODO AddOrUpdate
 						errors = errors.Concat(exprErrors).ToList();
 					}
@@ -233,7 +233,7 @@ namespace RPG.Engine
 						errors = errors.Concat(exprErrors).ToList();
 						if (exprErrors.Any())
 							continue;
-						exprErrors = stat.AddExpression(expression!, expressionName, position).FormatErrors(reader);
+						exprErrors = stat.AddOrUpdateExpression(expression!, expressionName, position).FormatErrors(reader);
 						errors = errors.Concat(exprErrors).ToList();
 						//TODO AddOrUpdate
 					}

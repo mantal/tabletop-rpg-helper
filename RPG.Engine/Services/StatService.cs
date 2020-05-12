@@ -110,7 +110,7 @@ namespace RPG.Engine.Services
 			IEnumerable<string> errors = new List<string>();
 
 			if (!Exists(id)) 
-				errors = errors.Append($"{id} does not exists"); //throw??
+				errors = errors.Append($"{id} does not exists");
 
 			var context = new ParsingContext
 			{
