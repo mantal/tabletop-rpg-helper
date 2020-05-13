@@ -1,4 +1,4 @@
-using System.Linq;
+﻿using System.Linq;
 using FluentAssertions;
 using RPG.Engine;
 using RPG.Engine.Ids;
@@ -131,8 +131,9 @@ namespace RPG.Tests
 
 			stat!.RemoveExpression("0");
 
-			stat!.ToString().Should().Be("[0, 0]");
-			stat!.TryGetVariable(new VariableId("FOR:var")).Should().BeNull();
+			stat!.Expressions.Should().BeEmpty();
+			//TODO?
+			//stat!.TryGetVariable(new VariableId("FOR:var")).Should().BeNull();
 		}
 	}
 }

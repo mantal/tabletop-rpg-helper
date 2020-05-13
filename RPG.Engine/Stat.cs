@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -132,10 +132,7 @@ namespace RPG.Engine
 				return new[] { $"Expression doesn't {Id}:{name} exists" };
 
 			Expressions.Remove(expression);
-
-			if (!Expressions.Any())
-				Expressions.Add(new NamedExpression("0", new LinkedList<Node>(new Node[] { new NumberNode(null!, 0), })));
-
+			
 			//TODO remove unused variables
 
 			return Enumerable.Empty<string>();
