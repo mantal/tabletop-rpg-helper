@@ -1,4 +1,4 @@
-﻿using FluentAssertions;
+using FluentAssertions;
 using RPG.Engine;
 using RPG.Engine.Ids;
 using RPG.Engine.Services;
@@ -131,6 +131,13 @@ namespace RPG.Tests
 		public void HandleEmptyBody()
 		{
 			_book.Populate(@"{}")
+				 .Should().BeEmpty();
+		}
+
+		[Fact]
+		public void HandleImplicitRootSection()
+		{
+			_book.Populate(@"test: {}")
 				 .Should().BeEmpty();
 		}
 

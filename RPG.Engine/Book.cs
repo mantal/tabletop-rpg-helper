@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -31,6 +31,11 @@ namespace RPG.Engine
 		//TODO static? / DI
 		public IEnumerable<string> Populate(string json)
 		{
+			if (string.IsNullOrWhiteSpace(json))
+				return new[] { "Empty json" };
+			if (json[0] != '{')
+				json = '{' + json + '}';
+
 			var errors = new List<string>();
 			var reader = new JsonTextReader(new StringReader(json));
 			var context = new ParsingContext
@@ -38,9 +43,6 @@ namespace RPG.Engine
 				FunctionService = _functionService,
 				StatService = _statService,
 			};
-
-			if (string.IsNullOrWhiteSpace(json))
-				return new[] { "Empty json" };
 
 			errors = errors.Concat(AddSection(reader, context, "#root", null)).ToList();
 
