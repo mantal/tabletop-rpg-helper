@@ -228,29 +228,28 @@ namespace RPG.Engine
 					}
 					else if (reader.TokenType == JsonToken.StartObject)
 					{
-						var props = DeserializeFlatObject(reader);
+						var props = DeserializeFlatObject(reader, true);
 						var position = -1;
 
-						//TODO case insensitive
-						if (!props.ContainsKey("Expression"))
+						if (!props.ContainsKey("expression"))
 						{
 							//TODO better msg
-							errors.Add(reader, $"expression {expressionName} should have an \"Expression\" property");
-							props["Expression"] = "+0"; //default value so we can get detect other errors
+							errors.Add(reader, $"expression {expressionName} should have an \"expression\" property");
+							props["expression"] = "+0"; //default value so we can get detect other errors
 						}
-						if (props.ContainsKey("Position"))
+						if (props.ContainsKey("position"))
 						{
-							var isInt = int.TryParse(props["Position"], out position);
+							var isInt = int.TryParse(props["position"], out position);
 							if (!isInt)
 							{
 								//TODO fix line number / char pos
 								//TODO better msg
-								errors.Add(reader, $"expected position to be an integer but found {props["Position"]}");
+								errors.Add(reader, $"expected position to be an integer but found {props["position"]}");
 								position = -1; //default value so we can get detect other errors
 							}
 						}
 
-						var exprErrors = _parser.Parse(out var expression, props["Expression"], context).FormatErrors(reader);
+						var exprErrors = _parser.Parse(out var expression, props["expression"], context).FormatErrors(reader);
 						errors = errors.Concat(exprErrors).ToList();
 						if (exprErrors.Any())
 							continue;
@@ -274,12 +273,15 @@ namespace RPG.Engine
 			return errors;
 		}
 
-		private IDictionary<string, string> DeserializeFlatObject(JsonTextReader reader)
+		private IDictionary<string, string> DeserializeFlatObject(JsonTextReader reader, bool lowerPropertyNames = false)
 		{
 			var props = new Dictionary<string, string>();
 			while ((_jsonHasNext = reader.ReadSkipComments()) && reader.TokenType != JsonToken.EndObject)
 			{
 				var name = (string) reader.Value!;
+				if (lowerPropertyNames)
+					name = name.ToLowerInvariant();
+
 				var value = reader.ReadAsString()!;
 				props[name] = value;
 			}

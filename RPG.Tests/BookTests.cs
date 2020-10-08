@@ -200,6 +200,14 @@ namespace RPG.Tests
 			_statService.GetValue("FOR").Should().Be(.5);
 		}
 
+		[Fact]
+		public void IgnoreCaseInExpressionProperties()
+		{
+			_book.Populate(@"{""FOR"": { ""should_run_last"": ""1"", ""should_run_first"": { ""PoSitIoN"": -2, ""ExPrEsSiOn"": "":value / 2"" } }")
+				 .Should().BeEmpty();
+			_statService.GetValue("FOR").Should().Be(1);
+		}
+
 		[Fact(Skip = "needs continue after error")] 
 		public void HandleUnnamedSection()
 		{
