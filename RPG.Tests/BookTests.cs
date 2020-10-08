@@ -63,9 +63,9 @@ namespace RPG.Tests
 		[Fact]
 		public void ImportMultiExpressionWithPositionStat()
 		{
-			_book.Populate(@"{""FOR"": { ""expr0"": ""17"", ""expr1"": { ""Position"": -2, ""Expression"": "":value + 2"" } }")
+			_book.Populate(@"{""FOR"": { ""should_run_last"": ""1"", ""should_run_first"": { ""Position"": -2, ""Expression"": "":value / 2"" } }")
 				 .Should().BeEmpty();
-			_statService.GetValue("FOR").Should().Be(17);
+			_statService.GetValue("FOR").Should().Be(1);
 		}
 
 		[Fact]

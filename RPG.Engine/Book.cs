@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -205,7 +204,7 @@ namespace RPG.Engine
 						}
 						stat.AddOrUpdateVariable(new VariableId(expressionName, stat.Id), value);
 					}
-					if (reader.TokenType.IsNumberOrString())
+					else if (reader.TokenType.IsNumberOrString())
 					{
 						var rawExpression = GetValueAsString(reader);
 						if (rawExpression == null)
