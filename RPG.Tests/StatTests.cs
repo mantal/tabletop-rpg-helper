@@ -135,5 +135,17 @@ namespace RPG.Tests
 			//TODO?
 			//stat!.TryGetVariable(new VariableId("FOR:var")).Should().BeNull();
 		}
+
+		[Fact]
+		public void ResolveExpressionsWithImplicitChaining()
+		{
+			_context.StatId = new StatId("FOR");
+			_parser.Parse(out var stat, _context, "FOR", "2").Should().BeEmpty();
+
+			_parser.Parse(out var expression, "2", _context);
+			stat!.AddExpression(expression!, "expr2").Should().BeEmpty();
+
+			stat!.Resolve().Should().Be(4);
+		}
 	}
 }

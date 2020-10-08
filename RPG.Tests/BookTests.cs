@@ -157,6 +157,13 @@ namespace RPG.Tests
 		}
 
 		[Fact]
+		public void HandleEmptyStatBody()
+		{
+			_book.Populate(@"{ ""FOR"": """" }")
+				 .Should().HaveCount(0);
+		}
+
+		[Fact]
 		public void HandleInvalidStatBody()
 		{
 			_book.Populate(@"{ ""FOR"": [] }")

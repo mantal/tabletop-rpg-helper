@@ -73,14 +73,16 @@ namespace RPG.Engine
 		public double Resolve()
 		{
 			Variables[_lastValueId] = 0;
-			var result = 0d;
 			foreach (var expression in Expressions)
 			{
-				result = expression.Resolve();
-				Variables[_lastValueId] = result;
+				var result = expression.Resolve();
+				if (UseLastValue(expression))
+					Variables[_lastValueId] = result;
+				else
+					Variables[_lastValueId] = Variables[_lastValueId] + result;
 			}
 
-			return result;
+			return Variables[_lastValueId];
 		}
 
 		public bool Exists(string expressionName) => Expressions.Any(e => e.Name == expressionName);
@@ -172,5 +174,8 @@ namespace RPG.Engine
 
 			}
 		}
+
+		private bool UseLastValue(Expression expression) 
+			=> expression.Nodes.Any(n => n is VariableNode varNode && varNode.Id == _lastValueId);
 	}
 }
