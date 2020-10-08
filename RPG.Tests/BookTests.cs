@@ -216,9 +216,16 @@ namespace RPG.Tests
 		}
 
 		[Fact]
-		public void HandleInvalidExpressionObject()
+		public void HandleExpressionObjectWithMissingProperty()
 		{
-			_book.Populate(@"{ ""FOR"": { ""expr"": { ""1"": null } }")
+			_book.Populate(@"{ ""FOR"": { ""expr"": { ""position"": 1 } }")
+				 .Should().HaveCount(1);
+		}
+
+		[Fact]
+		public void HandleExpressionObjectWithExtraProperties()
+		{
+			_book.Populate(@"{ ""FOR"": { ""expr"": { ""position"": 1 } }")
 				 .Should().HaveCount(1);
 		}
 

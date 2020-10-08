@@ -249,6 +249,13 @@ namespace RPG.Engine
 							}
 						}
 
+						var extraProps = props.Keys.Where(name => name != "expression" && name != "position").ToArray();
+						if (extraProps.Any())
+						{
+							//todo add stat path to error?
+							errors.Add(reader, $"Unknown properties ({string.Join(',', $"'{extraProps}'")}) will be ignored. Allowed properties are 'expression' and 'position'");
+						}
+
 						var exprErrors = _parser.Parse(out var expression, props["expression"], context).FormatErrors(reader);
 						errors = errors.Concat(exprErrors).ToList();
 						if (exprErrors.Any())
