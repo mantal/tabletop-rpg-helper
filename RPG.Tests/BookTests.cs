@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using RPG.Engine;
 using RPG.Engine.Ids;
 using RPG.Engine.Services;
@@ -198,6 +198,20 @@ namespace RPG.Tests
 			_book.Populate(@"{ ""FOR"": .5 }")
 				 .Should().HaveCount(0);
 			_statService.GetValue("FOR").Should().Be(.5);
+		}
+
+		[Fact(Skip = "needs continue after error")] 
+		public void HandleUnnamedSection()
+		{
+			_book.Populate(@"{ ""FOR"": 0 }{ }")
+				 .Should().HaveCount(1);
+		}
+
+		[Fact]
+		public void HandleInvalidExpressionObject()
+		{
+			_book.Populate(@"{ ""FOR"": { ""expr"": { ""1"": null } }")
+				 .Should().HaveCount(1);
 		}
 
 		#endregion

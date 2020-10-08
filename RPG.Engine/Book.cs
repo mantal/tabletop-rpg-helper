@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -20,6 +20,7 @@ namespace RPG.Engine
 		private readonly StatService _statService;
 		private readonly FunctionService _functionService;
 		private readonly Parser.Parser _parser;
+		private bool _jsonHasNext = false;
 
 		public Book(StatService statService, FunctionService functionService)
 		{
@@ -36,6 +37,7 @@ namespace RPG.Engine
 			if (json[0] != '{')
 				json = '{' + json + '}';
 
+			_jsonHasNext = false;
 			var errors = new List<string>();
 			var reader = new JsonTextReader(new StringReader(json));
 			var context = new ParsingContext
@@ -43,8 +45,12 @@ namespace RPG.Engine
 				FunctionService = _functionService,
 				StatService = _statService,
 			};
-
+			
 			errors = errors.Concat(AddSection(reader, context, "#root", null)).ToList();
+
+			//TODO tant qu'on ne continue pas apres une erreur on ne peut pas verifier si on a atteint la fin du fichier
+			//if (_jsonHasNext && reader.ReadSkipComments())
+			//	errors.Add(reader, "multiple root sections detected");
 
 			return errors;
 		}
@@ -70,14 +76,14 @@ namespace RPG.Engine
 			else
 				_sections[sectionId] = new Section(sectionId, _sections[parentSectionId].Default);
 
-			reader.ReadSkipComments();
-			if (reader.TokenType != JsonToken.StartObject)
+			_jsonHasNext = reader.ReadSkipComments();
+			if (!_jsonHasNext || reader.TokenType != JsonToken.StartObject)
 			{
 				errors.Add(reader, $"expected section start but got: {(string?)reader.Value}");
 				return errors; //TODO continue after error
 			}
 
-			while (reader.ReadSkipComments() && reader.TokenType != JsonToken.EndObject)
+			while ((_jsonHasNext = reader.ReadSkipComments()) && reader.TokenType != JsonToken.EndObject)
 			{
 				if (reader.TokenType != JsonToken.PropertyName)
 				{
@@ -152,9 +158,9 @@ namespace RPG.Engine
 			context.StatId = new StatId(id);
 			stat = new Stat(_sections[sectionId].Default, context.StatId);
 
-			reader.ReadSkipComments();
+			_jsonHasNext = reader.ReadSkipComments();
 
-			if (reader.TokenType.IsValue())
+			if (reader.TokenType.IsNumberOrString())
 			{
 				var rawExpression = GetValueAsString(reader);
 				if (rawExpression == null)
@@ -162,6 +168,9 @@ namespace RPG.Engine
 					errors.Add(reader, $"expected a string or a number but got {reader.Value?.ToString()}");
 					return errors;
 				}
+
+				if (string.IsNullOrWhiteSpace(rawExpression))
+					return errors;
 				errors = _parser.Parse(out var expression, rawExpression, context).FormatErrors(reader).ToList();
 				if (errors.Any())
 					return errors;
@@ -171,10 +180,15 @@ namespace RPG.Engine
 			}
 			else if (reader.TokenType == JsonToken.StartObject)
 			{
-				while (reader.ReadSkipComments() && reader.TokenType == JsonToken.PropertyName)
+				while ((_jsonHasNext = reader.ReadSkipComments()) && reader.TokenType == JsonToken.PropertyName)
 				{
 					var expressionName = (string) reader.Value!;
-					reader.ReadSkipComments();
+					_jsonHasNext = reader.ReadSkipComments();
+					if (!_jsonHasNext)
+					{
+						errors.Add(reader, "unexpected end");
+						return errors;
+					}
 
 					if (expressionName.StartsWith(':'))
 					{
@@ -191,7 +205,7 @@ namespace RPG.Engine
 						}
 						stat.AddOrUpdateVariable(new VariableId(expressionName, stat.Id), value);
 					}
-					if (reader.TokenType.IsValue())
+					if (reader.TokenType.IsNumberOrString())
 					{
 						var rawExpression = GetValueAsString(reader);
 						if (rawExpression == null)
@@ -199,6 +213,12 @@ namespace RPG.Engine
 							errors.Add(reader, $"expected a string or a number after expression declaration but got {reader.Value?.ToString()}");
 							continue;
 						}
+
+						// Since all stats defaults to 0 we can allow empty expressions
+						// This is useful when default already provide everything
+						if (string.IsNullOrWhiteSpace(rawExpression))
+							continue;
+
 						var exprErrors = _parser.Parse(out var expression, rawExpression, context).FormatErrors(reader);
 						errors = errors.Concat(exprErrors).ToList();
 						if (exprErrors.Any())
@@ -246,14 +266,19 @@ namespace RPG.Engine
 					}
 				}
 			}
+			else
+			{
+				errors.Add(reader, "expected expression string or expression object");
+				return errors;
+			}
 
 			return errors;
 		}
 
-		private IDictionary<string, string> DeserializeFlatObject(JsonReader reader)
+		private IDictionary<string, string> DeserializeFlatObject(JsonTextReader reader)
 		{
 			var props = new Dictionary<string, string>();
-			while (reader.Read() && reader.TokenType != JsonToken.EndObject)
+			while ((_jsonHasNext = reader.ReadSkipComments()) && reader.TokenType != JsonToken.EndObject)
 			{
 				var name = (string) reader.Value!;
 				var value = reader.ReadAsString()!;
@@ -263,7 +288,7 @@ namespace RPG.Engine
 			return props;
 		}
 
-		private string? GetValueAsString(JsonReader reader)
+		private string? GetValueAsString(JsonTextReader reader)
 			=> reader.TokenType switch
 			   {
 				   _ when reader.Value == null => null,
@@ -289,7 +314,7 @@ namespace RPG.Engine
 			return errors.Select(e => $"error: {reader.LineNumber}:{reader.LinePosition} {e}");
 		}
 
-		public static bool ReadSkipComments(this JsonReader reader)
+		public static bool ReadSkipComments(this JsonTextReader reader)
 		{
 			bool ret;
 			while ((ret = reader.Read()) && reader.TokenType == JsonToken.Comment)
@@ -297,29 +322,15 @@ namespace RPG.Engine
 
 			return ret;
 		}
-
-		public static bool IsValue(this JsonToken token)
+		
+		public static bool IsNumberOrString(this JsonToken token)
 			=> token switch
 			   {
-				   JsonToken.None             => false,
-				   JsonToken.StartObject      => false,
-				   JsonToken.StartArray       => false,
-				   JsonToken.StartConstructor => false,
-				   JsonToken.PropertyName     => false,
-				   JsonToken.Comment          => false,
-				   JsonToken.Raw              => false,
-				   JsonToken.Null             => false,
-				   JsonToken.Undefined        => false,
-				   JsonToken.EndObject        => false,
-				   JsonToken.EndArray         => false,
-				   JsonToken.EndConstructor   => false,
-				   JsonToken.Integer          => true,
-				   JsonToken.Float            => true,
-				   JsonToken.String           => true,
-				   JsonToken.Boolean          => true,
-				   JsonToken.Date             => true,
-				   JsonToken.Bytes            => true,
-				   _                          => throw new ArgumentOutOfRangeException(nameof(token), token, null)
+				   JsonToken.Integer => true,
+				   JsonToken.Float   => true,
+				   JsonToken.String  => true,
+				   JsonToken.Boolean => true,
+				   _                 => false,
 			   };
 	}
 
