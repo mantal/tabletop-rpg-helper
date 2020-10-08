@@ -12,7 +12,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RPG.Tests", "RPG.Tests\RPG.Tests.csproj", "{0D8DEF49-CCB3-43D9-AC16-23177B30BF44}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RPG.Engine", "RPG.Engine\RPG.Engine.csproj", "{E76004E5-05D1-46E0-A10A-11C950442088}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RPG.Engine", "RPG.Engine\RPG.Engine.csproj", "{E76004E5-05D1-46E0-A10A-11C950442088}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

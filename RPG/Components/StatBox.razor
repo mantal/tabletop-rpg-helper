@@ -1,0 +1,38 @@
+﻿@using RPG.Engine
+@using RPG.Engine.Ids
+
+@Stat.Id: <input type="number" size="2" required @onchange="@OnChange" value="@_base" readonly="@_readOnly"/>
+
+@code {
+#nullable disable // checked in OnInitialized
+    [Parameter]
+    public Stat Stat { get; set; }
+#nullable restore
+
+#nullable disable // set in OnInitialized 
+    private VariableId _baseId;
+#nullable restore
+
+    private double _base = 0;
+    private bool _readOnly;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+
+        if (Stat == null)
+            throw new ArgumentNullException(nameof(Stat));
+
+        _baseId = new VariableId(":base", Stat.Id);
+        _base = Stat.GetVariable(_baseId);
+        _readOnly = Stat.GetVariable(new VariableId(":cost", Stat.Id)) <= 0;
+        StateHasChanged();
+    }
+
+    private void OnChange(ChangeEventArgs e)
+    {
+        _base = double.Parse((string) e.Value);
+        Stat.AddOrUpdateVariable(_baseId, _base);
+        //todo event statService
+    }
+}
