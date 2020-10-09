@@ -7,13 +7,13 @@ using System.Linq;
 
 namespace RPG.Engine.Utils
 {
-    public class BookReader
+    public class BookParser
     {
 		private readonly TextReader _reader;
-		private int linePos = 0;
-		private int lineNumber = 1;
+		private int _linePosition = 0;
+		private int _lineNumber = 1;
 
-		public BookReader(TextReader reader)
+		public BookParser(TextReader reader)
 		{
 			_reader = reader;
 		}
@@ -45,7 +45,7 @@ namespace RPG.Engine.Utils
 				SkipWhitespaces();
 				if ((char)_reader.Peek() == '}')
 				{
-					_reader.Read();
+					Read();
 					break;
 				}
 			}
@@ -79,16 +79,16 @@ namespace RPG.Engine.Utils
 						|| (char)c == '-'
 						|| (char)c == '#'
 						);) 
-				id += (char) _reader.Read();
+				id += (char) Read();
 
 			if (id == "")
-				throw new Exception("Missing identifier");
+				throw BuildException("Missing identifier");
 
 			SkipWhitespaces();
 
 			var next = _reader.Peek();
 			if (next == -1)
-				throw new Exception("unexpected end of file"); // TODO better
+				throw BuildException("unexpected end of file"); // TODO better
 
 			NodeType type;
 			if (next == ':')
@@ -99,8 +99,8 @@ namespace RPG.Engine.Utils
 				id = string.IsNullOrEmpty(id) ? "{" : id;
 			}
 			else
-				throw new Exception($"expected property start ':' or object start '{{' but got: '{(char)next}'");
-			_reader.Read();
+				throw BuildException($"expected property start ':' or object start '{{' but got: '{(char)next}'");
+			Read();
 
 			SkipWhitespaces();
 
@@ -116,19 +116,36 @@ namespace RPG.Engine.Utils
 			for (int c;
 				 (c = _reader.Peek()) != -1
 				 && char.IsWhiteSpace((char) c);)
-				_reader.Read();
+				Read();
+		}
+
+		private int Read()
+		{
+			var c = _reader.Read();
+
+			if (c == '\n')
+			{
+				_linePosition = 0;
+				_lineNumber++;
+			}
+			else
+				_linePosition++;
+
+			return c;
 		}
 
 		private string ReadLine()
 		{
-			//TODO keep track of position
 			var line = "";
 			
-			for (int c; (c = _reader.Read()) != -1 && c != '\n';)
+			for (int c; (c = Read()) != -1 && c != '\n';)
 				line += (char)c;
 
 			return line;
 		}
+
+		private BookFormatException BuildException(string message) 
+			=> new BookFormatException(_lineNumber, _linePosition, message);
 
 		[DebuggerDisplay("({Type}) {Value}")]
 		public class Node
@@ -152,6 +169,19 @@ namespace RPG.Engine.Utils
 			String,
 			Integer,
 			Float,
+		}
+	}
+
+	public class BookFormatException : Exception
+	{
+		public int LineNumber { get; }
+		public int LinePosition { get; }
+
+		public BookFormatException(int lineNumber, int linePosition, string message)
+			: base($"error at line{lineNumber}:{linePosition}: {message}")
+		{
+			LineNumber = lineNumber;
+			LinePosition = linePosition;
 		}
 	}
 }

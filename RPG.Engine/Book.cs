@@ -7,8 +7,8 @@ using RPG.Engine.Ids;
 using RPG.Engine.Parser;
 using RPG.Engine.Services;
 using RPG.Engine.Utils;
-using Node = RPG.Engine.Utils.BookReader.Node;
-using NodeType = RPG.Engine.Utils.BookReader.NodeType;
+using Node = RPG.Engine.Utils.BookParser.Node;
+using NodeType = RPG.Engine.Utils.BookParser.NodeType;
 
 namespace RPG.Engine
 {
@@ -33,7 +33,7 @@ namespace RPG.Engine
 		{
 			try
 			{
-				return Populate(new BookReader(new StringReader(json)).Parse());
+				return Populate(new BookParser(new StringReader(json)).Parse());
 			}
 			catch (Exception e)
 			{

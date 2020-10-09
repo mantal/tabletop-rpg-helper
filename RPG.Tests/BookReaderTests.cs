@@ -11,25 +11,25 @@ namespace RPG.Tests
 		[Fact]
 		public void ParseProperty()
 		{
-			var node = new BookReader(new StringReader("expr: value")).Parse();
+			var node = new BookParser(new StringReader("expr: value")).Parse();
 
-			var expected = new BookReader.Node
+			var expected = new BookParser.Node
 			{
-				Type = BookReader.NodeType.ObjectIdentifier,
+				Type = BookParser.NodeType.ObjectIdentifier,
 				Value = "#root",
 				Children = new []
 				{
-					new BookReader.Node
+					new BookParser.Node
 					{
-						Type = BookReader.NodeType.PropertyIdentifier,
+						Type = BookParser.NodeType.PropertyIdentifier,
 						Value = "expr",
 						Children = new []
 						{
-							new BookReader.Node
+							new BookParser.Node
 							{
-								Type = BookReader.NodeType.String,
+								Type = BookParser.NodeType.String,
 								Value = "value",
-								Children = Enumerable.Empty<BookReader.Node>(),
+								Children = Enumerable.Empty<BookParser.Node>(),
 							},
 						},
 					},
@@ -42,39 +42,39 @@ namespace RPG.Tests
 		[Fact]
 		public void ParseProperties()
 		{
-			var node = new BookReader(new StringReader("expr: value\n expr2: value2")).Parse();
+			var node = new BookParser(new StringReader("expr: value\n expr2: value2")).Parse();
 
-			var expected = new BookReader.Node
+			var expected = new BookParser.Node
 			{
-				Type = BookReader.NodeType.ObjectIdentifier,
+				Type = BookParser.NodeType.ObjectIdentifier,
 				Value = "#root",
 				Children = new[]
 				{
-					new BookReader.Node
+					new BookParser.Node
 					{
-						Type = BookReader.NodeType.PropertyIdentifier,
+						Type = BookParser.NodeType.PropertyIdentifier,
 						Value = "expr",
 						Children = new []
 						{
-							new BookReader.Node
+							new BookParser.Node
 							{
-								Type = BookReader.NodeType.String,
+								Type = BookParser.NodeType.String,
 								Value = "value",
-								Children = Enumerable.Empty<BookReader.Node>(),
+								Children = Enumerable.Empty<BookParser.Node>(),
 							},
 						},
 					},
-					new BookReader.Node
+					new BookParser.Node
 					{
-						Type = BookReader.NodeType.PropertyIdentifier,
+						Type = BookParser.NodeType.PropertyIdentifier,
 						Value = "expr2",
 						Children = new []
 						{
-							new BookReader.Node
+							new BookParser.Node
 							{
-								Type = BookReader.NodeType.String,
+								Type = BookParser.NodeType.String,
 								Value = "value2",
-								Children = Enumerable.Empty<BookReader.Node>(),
+								Children = Enumerable.Empty<BookParser.Node>(),
 							},
 						},
 					},
@@ -87,45 +87,45 @@ namespace RPG.Tests
 		[Fact]
 		public void ParseObject()
 		{
-			var node = new BookReader(new StringReader("obj { expr: value\n expr2: value2\n }")).Parse();
+			var node = new BookParser(new StringReader("obj { expr: value\n expr2: value2\n }")).Parse();
 
-			var expected = new BookReader.Node
+			var expected = new BookParser.Node
 			{
-				Type = BookReader.NodeType.ObjectIdentifier,
+				Type = BookParser.NodeType.ObjectIdentifier,
 				Value = "#root",
 				Children = new[]
 				{
-					new BookReader.Node
+					new BookParser.Node
 					{
-						Type = BookReader.NodeType.ObjectIdentifier,
+						Type = BookParser.NodeType.ObjectIdentifier,
 						Value = "obj",
 						Children = new []
 						{
-							new BookReader.Node
+							new BookParser.Node
 							{
-								Type = BookReader.NodeType.PropertyIdentifier,
+								Type = BookParser.NodeType.PropertyIdentifier,
 								Value = "expr",
 								Children = new []
 								{
-									new BookReader.Node
+									new BookParser.Node
 									{
-										Type = BookReader.NodeType.String,
+										Type = BookParser.NodeType.String,
 										Value = "value",
-										Children = Enumerable.Empty<BookReader.Node>(),
+										Children = Enumerable.Empty<BookParser.Node>(),
 									},
 								},
 							},
-												new BookReader.Node
+												new BookParser.Node
 					{
-						Type = BookReader.NodeType.PropertyIdentifier,
+						Type = BookParser.NodeType.PropertyIdentifier,
 						Value = "expr2",
 						Children = new []
 						{
-							new BookReader.Node
+							new BookParser.Node
 							{
-								Type = BookReader.NodeType.String,
+								Type = BookParser.NodeType.String,
 								Value = "value2",
-								Children = Enumerable.Empty<BookReader.Node>(),
+								Children = Enumerable.Empty<BookParser.Node>(),
 							},
 						},
 					},
