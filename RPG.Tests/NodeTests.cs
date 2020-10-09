@@ -29,7 +29,7 @@ namespace RPG.Tests
 		[Fact]
 		public void ParseVariable()
 		{
-			var node = Node.FromString("F_O-R:b_as-e", _context);
+			var node = Node.FromString("F_O-R.b_as-e", _context);
 
 			node.Should().BeOfType<VariableNode>();
 		}
@@ -38,7 +38,7 @@ namespace RPG.Tests
 		public void ParseShorthandVariable()
 		{
 			_context.StatId = new StatId("F_O-R");
-			var node = Node.FromString(":b_as-e", _context);
+			var node = Node.FromString(".b_as-e", _context);
 
 			node.Should().BeOfType<VariableNode>();
 		}
@@ -47,7 +47,7 @@ namespace RPG.Tests
 		public void DetectInvalidVariable()
 		{
 			_context.StatId = new StatId("F_O-R");
-			var node = Node.FromString(":b_as:-e", _context);
+			var node = Node.FromString(".b_as:-e", _context);
 
 			node.Should().BeOfType<InvalidNode>();
 		}

@@ -12,7 +12,7 @@ namespace RPG.Engine.Ids
 		{
 			if (!id.IsValidVariableId())
 				throw new ArgumentException($"Invalid variable id: {id}", nameof(id));
-			if (id[0] == ':')
+			if (id[0] == '.')
 			{
 				if (statId == null)
 					throw new ArgumentException($"Shorthand variable id requires explicit stat id", nameof(id));
@@ -21,7 +21,7 @@ namespace RPG.Engine.Ids
 			}
 			else
 			{
-				var s = id.Split(':');
+				var s = id.Split('.');
 				StatId = new StatId(s[0]);
 				Id = s[1];
 			}
@@ -56,18 +56,20 @@ namespace RPG.Engine.Ids
 
 		public override int GetHashCode() => (Id, StatId).GetHashCode();
 
-		public override string ToString() => $"{StatId}:{Id}";
+		public override string ToString() => $"{StatId}.{Id}";
 	}
 
 	public static class VariableIdStringExtensions
 	{
 		public static bool IsValidVariableId(this string? s)
 			=> !string.IsNullOrEmpty(s)
-			   && s[^1] != ':'
-			   && s.All(c => char.IsLetterOrDigit(c) 
-							 || c == ':'
+			   && s.Length > 1
+			   && s[^1] != '.'
+			   && s.Count(c => c == '.') == 1
+			   && char.IsLetter(s[s.IndexOf('.') + 1])
+			   && s.All(c => char.IsLetterOrDigit(c)
+							 || c == '.'
 							 || c == '_'
-							 || c == '-')
-			   && s.Count(c => c == ':') == 1;
+							 || c == '-');
 	}
 }

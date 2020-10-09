@@ -40,7 +40,7 @@ namespace RPG.Engine
 		{
 			Id = id;
 			Expressions = expressions;
-			_lastValueId = new VariableId(":value", Id);
+			_lastValueId = new VariableId(".value", Id);
 			Variables[_lastValueId] = 0;
 			foreach (var node in Expressions.SelectMany(e => e.Nodes))
 			{
@@ -53,9 +53,9 @@ namespace RPG.Engine
 		public Stat(Stat stat, StatId? id = null)
 		{
 			Id = id ?? new StatId(stat.Id);
-			_lastValueId = new VariableId(":" + stat._lastValueId.Id, Id);
+			_lastValueId = new VariableId("." + stat._lastValueId.Id, Id);
 			Variables = stat.Variables
-							.Select(var => (Id: new VariableId(":" + var.Key.Id, Id), Value: var.Value))
+							.Select(var => (Id: new VariableId("." + var.Key.Id, Id), Value: var.Value))
 							.ToDictionary(v => v.Id, v => v.Value);
 			Expressions = stat.Expressions.Select(e 
 													  => new NamedExpression(e.Name,

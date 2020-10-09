@@ -25,8 +25,9 @@ namespace RPG.Engine.Parser
 		public override double GetValue() => StatService.GetValue(Id);
 
 		public override string ToString() => Id.ToString();
-		//Prepend ':' because VariableId strip it from it's property Id but expected it when building
-		public override Node Clone() => new VariableNode(StatService, ":" + Id.Id, Id.StatId);
-		public Node Clone(StatId statId) => new VariableNode(StatService, ":" + Id.Id, statId ?? Id.StatId);
+		
+		//Prepend '.' because VariableId strip it from it's property Id but expected it when building
+		public override Node Clone() => new VariableNode(StatService, "." + Id.Id, Id.StatId);
+		public Node Clone(StatId statId) => new VariableNode(StatService, "." + Id.Id, statId ?? Id.StatId);
 	}
 }

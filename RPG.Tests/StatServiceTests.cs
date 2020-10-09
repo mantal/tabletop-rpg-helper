@@ -25,15 +25,15 @@ namespace RPG.Tests
 		[Fact]
 		public void AddShortVariable()
 		{
-			_statService.Add("FOR", ":Base").Should().BeEmpty();
-			_statService.GetValue("FOR:Base").Should().Be(0);
+			_statService.Add("FOR", ".base").Should().BeEmpty();
+			_statService.GetValue("FOR.base").Should().Be(0);
 		}
 
 		[Fact]
 		public void AddVariable()
 		{
-			_statService.Add("DEX", ":Base").Should().BeEmpty();
-			_statService.Add("FOR", "DEX:Base").Should().BeEmpty();
+			_statService.Add("DEX", ".base").Should().BeEmpty();
+			_statService.Add("FOR", "DEX.base").Should().BeEmpty();
 
 			_statService.GetValue("FOR").Should().Be(0);
 		}
@@ -41,7 +41,7 @@ namespace RPG.Tests
 		[Fact]
 		public void AddMixed()
 		{
-			const string modifiers = "A:base + B - C * D / E + 1 - 2 * 3 / 4";
+			const string modifiers = "A.base + B - C * D / E + 1 - 2 * 3 / 4";
 
 			_statService.Add("B");
 			_statService.Add("C");
@@ -63,13 +63,13 @@ namespace RPG.Tests
 		public void AddNotAndDetectUnknownVariable()
 		{
 			_statService.Add("DEX");
-			_statService.Add("FOR", "DEX:no").Should().HaveCount(1);
+			_statService.Add("FOR", "DEX.no").Should().HaveCount(1);
 		}
 
 		[Fact]
 		public void AddNotAndDetectUnknownStatVariable()
 		{
-			_statService.Add("FOR", "DEX:no").Should().HaveCount(1);
+			_statService.Add("FOR", "DEX.no").Should().HaveCount(1);
 		}
 
 		[Fact]

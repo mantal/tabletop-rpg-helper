@@ -22,24 +22,38 @@ namespace RPG.Tests
 		//TODO test errors
 
 		[Fact]
-		public void ImportStat()
+		public void ImportIntStat()
 		{
-			_book.Populate(@"{""FOR"": ""2""}").Should().BeEmpty();
+			_book.Populate(@"FOR: 2").Should().BeEmpty();
+			_statService.GetValue("FOR").Should().Be(2);
+		}
+
+		[Fact]
+		public void ImportFloatStat()
+		{
+			_book.Populate(@"FOR: .2").Should().BeEmpty();
+			_statService.GetValue("FOR").Should().Be(.2);
+		}
+
+		[Fact]
+		public void ImportStringStat()
+		{
+			_book.Populate(@"FOR: 1 + 1").Should().BeEmpty();
 			_statService.GetValue("FOR").Should().Be(2);
 		}
 
 		[Fact]
 		public void ImportStatWithVariable()
 		{
-			_book.Populate(@"{""FOR"": { "":var"": 33, ""base"": ""2"" } }").Should().BeEmpty();
+			_book.Populate("FOR { .var: 33\n expr: 2\n }").Should().BeEmpty();
 			_statService.GetValue("FOR").Should().Be(2);
-			_statService.Get("FOR").TryGetVariable(new VariableId("FOR:var")).Should().Be(33);
+			_statService.Get("FOR").TryGetVariable(new VariableId("FOR.var")).Should().Be(33);
 		}
 
 		[Fact]
 		public void ImportStats()
 		{
-			_book.Populate(@"{""FOR"": ""2"", ""DEX"": ""3""}").Should().BeEmpty();
+			_book.Populate("FOR: 2\n DEX: 3").Should().BeEmpty();
 			_statService.GetValue("FOR").Should().Be(2);
 			_statService.GetValue("DEX").Should().Be(3);
 		}
@@ -47,14 +61,14 @@ namespace RPG.Tests
 		[Fact]
 		public void ImportMultiExpressionStat()
 		{
-			_book.Populate(@"{""FOR"": { ""expr0"": ""2"", ""expr1"": "":value + 2"" } }").Should().BeEmpty();
+			_book.Populate("FOR { expr0: 2\n expr1: .value + 2\n }").Should().BeEmpty();
 			_statService.GetValue("FOR").Should().Be(4);
 		}
 
 		[Fact]
 		public void ImportMultiExpressionStats()
 		{
-			_book.Populate(@"{""FOR"": { ""expr0"": ""2"", ""expr1"": "":value + 2"" }, ""DEX"": { ""expr0"": ""2"", ""expr1"": ""FOR + :value"" } }")
+			_book.Populate("FOR { expr0: 2\n expr1: .value + 2\n } DEX { expr0: 2\n expr1: FOR + .value\n } }")
 				 .Should().BeEmpty();
 			_statService.GetValue("FOR").Should().Be(4);
 			_statService.GetValue("DEX").Should().Be(6);
@@ -63,7 +77,7 @@ namespace RPG.Tests
 		[Fact]
 		public void ImportMultiExpressionWithPositionStat()
 		{
-			_book.Populate(@"{""FOR"": { ""should_run_last"": ""1"", ""should_run_first"": { ""Position"": -2, ""Expression"": "":value / 2"" } }")
+			_book.Populate("FOR { should_run_last: 1\n should_run_first { Position: -2\n Expression: .value / 2\n } }")
 				 .Should().BeEmpty();
 			_statService.GetValue("FOR").Should().Be(1);
 		}
@@ -71,7 +85,7 @@ namespace RPG.Tests
 		[Fact]
 		public void ImportDefault()
 		{
-			_book.Populate(@"{""$default"": ""2"", ""FOR"": "":value + 2""}")
+			_book.Populate("_default: 2\n FOR: .value + 2\n")
 				 .Should().BeEmpty();
 			_statService.GetValue("FOR").Should().Be(4);
 		}
@@ -79,7 +93,7 @@ namespace RPG.Tests
 		[Fact]
 		public void ImportDefaultWithVariable()
 		{
-			_book.Populate(@"{""$default"": { "":var"": 2 }, ""FOR"": "":var + 2""}")
+			_book.Populate("_default { .var: 2\n } FOR: .var + 2\n")
 				 .Should().BeEmpty();
 			_statService.GetValue("FOR").Should().Be(4);
 		}
@@ -87,7 +101,7 @@ namespace RPG.Tests
 		[Fact]
 		public void ImportMultiExpressionDefault()
 		{
-			_book.Populate(@"{""$default"": { ""expr0"": "":base + 1"", ""expr1"": "":value + 1"" }, ""FOR"": "":value + 2""}")
+			_book.Populate("_default { expr0: .base + 1\n expr1: .value + 1\n } FOR: .value + 2\n}")
 				 .Should().BeEmpty();
 			_statService.GetValue("FOR").Should().Be(4);
 		}
@@ -95,7 +109,7 @@ namespace RPG.Tests
 		[Fact]
 		public void OverrideDefaultVariable()
 		{
-			_book.Populate(@"{""$default"": { "":var"": 2, ""expr"": "":var"" }, ""FOR"": { "":var"": 4 } }")
+			_book.Populate("_default { .var: 2\n expr: .var\n } FOR { .var: 4\n } }")
 				 .Should().BeEmpty();
 			_statService.GetValue("FOR").Should().Be(4);
 		}
@@ -103,7 +117,7 @@ namespace RPG.Tests
 		[Fact]
 		public void ImportSection()
 		{
-			_book.Populate(@"{ ""#section"": { ""FOR"": ""2"" } }")
+			_book.Populate("#section { FOR: 2\n } }")
 				 .Should().BeEmpty();
 			_statService.GetValue("FOR").Should().Be(2);
 			_book.Sections.ContainsKey("#section").Should().BeTrue("it should have imported the section");
@@ -113,7 +127,7 @@ namespace RPG.Tests
 		[Fact]
 		public void DefaultShouldCascade()
 		{
-			_book.Populate(@"{""$default"": ""2"", ""FOR"": "":value + 2""}")
+			_book.Populate("_default: 2\n #section { FOR: .value + 2\n }")
 				 .Should().BeEmpty();
 			_statService.GetValue("FOR").Should().Be(4);
 		}
@@ -131,20 +145,13 @@ namespace RPG.Tests
 		public void HandleEmptyBody()
 		{
 			_book.Populate(@"{}")
-				 .Should().BeEmpty();
+				 .Should().HaveCount(1);
 		}
-
-		[Fact]
-		public void HandleImplicitRootSection()
-		{
-			_book.Populate(@"test: {}")
-				 .Should().BeEmpty();
-		}
-
+		
 		[Fact]
 		public void HandleDuplicateStats()
 		{
-			_book.Populate(@"{""FOR"": ""2"", ""FOR"": ""3""}")
+			_book.Populate("FOR: 2\n FOR: 3\n")
 				 .Should().HaveCount(1);
 		}
 
@@ -152,58 +159,35 @@ namespace RPG.Tests
 		[Fact(Skip = "not_impl")]
 		public void HandleDuplicateExpressionInSameBlock()
 		{
-			_book.Populate(@"{ ""FOR"": {""expr"": ""2"", ""expr"": ""3""} }")
+			_book.Populate("FOR { expr: 2\n expr: 3\n }")
 				 .Should().HaveCount(1);
-		}
-
-		[Fact]
-		public void HandleEmptyStatBody()
-		{
-			_book.Populate(@"{ ""FOR"": """" }")
-				 .Should().HaveCount(0);
 		}
 
 		[Fact]
 		public void HandleInvalidStatBody()
 		{
-			_book.Populate(@"{ ""FOR"": [] }")
+			_book.Populate("FOR: []")
 				 .Should().HaveCount(1);
 		}
 
 		[Fact]
 		public void HandleInvalidShortStatId()
 		{
-			_book.Populate(@"{ ""F°R"": 1 }")
+			_book.Populate("F°R: 1")
 				 .Should().HaveCount(1);
 		}
 
 		[Fact]
 		public void HandleInvalidStatId()
 		{
-			_book.Populate(@"{ ""F°R"": {} }")
+			_book.Populate("F°R: { val: 2\n }")
 				 .Should().HaveCount(1);
 		}
-
-		[Fact]
-		public void HandleInteger()
-		{
-			_book.Populate(@"{ ""FOR"": 1 }")
-				 .Should().HaveCount(0);
-			_statService.GetValue("FOR").Should().Be(1);
-		}
-
-		[Fact]
-		public void HandleFloat()
-		{
-			_book.Populate(@"{ ""FOR"": .5 }")
-				 .Should().HaveCount(0);
-			_statService.GetValue("FOR").Should().Be(.5);
-		}
-
+		
 		[Fact]
 		public void IgnoreCaseInExpressionProperties()
 		{
-			_book.Populate(@"{""FOR"": { ""should_run_last"": ""1"", ""should_run_first"": { ""PoSitIoN"": -2, ""ExPrEsSiOn"": "":value / 2"" } }")
+			_book.Populate("FOR { should_run_last: 1\n should_run_first { PoSitIoN: -2\n ExPrEsSiOn\n: .value / 2\n }")
 				 .Should().BeEmpty();
 			_statService.GetValue("FOR").Should().Be(1);
 		}
@@ -211,21 +195,35 @@ namespace RPG.Tests
 		[Fact(Skip = "needs continue after error")] 
 		public void HandleUnnamedSection()
 		{
-			_book.Populate(@"{ ""FOR"": 0 }{ }")
+			_book.Populate("{ }")
 				 .Should().HaveCount(1);
 		}
 
 		[Fact]
 		public void HandleExpressionObjectWithMissingProperty()
 		{
-			_book.Populate(@"{ ""FOR"": { ""expr"": { ""position"": 1 } }")
+			_book.Populate("FOR { expr { position: 1\n } }")
 				 .Should().HaveCount(1);
 		}
 
 		[Fact]
 		public void HandleExpressionObjectWithExtraProperties()
 		{
-			_book.Populate(@"{ ""FOR"": { ""expr"": { ""position"": 1 } }")
+			_book.Populate("FOR { expr { expression: 1\n extra: 0\n } }")
+				 .Should().HaveCount(1);
+		}
+
+		[Fact(Skip = "TODO")]
+		public void HandleExtraClosingBracket()
+		{
+			_book.Populate("FOR: 1\n }")
+				 .Should().HaveCount(1);
+		}
+
+		[Fact]
+		public void HandleUnexpectedObject()
+		{
+			_book.Populate("FOR: { expr: 1\n }")
 				 .Should().HaveCount(1);
 		}
 
