@@ -26,6 +26,14 @@ namespace RPG.Engine.Services
 				new Function(new FunctionId("$MAX"), 2, parameters => parameters.Max())
 			},
 			{
+				new FunctionId("$FLOOR"),
+				new Function(new FunctionId("$FLOOR"), 1, 1, parameters => Math.Floor(parameters[0]))
+			},
+			{
+				new FunctionId("$CEILING"),
+				new Function(new FunctionId("$CEILING"), 1, 1, parameters => Math.Ceiling(parameters[0]))
+			},
+			{
 				//TODO gerer des cas plus complexes que l'égalité / ajouter une valeur par défaut
 				new FunctionId("$IFZ"),
 				new Function(new FunctionId("$IFZ"), 3, null, 2, 
