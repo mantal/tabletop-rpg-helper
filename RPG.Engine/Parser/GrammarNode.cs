@@ -1,30 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using RPG.Engine.Services;
 
 namespace RPG.Engine.Parser
 {
 	public class GrammarNode : Node
 	{
-		public string Text { get; }
+		public GrammarNode(string text, NodeType type, int priority)
+			: base(text, type, priority)
+		{ }
 
-		public GrammarNode(StatService statService, string text, NodeType type, int priority)
-			: base(statService, type, priority)
-		{
-			Text = text;
-		}
+		public override bool IsValidOperand() 
+			=> Type == NodeType.LeftParenthesis
+			   || Type == NodeType.RightParenthesis
+			   || Type == NodeType.RightBracket;
 
-		public override bool IsExpression() => Type == NodeType.LeftParenthesis;
-
-		public override IEnumerable<string> IsValid(LinkedListNode<Node> token, ParsingContext context)
+		public override IEnumerable<string> IsValid(LinkedListNode<Node> node)
 			=> Enumerable.Empty<string>();
 
 		public override LinkedListNode<Node> Apply(LinkedListNode<Node> node)
-			=> throw new InvalidOperationException();
+			=> throw new InvalidOperationException($"{nameof(Apply)} should not be called on {nameof(GrammarNode)}");
 
-		public override string ToString() => Text;
-
-		public override Node Clone() => new GrammarNode(StatService, Text, Type, Priority);
+		public override Node Clone() => new GrammarNode(Text, Type, Priority);
 	}
 }

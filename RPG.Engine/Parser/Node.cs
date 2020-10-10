@@ -1,97 +1,109 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using RPG.Engine.Ids;
-using RPG.Engine.Services;
+using RPG.Engine.Utils;
 
 namespace RPG.Engine.Parser
 {
     public abstract class Node
 	{
 		public const int MinPriority = 0;
-		public const int MaxPriority = 4;
+		public const int MaxPriority = 8;
 
 		/// <summary>
-		/// 4 = parenthesis
-		/// 3 = function
-		/// 2 = * / %
-		/// 1 = + -
-		/// 0 = stats variables
+		/// 8  parenthesis
+		/// 7  function
+		/// 6  unary operators: + - ~
+		/// 5  * / %
+		/// 4  + -
+		/// 3  stats and variables
 		/// </summary>
 		public int Priority { get; }
 		public NodeType Type { get; }
-		protected readonly StatService StatService;
 		
-		protected Node(StatService statService, NodeType type, int priority)
+		protected string Text { get; }
+		
+		protected Node(string text, NodeType type, int priority)
 		{
-			StatService = statService;
+			Text = text;
 			Type = type;
 			Priority = priority;
 		}
 
 		public static Node FromString(string text, ParsingContext context)
 		{
-			if (string.Compare(text, ",", StringComparison.InvariantCultureIgnoreCase) == 0)
-				return new GrammarNode(context.StatService, text, NodeType.ArgumentDivider, -1);
-			if (string.Compare(text, "(", StringComparison.InvariantCultureIgnoreCase) == 0)
-				return new GrammarNode(context.StatService, text, NodeType.LeftParenthesis, 4);
-			if (string.Compare(text, ")", StringComparison.InvariantCultureIgnoreCase) == 0)
-				return new GrammarNode(context.StatService, text, NodeType.RightParenthesis, -1);
-			if (string.Compare(text, "{", StringComparison.InvariantCultureIgnoreCase) == 0)
-				return new GrammarNode(context.StatService, text, NodeType.LeftBracket, -1);
-			if (string.Compare(text, "}", StringComparison.InvariantCultureIgnoreCase) == 0)
-				return new GrammarNode(context.StatService, text, NodeType.RightBracket, -1);
-			if (string.Compare(text, "+", StringComparison.InvariantCultureIgnoreCase) == 0)
-				return new AdditionOperatorNode(context.StatService, NodeType.PlusOperator);
-			if (string.Compare(text, "-", StringComparison.InvariantCultureIgnoreCase) == 0)
-				return new AdditionOperatorNode(context.StatService, NodeType.MinusOperator);
-			if (string.Compare(text, "*", StringComparison.InvariantCultureIgnoreCase) == 0)
-				return new MultiplierOperatorNode(context.StatService, NodeType.MultiplierOperator);
-			if (string.Compare(text, "/", StringComparison.InvariantCultureIgnoreCase) == 0)
-				return new MultiplierOperatorNode(context.StatService, NodeType.DivideOperator);
-			if (string.Compare(text, "%", StringComparison.InvariantCultureIgnoreCase) == 0)
-				return new MultiplierOperatorNode(context.StatService, NodeType.ModuloOperator);
+			if (text.IsEquivalentTo(","))
+				return new GrammarNode(text, NodeType.ArgumentDivider, -1);
+			if (text.IsEquivalentTo("("))
+				return new GrammarNode(text, NodeType.LeftParenthesis, 8);
+			if (text.IsEquivalentTo(")"))
+				return new GrammarNode(text, NodeType.RightParenthesis, -1);
+			if (text.IsEquivalentTo("{"))
+				return new GrammarNode(text, NodeType.LeftBracket, -1);
+			if (text.IsEquivalentTo("}"))
+				return new GrammarNode(text, NodeType.RightBracket, -1);
+			if (text.IsEquivalentTo("+"))
+				return new AdditionOperatorNode(text, NodeType.PlusOperator);
+			if (text.IsEquivalentTo("-"))
+				return new AdditionOperatorNode(text, NodeType.MinusOperator);
+			if (text.IsEquivalentTo("*"))
+				return new MultiplierOperatorNode(text, NodeType.MultiplierOperator);
+			if (text.IsEquivalentTo("/"))
+				return new MultiplierOperatorNode(text, NodeType.DivideOperator);
+			if (text.IsEquivalentTo("%"))
+				return new MultiplierOperatorNode(text, NodeType.ModuloOperator);
 			if (text.IsValidFunctionId())
-				return new FunctionNode(context.StatService, context.FunctionService, text);
+				return new FunctionNode(context.FunctionService, text);
 			if (text.IsValidVariableId())
 				return new VariableNode(context.StatService, text, context.StatId);
 			if (double.TryParse(text, NumberStyles.Float, null, out _))
-				return new NumberNode(context.StatService, text);
+				return new NumberNode(text);
 			if (text.IsValidStatId())
 				return new StatNode(context.StatService, text);
 
-			return new InvalidNode(context.StatService, text);
+			return new InvalidNode(text);
 		}
 
-		// Does resolving this yield a ValueNode
-		public abstract bool IsExpression();
+		public abstract bool IsValidOperand();
 
-		public virtual LinkedListNode<Node> Transform(LinkedListNode<Node> token) => token;
+		/// <summary>
+		/// Transform nodes before validation happen
+		/// </summary>
+		/// <returns>the current node or the one that replaced it</returns>
+		public virtual LinkedListNode<Node> OnBeforeValidation(LinkedListNode<Node> node) => node;
 
-		public abstract IEnumerable<string> IsValid(LinkedListNode<Node> token, ParsingContext context);
+		public abstract IEnumerable<string> IsValid(LinkedListNode<Node> node);
+
+		/// <summary>
+		/// Transform nodes after validation happen
+		/// </summary>
+		/// <returns>the current node or the one that replaced it</returns>
+		public virtual LinkedListNode<Node> OnAfterValidation(LinkedListNode<Node> node) => node;
+
 		public abstract LinkedListNode<Node> Apply(LinkedListNode<Node> node);
 
-		public new abstract string ToString();
+		public override string ToString() => Text;
 
 		public enum NodeType
 		{
-			Invalid = 0,
-			Number = 1,
-			PlusOperator = 2,
-			MinusOperator = 3,
-			MultiplierOperator = 4,
-			DivideOperator = 5,
-			ModuloOperator = 6,
-			Stat = 7,
-			Variable = 8,
-			Function = 9,
-			LeftParenthesis = 10,
-			RightParenthesis = 11,
-			LeftBracket = 12,
-			RightBracket = 13,
-			ArgumentDivider = 14,
-			UnaryPlusOperator = 15,
-			UnaryMinusOperator = 16,
+			Invalid,
+			Number,
+			PlusOperator,
+			MinusOperator,
+			MultiplierOperator,
+			DivideOperator,
+			ModuloOperator,
+			Stat,
+			Variable,
+			Function,
+			LeftParenthesis,
+			RightParenthesis,
+			LeftBracket,
+			RightBracket,
+			ArgumentDivider,
+			UnaryPlusOperator,
+			UnaryMinusOperator,
 		}
 
 		public abstract Node Clone();
@@ -99,8 +111,8 @@ namespace RPG.Engine.Parser
 
 	public abstract class ValueNode : Node
 	{
-		protected ValueNode(StatService statService, NodeType type, int priority)
-			: base(statService, type, priority)
+		protected ValueNode(string text, NodeType type, int priority)
+			: base(text, type, priority)
 		{ }
 
 		public override LinkedListNode<Node> Apply(LinkedListNode<Node> node)
@@ -108,28 +120,23 @@ namespace RPG.Engine.Parser
 
 		public abstract double GetValue();
 
-		public override bool IsExpression() => true;
+		public override bool IsValidOperand() => true;
 	}
 
 	public class InvalidNode : Node
 	{
-		private readonly string _text;
+		public InvalidNode(string text)
+			: base(text, NodeType.Invalid, -1)
+		{ }
 
-		public InvalidNode(StatService statService, string text)
-			: base(statService, NodeType.Invalid, -1)
-		{
-			_text = text;
-		}
-
-		public override IEnumerable<string> IsValid(LinkedListNode<Node> token, ParsingContext context)
-			=> new[] { $"Invalid token: {_text}" };
+		public override IEnumerable<string> IsValid(LinkedListNode<Node> node)
+			=> new[] { $"Invalid node: {Text}" };
 
 		public override LinkedListNode<Node> Apply(LinkedListNode<Node> node) 
 			=> throw new InvalidOperationException();
 
-		public override string ToString() => _text;
-		public override bool IsExpression() => false;
-		public override Node Clone() => new InvalidNode(StatService, _text);
+		public override bool IsValidOperand() => false;
+		public override Node Clone() => new InvalidNode(Text);
 	}
 
 	public static class LinkedListNodeExtensions
@@ -143,8 +150,8 @@ namespace RPG.Engine.Parser
 			}
 
 			node = node.Next;
-			// ReSharper disable once AssignNullToNotNullAttribute
 			node.List.Remove(node.Previous);
+
 			return node;
 		}
 	}

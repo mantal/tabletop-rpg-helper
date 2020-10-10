@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using RPG.Engine.Services;
 
 namespace RPG.Engine.Parser
 {
@@ -9,25 +8,25 @@ namespace RPG.Engine.Parser
 	{
 		private readonly double _value;
 
-		public NumberNode(StatService statService, string token) 
-			: base(statService, NodeType.Number, -1)
+		public NumberNode(string text) 
+			: base(text, NodeType.Number, -1)
 		{
-			_value = double.Parse(token, NumberStyles.Float, null);
+			_value = double.Parse(text, NumberStyles.Float, null);
 		}
 
-		public NumberNode(StatService statService, double value) 
-			: base(statService, NodeType.Number, -1)
+		public NumberNode(double value) 
+			: base(value.ToString(CultureInfo.InvariantCulture), NodeType.Number, -1)
 		{
 			_value = value;
 		}
 
-		public override IEnumerable<string> IsValid(LinkedListNode<Node> token, ParsingContext context)
+		public override IEnumerable<string> IsValid(LinkedListNode<Node> node)
 			=> Enumerable.Empty<string>();
 
 		public override double GetValue() => _value;
 
 		public override string ToString() => _value.ToString(CultureInfo.InvariantCulture);
 
-		public override Node Clone() => new NumberNode(StatService, _value);
+		public override Node Clone() => new NumberNode(_value);
 	}
 }

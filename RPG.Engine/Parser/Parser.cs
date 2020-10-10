@@ -60,14 +60,17 @@ namespace RPG.Engine.Parser
 			if (tokens.First == null)
 				return new[] { $"Empty expression: '{s}'" };
 
+			for (var t = tokens.First; t != null; t = t.Next)
+				t = t.Value.OnBeforeValidation(t);
+
 			for (var t = tokens.First; t != null; t = t.Next) 
-				errors = errors.Concat(t.Value.IsValid(t, context)).ToList();
+				errors = errors.Concat(t.Value.IsValid(t)).ToList();
 
 			if (errors.Any())
 				return errors;
 
 			for (var t = tokens.First; t != null; t = t.Next)
-				t = t.Value.Transform(t);
+				t = t.Value.OnAfterValidation(t);
 
 			expression = new Expression(tokens);
 

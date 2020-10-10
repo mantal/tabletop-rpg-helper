@@ -8,26 +8,30 @@ namespace RPG.Engine.Parser
 	public class VariableNode : ValueNode
 	{
 		public readonly VariableId Id;
+		private readonly StatId _parentId;
+		private readonly StatService _statService;
 
 		public VariableNode(StatService statService, string id, StatId parentId)
-			: base(statService, NodeType.Stat, 0)
+			: base(id, NodeType.Stat, 0)
 		{
+			_statService = statService;
 			Id = new VariableId(id, parentId);
+			_parentId = parentId;
 		}
 
-		public override IEnumerable<string> IsValid(LinkedListNode<Node> token, ParsingContext context)
+		public override IEnumerable<string> IsValid(LinkedListNode<Node> node)
 		{
-			if (Id.StatId != context.StatId && !context.StatService.Exists(Id))
+			if (Id.StatId != _parentId && !_statService.Exists(Id))
 				return new[] { $"Undeclared variable id: {Id}" };
 			return Enumerable.Empty<string>();
 		}
 
-		public override double GetValue() => StatService.GetValue(Id);
+		public override double GetValue() => _statService.GetValue(Id);
 
 		public override string ToString() => Id.ToString();
 		
 		//Prepend '.' because VariableId strip it from it's property Id but expected it when building
-		public override Node Clone() => new VariableNode(StatService, "." + Id.Id, Id.StatId);
-		public Node Clone(StatId statId) => new VariableNode(StatService, "." + Id.Id, statId ?? Id.StatId);
+		public override Node Clone() => new VariableNode(_statService, "." + Id.Id, Id.StatId);
+		public Node Clone(StatId statId) => new VariableNode(_statService, "." + Id.Id, statId ?? Id.StatId);
 	}
 }

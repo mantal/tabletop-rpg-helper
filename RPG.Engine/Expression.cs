@@ -6,7 +6,7 @@ namespace RPG.Engine
 {
 	public class Expression
 	{
-		public static Expression Default { get; } = new Expression(new LinkedList<Node>(new [] { new NumberNode(null!, 0), }));
+		public static Expression Default { get; } = new Expression(new LinkedList<Node>(new [] { new NumberNode(0), }));
 
 		public LinkedList<Node> Nodes { get; }
 
@@ -47,7 +47,18 @@ namespace RPG.Engine
 		}
 
 		public override string ToString()
-			=> string.Join(' ', Nodes.Select(e => e.ToString()));
+		{
+			var s = "";
+			for (var node = Nodes.First; node != null; node = node.Next)
+			{
+				s += node.Value.ToString();
+				if (node.Next != null
+					&& !(node.Value is UnaryOperatorNode))
+					s += ' ';
+			}
+
+			return s;
+		}
 	}
 
 	public class NamedExpression : Expression

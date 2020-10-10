@@ -8,24 +8,26 @@ namespace RPG.Engine.Parser
 	public class StatNode : ValueNode
 	{
 		public readonly StatId Id;
+		private readonly StatService _statService;
 
 		public StatNode(StatService statService, string id)
-			: base(statService, NodeType.Variable, 0)
+			: base(id, NodeType.Variable, 0)
 		{
+			_statService = statService;
 			Id = new StatId(id);
 		}
 
-		public override IEnumerable<string> IsValid(LinkedListNode<Node> token, ParsingContext context)
+		public override IEnumerable<string> IsValid(LinkedListNode<Node> node)
 		{
-			if (!context.StatService.Exists(Id))
+			if (!_statService.Exists(Id))
 				return new[] { $"Undeclared stat id: {Id}" };
 			return Enumerable.Empty<string>();
 		}
 
-		public override double GetValue() => StatService.GetValue(Id);
+		public override double GetValue() => _statService.GetValue(Id);
 
 		public override string ToString() => Id.ToString();
 
-		public override Node Clone() => new StatNode(StatService, Id.Id);
+		public override Node Clone() => new StatNode(_statService, Id.Id);
 	}
 }

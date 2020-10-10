@@ -13,21 +13,21 @@ namespace RPG.Engine.Parser
 		public Expression[] Arguments { get; private set; } = new Expression[0];
 
 		//todo quand impl: update une fonction ne peut pas changer son numbre d'args
-		public FunctionNode(StatService statService, FunctionService functionService, string id)
-			: base(statService, NodeType.Function, 1)
+		public FunctionNode(FunctionService functionService, string id)
+			: base(id, NodeType.Function, 1)
 		{
 			_functionService = functionService;
 			Id = new FunctionId(id);
 		}
 
-		public override IEnumerable<string> IsValid(LinkedListNode<Node> token, ParsingContext context)
+		public override IEnumerable<string> IsValid(LinkedListNode<Node> node)
 		{
 			if (!_functionService.Exists(Id)) 
 				return new [] { $"Undefined function {Id}" };
 
 			var function = _functionService.Get(Id);
 
-			_argumentCount = CountArguments(token.Next);
+			_argumentCount = CountArguments(node.Next);
 			if (_argumentCount < function.RequiredParameterNumber
 				|| (function.MaxParameterNumber != null
 					&& _argumentCount > function.MaxParameterNumber))
@@ -38,46 +38,46 @@ namespace RPG.Engine.Parser
 			return Enumerable.Empty<string>();
 		}
 
-		public override LinkedListNode<Node> Transform(LinkedListNode<Node> start)
+		public override LinkedListNode<Node> OnAfterValidation(LinkedListNode<Node> start)
 		{
-			LinkedListNode<Node>? token = start;
+			var node = start;
 
-			if (token.Next != null && token.Next.Value.Type == NodeType.LeftBracket) 
-				token.List.Remove(token.Next);
+			if (node.Next != null && node.Next.Value.Type == NodeType.LeftBracket) 
+				node.List.Remove(node.Next);
 
-			token = token.Next;
+			node = node.Next;
 			Arguments = new Expression[_argumentCount];
 
 			var i = 0;
-			while (token != null
-				   && token.Value.Type != NodeType.RightBracket)
+			while (node != null
+				   && node.Value.Type != NodeType.RightBracket)
 			{
 				var arg = new LinkedList<Node>();
 
-				while (token != null
-					   && token.Value.Type != NodeType.ArgumentDivider
-					   && token.Value.Type != NodeType.RightBracket)
+				while (node != null
+					   && node.Value.Type != NodeType.ArgumentDivider
+					   && node.Value.Type != NodeType.RightBracket)
 				{
-					token = token.Value.Transform(token);
+					node = node.Value.OnAfterValidation(node);
 
-					arg.AddLast(token.Value);
+					arg.AddLast(node.Value);
 
-					token = token.Consume();
+					node = node.Consume();
 
 				}
 
-				if (token != null && token.Value.Type == NodeType.ArgumentDivider) 
-					token = token.Consume();
+				if (node != null && node.Value.Type == NodeType.ArgumentDivider) 
+					node = node.Consume();
 
 				Arguments[i] = new Expression(arg);
 				i++;
 			}
 
-			if (token != null && token.Value.Type == NodeType.RightBracket)
+			if (node != null && node.Value.Type == NodeType.RightBracket)
 			{
-				token.List.Remove(token);
-				// make sure we don't accidentally reuse the token after it's removed
-				token = null;
+				node.List.Remove(node);
+				// make sure we don't accidentally reuse the node after it's removed
+				node = null;
 			}
 
 			return start;
@@ -99,9 +99,9 @@ namespace RPG.Engine.Parser
 			return $"{Id}{{{string.Join(", ", Arguments.Select(a => a.ToString()))}}}";
 		}
 
-		public override bool IsExpression() => true;
+		public override bool IsValidOperand() => true;
 
-		public override Node Clone() => new FunctionNode(StatService, _functionService, Id.Id);
+		public override Node Clone() => new FunctionNode(_functionService, Id.Id);
 
 		private string GetArgumentNumberErrorMessage(Function function)
 		{
@@ -126,7 +126,7 @@ namespace RPG.Engine.Parser
 		{
 			if (token == null)
 				return 0;
-			if (token.Value.IsExpression()) //$FUNC +2 TODO
+			if (token.Value.IsValidOperand()) //$FUNC +2 TODO
 				return 1;
 			if (token.Value.Type != NodeType.LeftBracket)
 				return 0;

@@ -1,4 +1,5 @@
-﻿using FluentAssertions;
+using FluentAssertions;
+using RPG.Engine.Ids;
 using RPG.Engine.Parser;
 using RPG.Engine.Services;
 using Xunit;
@@ -19,6 +20,33 @@ namespace RPG.Tests
 				StatService = new StatService(functionService),
 			};
 		}
+
+		[Fact]
+		public void Parse()
+		{
+			const string input = "$MAX{.1, 2} + +3 - -4 * stat / .var";
+			const string expected = "$MAX{0.1, 2} + +3 - -4 * stat / stat.var";
+
+			_parsingContext.StatService.Add("stat");
+			_parsingContext.StatService.Get("stat").AddOrUpdateVariable(new VariableId("stat.var"), 0);
+			_parsingContext.StatId = new StatId("stat");
+
+			_parser.Parse(out var expression, input, _parsingContext).Should().BeEmpty();
+
+			expression!.ToString().Should().Be(expected);
+		}
+
+		[Fact]
+		public void ParseUnary()
+		{
+			const string e = "+1";
+
+			_parser.Parse(out var expression, e, _parsingContext).Should().BeEmpty();
+
+			expression!.ToString().Should().Be(e);
+		}
+
+		#region Function
 
 		[Fact]
 		public void ParseFunction()
@@ -77,5 +105,7 @@ namespace RPG.Tests
 		{
 			_parser.Parse(out _, "$IFZ{1, 1, 2, 3}", _parsingContext).Should().HaveCount(1);
 		}
+
+#endregion
 	}
 }
