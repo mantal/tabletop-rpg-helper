@@ -65,7 +65,7 @@ namespace RPG.Tests
 		}
 
 		[Fact]
-		public void ParseZeroParameterFunction()
+		public void ParseZeroParameterFunctionWithEmptyBrackets()
 		{
 			_parser.Parse(out var expression, "$ZERO{}", _parsingContext).Should().BeEmpty();
 
@@ -89,6 +89,14 @@ namespace RPG.Tests
 		}
 
 		[Fact]
+		public void ParseMixedFunction()
+		{
+			_parser.Parse(out var expression, "$MAX{$ABS 1, $ZERO, $ABS{$MIN{0,1}}}", _parsingContext).Should().BeEmpty();
+
+			expression!.ToString().Should().Be("$MAX{$ABS 1, $ZERO, $ABS{$MIN{0, 1}}}");
+		}
+
+		[Fact]
 		public void ParseWithNotEnoughArguments()
 		{
 			_parser.Parse(out _, "$ABS", _parsingContext).Should().HaveCount(1);
@@ -104,6 +112,18 @@ namespace RPG.Tests
 		public void ParseWithWrongBatchArguments()
 		{
 			_parser.Parse(out _, "$IFZ{1, 1, 2, 3}", _parsingContext).Should().HaveCount(1);
+		}
+
+		[Fact]
+		public void ParseFunctionWithUnbalancedLeftBracket()
+		{
+			_parser.Parse(out _, "$MIN{", _parsingContext).Should().HaveCount(1);
+		}
+
+		[Fact]
+		public void ParseFunctionWithUnbalancedRightBracket()
+		{
+			_parser.Parse(out _, "$ABS}", _parsingContext).Should().HaveCount(1);
 		}
 
 #endregion

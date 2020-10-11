@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using RPG.Engine.Ids;
 using RPG.Engine.Services;
@@ -99,8 +99,6 @@ namespace RPG.Engine.Parser
 			return $"{Id}{{{string.Join(", ", Arguments.Select(a => a.ToString()))}}}";
 		}
 
-		public override bool IsValidOperand() => true;
-
 		public override Node Clone() => new FunctionNode(_functionService, Id.Id);
 
 		private string GetArgumentNumberErrorMessage(Function function)
@@ -122,11 +120,11 @@ namespace RPG.Engine.Parser
 			return $"{function.RequiredParameterNumber} to {function.MaxParameterNumber} arguments";
 		}
 
-		private int CountArguments(LinkedListNode<Node> token)
+		private int CountArguments(LinkedListNode<Node>? token)
 		{
 			if (token == null)
 				return 0;
-			if (token.Value.IsValidOperand()) //$FUNC +2 TODO
+			if (token.Value.IsValidRightOperand()) //$FUNC +2 TODO
 				return 1;
 			if (token.Value.Type != NodeType.LeftBracket)
 				return 0;

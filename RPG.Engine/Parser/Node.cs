@@ -65,13 +65,14 @@ namespace RPG.Engine.Parser
 			return new InvalidNode(text);
 		}
 
-		public abstract bool IsValidOperand();
+		public abstract bool IsValidLeftOperand();
+		public abstract bool IsValidRightOperand();
 
 		/// <summary>
 		/// Transform nodes before validation happen
 		/// </summary>
 		/// <returns>the current node or the one that replaced it</returns>
-		public virtual LinkedListNode<Node> OnBeforeValidation(LinkedListNode<Node> node) => node;
+		public virtual LinkedListNode<Node>? OnBeforeValidation(LinkedListNode<Node> node) => node;
 
 		public abstract IEnumerable<string> IsValid(LinkedListNode<Node> node);
 
@@ -79,7 +80,7 @@ namespace RPG.Engine.Parser
 		/// Transform nodes after validation happen
 		/// </summary>
 		/// <returns>the current node or the one that replaced it</returns>
-		public virtual LinkedListNode<Node> OnAfterValidation(LinkedListNode<Node> node) => node;
+		public virtual LinkedListNode<Node>? OnAfterValidation(LinkedListNode<Node> node) => node;
 
 		public abstract LinkedListNode<Node> Apply(LinkedListNode<Node> node);
 
@@ -120,7 +121,8 @@ namespace RPG.Engine.Parser
 
 		public abstract double GetValue();
 
-		public override bool IsValidOperand() => true;
+		public override bool IsValidLeftOperand() => true;
+		public override bool IsValidRightOperand() => true;
 	}
 
 	public class InvalidNode : Node
@@ -135,7 +137,8 @@ namespace RPG.Engine.Parser
 		public override LinkedListNode<Node> Apply(LinkedListNode<Node> node) 
 			=> throw new InvalidOperationException();
 
-		public override bool IsValidOperand() => false;
+		public override bool IsValidLeftOperand() => false;
+		public override bool IsValidRightOperand() => false;
 		public override Node Clone() => new InvalidNode(Text);
 	}
 

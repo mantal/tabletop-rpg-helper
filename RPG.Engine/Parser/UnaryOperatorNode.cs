@@ -18,7 +18,7 @@ namespace RPG.Engine.Parser
 
 			var next = node.Next.Value;
 
-			if (!next.IsValidOperand())
+			if (!next.IsValidRightOperand())
 			{
 				errors.Add($"Expected operand after operator '{Text}' but found '{next}'");
 				return errors;
@@ -27,16 +27,18 @@ namespace RPG.Engine.Parser
 			return Enumerable.Empty<string>();
 		}
 
-		public override bool IsValidOperand() => true;
+		public override bool IsValidLeftOperand() => false;
+
+		public override bool IsValidRightOperand() => true;
 
 		protected LinkedListNode<Node> ReplaceSelfWithResult(LinkedListNode<Node> node, double result)
 		{
 			var value = new NumberNode(result);
 
-			var resultNode = node.List.AddAfter(node.Next, value);
+			var resultNode = node.List.AddAfter(node.Next!, value);
 
-			resultNode.List.Remove(resultNode.Previous.Previous);
-			resultNode.List.Remove(resultNode.Previous);
+			resultNode.List.Remove(resultNode.Previous!.Previous!);
+			resultNode.List.Remove(resultNode.Previous!);
 
 			return resultNode;
 		}

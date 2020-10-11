@@ -9,8 +9,6 @@ namespace RPG.Engine.Parser
 			: base(text, type, priority)
 		{ }
 
-		public override bool IsValidOperand() => false;
-
 		public override IEnumerable<string> IsValid(LinkedListNode<Node> node)
 		{
 			var errors = new List<string>();
@@ -19,7 +17,7 @@ namespace RPG.Engine.Parser
 				return new[] { $"Expected operand before operator '{Text}' but found nothing" };
 
 			var previous = node.Previous.Value;
-			if (!previous.IsValidOperand())
+			if (!previous.IsValidLeftOperand())
 			{
 				errors.Add($"Expected operand before operator '{Text}' but found '{previous}'");
 				return errors;
@@ -29,7 +27,7 @@ namespace RPG.Engine.Parser
 				return new[] { $"Expected operand after operator '{Text}' but found nothing" };
 
 			var next = node.Next.Value;
-			if (!next.IsValidOperand())
+			if (!next.IsValidRightOperand())
 			{
 				errors.Add($"Expected operand after operator '{Text}' but found '{next}'");
 				return errors;
@@ -37,6 +35,10 @@ namespace RPG.Engine.Parser
 
 			return Enumerable.Empty<string>();
 		}
+
+		public override bool IsValidLeftOperand() => false;
+
+		public override bool IsValidRightOperand() => false;
 
 		protected LinkedListNode<Node> ReplaceSelfWithResult(LinkedListNode<Node> node, double result)
 		{

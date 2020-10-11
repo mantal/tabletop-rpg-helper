@@ -10,11 +10,13 @@ namespace RPG.Engine.Parser
 			: base(text, type, priority)
 		{ }
 
-		public override bool IsValidOperand() 
-			=> Type == NodeType.LeftParenthesis
-			   || Type == NodeType.RightParenthesis
-			   || Type == NodeType.RightBracket;
+		public override bool IsValidLeftOperand()
+			=> Type == NodeType.RightBracket
+			   || Type == NodeType.RightParenthesis;
 
+		public override bool IsValidRightOperand()
+			=> Type == NodeType.LeftParenthesis;
+		
 		public override IEnumerable<string> IsValid(LinkedListNode<Node> node)
 			=> Enumerable.Empty<string>();
 
