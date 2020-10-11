@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using RPG.Engine.Ids;
 using RPG.Engine.Services;
@@ -38,15 +38,29 @@ namespace RPG.Engine.Parser
 			return Enumerable.Empty<string>();
 		}
 
-		public override LinkedListNode<Node> OnAfterValidation(LinkedListNode<Node> start)
+		public override LinkedListNode<Node>? OnAfterValidation(LinkedListNode<Node> start)
 		{
-			var node = start;
-
-			if (node.Next != null && node.Next.Value.Type == NodeType.LeftBracket) 
-				node.List.Remove(node.Next);
-
-			node = node.Next;
 			Arguments = new Expression[_argumentCount];
+
+			var node = start.Next;
+
+			if (node == null)
+				return start;
+			if (node.Value.Type != NodeType.LeftBracket
+				&& _argumentCount < 2)
+			{
+				if (_argumentCount == 0)
+					return start;
+
+				var arg = new LinkedList<Node>(new []{ node.Value });
+				Arguments[0] = new Expression(arg);
+
+				node.List.Remove(node);
+
+				return start;
+			}
+
+			node = node.Consume(); // remove {
 
 			var i = 0;
 			while (node != null
@@ -58,12 +72,11 @@ namespace RPG.Engine.Parser
 					   && node.Value.Type != NodeType.ArgumentDivider
 					   && node.Value.Type != NodeType.RightBracket)
 				{
-					node = node.Value.OnAfterValidation(node);
+					node = node.Value.OnAfterValidation(node)!;
 
 					arg.AddLast(node.Value);
 
 					node = node.Consume();
-
 				}
 
 				if (node != null && node.Value.Type == NodeType.ArgumentDivider) 
@@ -94,8 +107,11 @@ namespace RPG.Engine.Parser
 		{
 			if (_argumentCount == 0)
 				return Id.ToString();
-			if (_argumentCount == 1)
+			if (_argumentCount == 1
+				&& (!(Arguments[0].Nodes.First.Value is FunctionNode f)
+					|| f.Arguments.Length == 0))
 				return $"{Id} {Arguments[0]}";
+
 			return $"{Id}{{{string.Join(", ", Arguments.Select(a => a.ToString()))}}}";
 		}
 
