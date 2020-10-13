@@ -61,10 +61,8 @@ namespace RPG.Engine.Services
 			if (Exists(id))
 				errors = errors.Append($"Stat already exists: {id}");
 
-			var context = new ParsingContext
+			var context = new ParsingContext(this, _functionService)
 			{
-				StatService = this,
-				FunctionService = _functionService,
 				StatId = id,
 			};
 			errors = errors.Concat(_parser.Parse(out var stat, context, id.ToString(), rawModifiers));
@@ -112,9 +110,8 @@ namespace RPG.Engine.Services
 			if (!Exists(id)) 
 				errors = errors.Append($"{id} does not exists");
 
-			var context = new ParsingContext
+			var context = new ParsingContext(this, _functionService)
 			{
-				StatService = this,
 				StatId = id,
 			};
 			errors = errors.Concat(_parser.Parse(out var stat, context, id.ToString(), rawModifiers));

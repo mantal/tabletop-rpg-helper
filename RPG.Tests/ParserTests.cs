@@ -14,11 +14,7 @@ namespace RPG.Tests
 		public ParserTests()
 		{
 			var functionService = new FunctionService();
-			_parsingContext = new ParsingContext
-			{
-				FunctionService = functionService,
-				StatService = new StatService(functionService),
-			};
+			_parsingContext = new ParsingContext(new StatService(functionService), functionService);
 		}
 
 		[Fact]

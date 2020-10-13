@@ -16,8 +16,8 @@ namespace RPG.Engine.Parser
 
 			var type = Type == NodeType.PlusOperator ? NodeType.UnaryPlusOperator : NodeType.UnaryMinusOperator;
 
-			var newNode = node.List.AddAfter(node, new UnaryAdditionOperatorNode(Text, type));
-			node.List.Remove(node);
+			var newNode = node.List!.AddAfter(node, new UnaryAdditionOperatorNode(Text, type));
+			node.List!.Remove(node);
 
 			return newNode;
 		}
@@ -29,11 +29,11 @@ namespace RPG.Engine.Parser
 
 			var value = new NumberNode(Type == NodeType.PlusOperator ? a + b : a - b);
 
-			var result = node.List.AddAfter(node.Next!, value);
+			var result = node.List!.AddAfter(node.Next!, value);
 
-			result.List.Remove(result.Previous!.Previous!.Previous!);
-			result.List.Remove(result.Previous!.Previous!);
-			result.List.Remove(result.Previous!);
+			result.List!.Remove(result.Previous!.Previous!.Previous!);
+			result.List!.Remove(result.Previous!.Previous!);
+			result.List!.Remove(result.Previous!);
 
 			return result;
 		}

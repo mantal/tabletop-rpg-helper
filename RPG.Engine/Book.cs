@@ -45,11 +45,7 @@ namespace RPG.Engine
 		public IEnumerable<string> Populate(Node node)
 		{
 			var errors = new List<string>();
-			var context = new ParsingContext
-			{
-				FunctionService = _functionService,
-				StatService = _statService,
-			};
+			var context = new ParsingContext(_statService, _functionService);
 
 			if (!node.Children.Any())
 				return new[] { "error: empty book" };

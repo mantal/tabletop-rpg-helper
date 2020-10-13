@@ -41,9 +41,9 @@ namespace RPG.Engine
 				node.Value.Apply(node);
 			}
 
-			nodes.First.Value.Apply(nodes.First);
+			nodes.First!.Value.Apply(nodes.First!);
 
-			return ((ValueNode)nodes.First.Value).GetValue();
+			return ((ValueNode)nodes.First!.Value).GetValue();
 		}
 
 		public override string ToString()

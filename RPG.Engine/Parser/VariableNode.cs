@@ -8,10 +8,10 @@ namespace RPG.Engine.Parser
 	public class VariableNode : ValueNode
 	{
 		public readonly VariableId Id;
-		private readonly StatId _parentId;
+		private readonly StatId? _parentId;
 		private readonly StatService _statService;
 
-		public VariableNode(StatService statService, string id, StatId parentId)
+		public VariableNode(StatService statService, string id, StatId? parentId)
 			: base(id, NodeType.Stat, 0)
 		{
 			_statService = statService;
@@ -34,6 +34,6 @@ namespace RPG.Engine.Parser
 		
 		//Prepend '.' because VariableId strip it from it's property Id but expected it when building
 		public override Node Clone() => new VariableNode(_statService, "." + Id.Id, Id.StatId);
-		public Node Clone(StatId statId) => new VariableNode(_statService, "." + Id.Id, statId ?? Id.StatId);
+		public Node Clone(StatId? statId) => new VariableNode(_statService, "." + Id.Id, statId ?? Id.StatId);
 	}
 }

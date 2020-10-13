@@ -31,14 +31,14 @@ namespace RPG.Engine
 			foreach (var node in Expressions.SelectMany(e => e.Nodes))
 			{
 				if (node is VariableNode variableNode
-					&& variableNode.Id.StatId == id)
+					&& variableNode.Id.StatId.Equals(id))
 					AddOrUpdateVariable(variableNode.Id, 0);
 			}
 		}
 
 		public Stat(Stat stat, StatId? id = null)
 		{
-			Id = id ?? new StatId(stat.Id);
+			Id = id ?? stat.Id with {};
 			_lastValueId = new VariableId("." + stat._lastValueId.Id, Id);
 			Variables = stat.Variables
 							.Select(var => (Id: new VariableId("." + var.Key.Id, Id), Value: var.Value))

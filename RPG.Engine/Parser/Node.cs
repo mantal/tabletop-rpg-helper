@@ -190,12 +190,12 @@ namespace RPG.Engine.Parser
 		{
 			if (node.Next == null)
 			{
-				node.List.Remove(node);
+				node.List!.Remove(node);
 				return null;
 			}
 
 			node = node.Next;
-			node.List.Remove(node.Previous);
+			node.List!.Remove(node.Previous!);
 
 			return node;
 		}

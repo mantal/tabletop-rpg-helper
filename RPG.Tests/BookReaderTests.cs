@@ -1,4 +1,5 @@
-﻿using System.IO;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using FluentAssertions;
 using RPG.Engine.Utils;
@@ -6,8 +7,8 @@ using Xunit;
 
 namespace RPG.Tests
 {
-    public class BookReaderTests
-    {
+	public class BookReaderTests
+	{
 		[Fact]
 		public void ParseProperty()
 		{
@@ -17,13 +18,13 @@ namespace RPG.Tests
 			{
 				Type = BookParser.NodeType.ObjectIdentifier,
 				Value = "#root",
-				Children = new []
+				Children = new[]
 				{
 					new BookParser.Node
 					{
 						Type = BookParser.NodeType.PropertyIdentifier,
 						Value = "expr",
-						Children = new []
+						Children = new[]
 						{
 							new BookParser.Node
 							{
@@ -54,7 +55,7 @@ namespace RPG.Tests
 					{
 						Type = BookParser.NodeType.PropertyIdentifier,
 						Value = "expr",
-						Children = new []
+						Children = new[]
 						{
 							new BookParser.Node
 							{
@@ -68,7 +69,7 @@ namespace RPG.Tests
 					{
 						Type = BookParser.NodeType.PropertyIdentifier,
 						Value = "expr2",
-						Children = new []
+						Children = new[]
 						{
 							new BookParser.Node
 							{
@@ -99,13 +100,13 @@ namespace RPG.Tests
 					{
 						Type = BookParser.NodeType.ObjectIdentifier,
 						Value = "obj",
-						Children = new []
+						Children = new[]
 						{
 							new BookParser.Node
 							{
 								Type = BookParser.NodeType.PropertyIdentifier,
 								Value = "expr",
-								Children = new []
+								Children = new[]
 								{
 									new BookParser.Node
 									{
@@ -115,20 +116,20 @@ namespace RPG.Tests
 									},
 								},
 							},
-												new BookParser.Node
-					{
-						Type = BookParser.NodeType.PropertyIdentifier,
-						Value = "expr2",
-						Children = new []
-						{
 							new BookParser.Node
 							{
-								Type = BookParser.NodeType.String,
-								Value = "value2",
-								Children = Enumerable.Empty<BookParser.Node>(),
+								Type = BookParser.NodeType.PropertyIdentifier,
+								Value = "expr2",
+								Children = new[]
+								{
+									new BookParser.Node
+									{
+										Type = BookParser.NodeType.String,
+										Value = "value2",
+										Children = Enumerable.Empty<BookParser.Node>(),
+									},
+								},
 							},
-						},
-					},
 						},
 					},
 				},

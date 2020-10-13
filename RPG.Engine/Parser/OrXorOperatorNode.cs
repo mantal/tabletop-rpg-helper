@@ -12,8 +12,8 @@ namespace RPG.Engine.Parser
 
 		public override LinkedListNode<Node> Apply(LinkedListNode<Node> node)
 		{
-			var a = ((ValueNode)node.Previous.Value).GetValue().ToBool();
-			var b = ((ValueNode)node.Next.Value).GetValue().ToBool();
+			var a = ((ValueNode)node.Previous!.Value).GetValue().ToBool();
+			var b = ((ValueNode)node.Next!.Value).GetValue().ToBool();
 
 			var result = Type switch
 						 {

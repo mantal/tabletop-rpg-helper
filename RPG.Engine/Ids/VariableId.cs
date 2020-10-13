@@ -3,10 +3,10 @@ using System.Linq;
 
 namespace RPG.Engine.Ids
 {
-	public class VariableId
+	public record VariableId
 	{
-		public readonly StatId StatId;
-		public readonly string Id;
+		public StatId StatId { get; }
+		public string Id { get; }
 
 		public VariableId(string id, StatId? statId = null)
 		{
@@ -17,7 +17,7 @@ namespace RPG.Engine.Ids
 				if (statId == null)
 					throw new ArgumentException($"Shorthand variable id requires explicit stat id", nameof(id));
 				StatId = statId;
-				Id = id.Substring(1);
+				Id = id[1..];
 			}
 			else
 			{
@@ -27,35 +27,8 @@ namespace RPG.Engine.Ids
 			}
 		}
 
-		public VariableId(VariableId id) //TODO + StatId
-		{
-			Id = id.Id;
-			StatId = id.StatId;
-		}
-
 		public static explicit operator VariableId(string id) => new VariableId(id);
-
-		public static bool operator ==(VariableId? a, VariableId? b)
-		{
-			if (a is null || b is null)
-				return a is null && b is null;
-			return string.Compare(a.Id, b.Id, StringComparison.InvariantCultureIgnoreCase) == 0
-				   && a.StatId == b.StatId;
-		}
-
-		public static bool operator !=(VariableId? a, VariableId? b) => !(a == b);
-
-		public override bool Equals(object? obj)
-		{
-			if (ReferenceEquals(this, obj)) return true;
-			if (obj is null) return false;
-			if (obj.GetType() != typeof(VariableId)) return false;
-			return ((VariableId)obj).StatId == StatId
-				   && ((VariableId)obj).Id == Id;
-		}
-
-		public override int GetHashCode() => (Id, StatId).GetHashCode();
-
+		
 		public override string ToString() => $"{StatId}.{Id}";
 	}
 

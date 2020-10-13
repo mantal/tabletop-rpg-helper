@@ -13,20 +13,20 @@ namespace RPG.Engine.Parser
 			// unary plus is always a no op
 			if (Type == NodeType.UnaryPlusOperator)
 			{
-				var next = node.Next;
-				node.List.Remove(node);
+				var next = node.Next!;
+				node.List!.Remove(node);
 
 				return next;
 			}
 
-			var b = ((ValueNode)node.Next.Value).GetValue();
+			var b = ((ValueNode)node.Next!.Value).GetValue();
 
 			var value = new NumberNode(-b);
 
-			var result = node.List.AddAfter(node.Next, value);
+			var result = node.List!.AddAfter(node.Next!, value);
 
-			result.List.Remove(result.Previous.Previous);
-			result.List.Remove(result.Previous);
+			result.List!.Remove(result.Previous!.Previous!);
+			result.List!.Remove(result.Previous!);
 
 			return result;
 		}

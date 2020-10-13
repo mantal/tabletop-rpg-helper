@@ -55,7 +55,7 @@ namespace RPG.Engine.Parser
 				var arg = new LinkedList<Node>(new []{ node.Value });
 				Arguments[0] = new Expression(arg);
 
-				node.List.Remove(node);
+				node.List!.Remove(node);
 
 				return start;
 			}
@@ -88,7 +88,7 @@ namespace RPG.Engine.Parser
 
 			if (node != null && node.Value.Type == NodeType.RightBracket)
 			{
-				node.List.Remove(node);
+				node.List!.Remove(node);
 				// make sure we don't accidentally reuse the node after it's removed
 				node = null;
 			}
@@ -108,7 +108,7 @@ namespace RPG.Engine.Parser
 			if (_argumentCount == 0 || Arguments.Length == 0)
 				return Id.ToString();
 			if (_argumentCount == 1
-				&& (!(Arguments[0].Nodes.First.Value is FunctionNode f)
+				&& (!(Arguments[0].Nodes.First!.Value is FunctionNode f)
 					|| f.Arguments.Length == 0))
 				return $"{Id} {Arguments[0]}";
 

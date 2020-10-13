@@ -3,9 +3,9 @@ using System.Linq;
 
 namespace RPG.Engine.Ids
 {
-	public class StatId
+	public record StatId
 	{
-		public readonly string Id;
+		public string Id { get; }
 		
 		public StatId(string id)
 		{
@@ -15,32 +15,8 @@ namespace RPG.Engine.Ids
 			Id = id;
 		}
 
-		public StatId(StatId id)
-		{
-			Id = id.Id;
-		}
-
 		public static explicit operator StatId(string id) => new StatId(id);
 
-		public static bool operator ==(StatId? a, StatId? b)
-		{
-			if (a is null || b is null)
-				return a is null && b is null;
-			return string.Compare(a.Id, b.Id, StringComparison.InvariantCultureIgnoreCase) == 0;
-		}
-
-		public static bool operator !=(StatId? a, StatId? b) => !(a == b);
-
-		public override bool Equals(object? obj)
-		{
-			if (ReferenceEquals(this, obj)) return true;
-			if (obj is null) return false;
-			if (obj.GetType() != typeof(StatId)) return false;
-			return ((StatId) obj).Id == Id;
-		}
-
-		public override int GetHashCode() => Id.GetHashCode(StringComparison.InvariantCultureIgnoreCase);
-		
 		public override string ToString() => Id;
 	}
 

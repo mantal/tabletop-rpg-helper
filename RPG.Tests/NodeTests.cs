@@ -1,14 +1,21 @@
 ﻿using FluentAssertions;
 using RPG.Engine.Ids;
 using RPG.Engine.Parser;
+using RPG.Engine.Services;
 using Xunit;
 
 namespace RPG.Tests
 {
     public class NodeTests
-    {
-		private readonly ParsingContext _context = new ParsingContext();
-		
+	{
+		private readonly ParsingContext _context;
+
+		public NodeTests()
+		{
+			var functionService = new FunctionService();
+			_context = new ParsingContext(new StatService(functionService), functionService);
+		}
+
 		[Fact]
 		public void ParseNumber()
 		{

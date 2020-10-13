@@ -44,11 +44,11 @@ namespace RPG.Engine.Parser
 		{
 			var value = new NumberNode(result);
 
-			var resultNode = node.List.AddAfter(node.Next, value);
+			var resultNode = node.List!.AddAfter(node.Next!, value);
 
-			resultNode.List.Remove(resultNode.Previous.Previous.Previous);
-			resultNode.List.Remove(resultNode.Previous.Previous);
-			resultNode.List.Remove(resultNode.Previous);
+			resultNode.List!.Remove(resultNode.Previous!.Previous!.Previous!);
+			resultNode.List!.Remove(resultNode.Previous!.Previous!);
+			resultNode.List!.Remove(resultNode.Previous!);
 
 			return resultNode;
 		}

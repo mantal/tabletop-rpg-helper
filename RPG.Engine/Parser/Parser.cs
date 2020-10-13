@@ -112,8 +112,14 @@ namespace RPG.Engine.Parser
 
 	public class ParsingContext
 	{
-		public StatId StatId { get; set; }
-		public StatService StatService { get; set; }
-		public FunctionService FunctionService { get; set; }
+		public StatId? StatId { get; set; }
+		public StatService StatService { get; }
+		public FunctionService FunctionService { get; }
+
+		public ParsingContext(StatService statService, FunctionService functionService)
+		{
+			StatService = statService;
+			FunctionService = functionService;
+		}
 	}
 }
