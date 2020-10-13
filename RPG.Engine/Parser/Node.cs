@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using RPG.Engine.Ids;
 using RPG.Engine.Utils;
 
@@ -120,6 +121,14 @@ namespace RPG.Engine.Parser
 			=> node;
 
 		public abstract double GetValue();
+
+		public override IEnumerable<string> IsValid(LinkedListNode<Node> node)
+		{
+			// Only check the left to prevent producing too many errors 
+			if (node.Previous == null || !node.Previous.Value.IsValidLeftOperand())
+				return Enumerable.Empty<string>();
+			return new[] {$"missing operator or argument separator around value {node.Value}"};
+		}
 
 		public override bool IsValidLeftOperand() => true;
 		public override bool IsValidRightOperand() => true;

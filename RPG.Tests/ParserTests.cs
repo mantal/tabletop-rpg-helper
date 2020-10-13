@@ -127,5 +127,13 @@ namespace RPG.Tests
 		}
 
 #endregion
+
+		[Fact]
+		public void HandleMissingOperators()
+		{
+			_parsingContext.StatService.Add("A");
+			_parsingContext.StatService.Add("B");
+			_parser.Parse(out _, "A A.b $ZERO $ABS 1 $MIN{0,1}", _parsingContext).Should().HaveCount(5);
+		}
 	}
 }

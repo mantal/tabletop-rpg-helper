@@ -19,9 +19,11 @@ namespace RPG.Engine.Parser
 
 		public override IEnumerable<string> IsValid(LinkedListNode<Node> node)
 		{
+			var errors = base.IsValid(node);
+
 			if (!_statService.Exists(Id))
-				return new[] { $"Undeclared stat id: {Id}" };
-			return Enumerable.Empty<string>();
+				return errors.Append($"Undeclared stat id: {Id}");
+			return errors;
 		}
 
 		public override double GetValue() => _statService.GetValue(Id);

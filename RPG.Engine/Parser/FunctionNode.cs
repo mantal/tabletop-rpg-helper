@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using RPG.Engine.Ids;
 using RPG.Engine.Services;
@@ -35,7 +35,7 @@ namespace RPG.Engine.Parser
 			if (function.ParameterBatchSize != null && (_argumentCount - function.RequiredParameterNumber) % function.ParameterBatchSize != 0)
 				return new[] { $"Function {Id} have an invalid number of arguments ({_argumentCount}. Arguments after the {function.RequiredParameterNumber}th should come in batch of {function.ParameterBatchSize}" };
 
-			return Enumerable.Empty<string>();
+			return base.IsValid(node);
 		}
 
 		public override LinkedListNode<Node>? OnAfterValidation(LinkedListNode<Node> start)
@@ -105,7 +105,7 @@ namespace RPG.Engine.Parser
 
 		public override string ToString()
 		{
-			if (_argumentCount == 0)
+			if (_argumentCount == 0 || Arguments.Length == 0)
 				return Id.ToString();
 			if (_argumentCount == 1
 				&& (!(Arguments[0].Nodes.First.Value is FunctionNode f)
