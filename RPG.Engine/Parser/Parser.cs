@@ -7,8 +7,18 @@ namespace RPG.Engine.Parser
 {
 	public class Parser
 	{
-		private const string _simpleBreakChars = "+-*/%$(){},";
-		private const string _greedyBreakChars = "$";
+		private bool IsSingleToken(char c)
+			=> "+-*/%(){},&|^".Contains(c);
+
+		/// <summary>
+		/// Special token are only made of special characters
+		/// </summary>
+		private bool IsSpecialToken(char c)
+			=> "<>=~".Contains(c);
+
+		private bool IsTokenStart(char c)
+			=> c == '$'
+			   || char.IsWhiteSpace(c);
 
 		public IEnumerable<string> Parse(out Stat? stat, ParsingContext context, string id, string? rawExpression = "0")
 		{
@@ -34,45 +44,67 @@ namespace RPG.Engine.Parser
 			var errors = new List<string>();
 			expression = null;
 
-			var tokens = new LinkedList<Node>();
+			var nodes = new LinkedList<Node>();
 			var last = 0;
+
+
 			for (var i = 0; i <= s.Length; i++)
 			{
 				if (i == s.Length
-					|| char.IsWhiteSpace(s[i])
-					|| _greedyBreakChars.Contains(s[i]))
-				{
-					var token = s[last..i].Trim();
-					if (token.Length > 0)
-						tokens.AddLast(Node.FromString(token, context));
+					|| IsTokenStart(s[i]))
+                {
+                    var token = s[last..i].Trim();
+                    if (token.Length > 0)
+                        nodes.AddLast(Node.FromString(token, context));
 					last = i;
 				}
-				else if (_simpleBreakChars.Contains(s[i]))
+				else if (IsSingleToken(s[i]))
+                {
+					var token = s[last..i].Trim();
+					if (token.Length > 0)
+						nodes.AddLast(Node.FromString(token, context));
+					nodes.AddLast(Node.FromString(s[i].ToString(), context));
+					last = i + 1;
+				}
+				else if (IsSpecialToken(s[i]))
+				{
+					if (i > 0 && IsSpecialToken(s[i - 1]))
+					{ }
+					else
+					{
+						var token = s[last..i].Trim();
+						if (token.Length > 0)
+							nodes.AddLast(Node.FromString(token, context));
+						last = i;
+					}
+				}
+				else if (i > 0 && IsSpecialToken(s[i - 1]))
 				{
 					var token = s[last..i].Trim();
 					if (token.Length > 0)
-						tokens.AddLast(Node.FromString(token, context));
-					tokens.AddLast(Node.FromString(s[i].ToString(), context));
-					last = i + 1;
+						nodes.AddLast(Node.FromString(token, context));
+					last = i;
 				}
+				else
+				{ }
 			}
 			
-			if (tokens.First == null)
+			if (nodes.First == null)
 				return new[] { $"Empty expression: '{s}'" };
 
-			for (var t = tokens.First; t != null; t = t.Next)
-				t = t.Value.OnBeforeValidation(t);
+			for (var node = nodes.First; node != null; node = node?.Next)
+				node = node.Value.OnBeforeValidation(node);
 
-			for (var t = tokens.First; t != null; t = t.Next) 
-				errors = errors.Concat(t.Value.IsValid(t)).ToList();
+			for (var node = nodes.First; node != null; node = node.Next) 
+				errors = errors.Concat(node.Value.IsValid(node)).ToList();
 
 			if (errors.Any())
 				return errors;
 
-			for (var t = tokens.First; t != null; t = t.Next)
-				t = t.Value.OnAfterValidation(t);
+			for (var node = nodes.First; node != null; node = node?.Next)
+				node = node.Value.OnAfterValidation(node);
 
-			expression = new Expression(tokens);
+			expression = new Expression(nodes);
 
 			return errors;
 		}

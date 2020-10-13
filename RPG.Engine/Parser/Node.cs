@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -19,10 +19,13 @@ namespace RPG.Engine.Parser
 		/// 5  * / %
 		/// 4  + -
 		/// 3  stats and variables
+		/// 2  relational operators: <![CDATA[ > >= < <= = ]]>
+		/// 1  and operator: &
+		/// 0  or and xor operators: | ^
 		/// </summary>
 		public int Priority { get; }
 		public NodeType Type { get; }
-		
+
 		protected string Text { get; }
 		
 		protected Node(string text, NodeType type, int priority)
@@ -54,6 +57,26 @@ namespace RPG.Engine.Parser
 				return new MultiplierOperatorNode(text, NodeType.DivideOperator);
 			if (text.IsEquivalentTo("%"))
 				return new MultiplierOperatorNode(text, NodeType.ModuloOperator);
+			if (text.IsEquivalentTo(">"))
+				return new RelationalOperatorNode(text, NodeType.GreaterThanOperator);
+			if (text.IsEquivalentTo(">="))
+				return new RelationalOperatorNode(text, NodeType.GreaterThanOrEqualOperator);
+			if (text.IsEquivalentTo("="))
+				return new RelationalOperatorNode(text, NodeType.EqualOperator);
+			if (text.IsEquivalentTo("~="))
+				return new RelationalOperatorNode(text, NodeType.NotEqualOperator);
+			if (text.IsEquivalentTo("<"))
+				return new RelationalOperatorNode(text, NodeType.LessThanOperator);
+			if (text.IsEquivalentTo("<="))
+				return new RelationalOperatorNode(text, NodeType.LessThanOrEqualOperator);
+			if (text.IsEquivalentTo("&"))
+				return new AndOperatorNode(text, NodeType.AndOperator);
+			if (text.IsEquivalentTo("|"))
+				return new OrXorOperatorNode(text, NodeType.OrOperator);
+			if (text.IsEquivalentTo("^"))
+				return new OrXorOperatorNode(text, NodeType.XorOperator);
+			if (text.IsEquivalentTo("~"))
+				return new NotOperatorNode(text, NodeType.UnaryNotOperator);
 			if (text.IsValidFunctionId())
 				return new FunctionNode(context.FunctionService, text);
 			if (text.IsValidVariableId())
@@ -106,6 +129,16 @@ namespace RPG.Engine.Parser
 			ArgumentDivider,
 			UnaryPlusOperator,
 			UnaryMinusOperator,
+			GreaterThanOperator,
+			GreaterThanOrEqualOperator,
+			LessThanOperator,
+			LessThanOrEqualOperator,
+			EqualOperator,
+			NotEqualOperator,
+			AndOperator,
+			OrOperator,
+			XorOperator,
+			UnaryNotOperator,
 		}
 
 		public abstract Node Clone();

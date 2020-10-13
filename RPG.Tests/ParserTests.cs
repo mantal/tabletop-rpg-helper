@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using RPG.Engine.Ids;
 using RPG.Engine.Parser;
 using RPG.Engine.Services;
@@ -24,8 +24,8 @@ namespace RPG.Tests
 		[Fact]
 		public void Parse()
 		{
-			const string input = "$MAX{.1, 2} + +3 - -4 * stat / .var";
-			const string expected = "$MAX{0.1, 2} + +3 - -4 * stat / stat.var";
+			const string input = "$MAX{$ZERO,$ABS .1}++2--3*stat/.var>4>=5=6~=7<=8<9&10|11^12~13";
+			const string expected = "$MAX{$ZERO, $ABS 0.1} + +2 - -3 * stat / stat.var > 4 >= 5 = 6 ~= 7 <= 8 < 9 & 10 | 11 ^ 12 ~13";
 
 			_parsingContext.StatService.Add("stat");
 			_parsingContext.StatService.Get("stat").AddOrUpdateVariable(new VariableId("stat.var"), 0);
@@ -44,6 +44,14 @@ namespace RPG.Tests
 			_parser.Parse(out var expression, e, _parsingContext).Should().BeEmpty();
 
 			expression!.ToString().Should().Be(e);
+		}
+
+		[Fact]
+		public void ParseGreaterThan()
+		{
+			_parser.Parse(out var expression, "1>=1", _parsingContext).Should().BeEmpty();
+
+			expression!.ToString().Should().Be("1 >= 1");
 		}
 
 		#region Function

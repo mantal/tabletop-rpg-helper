@@ -280,6 +280,16 @@ namespace RPG.Tests
 			_statService.GetValue("C").Should().Be(10);
 		}
 
+		[Fact]
+		public void ResolveSuperMixed()
+		{
+			_statService.Add("A", "5");
+			_statService.Add("B", "2");
+			_statService.Add("C", "A & B | 0 ^ 1 >= 0");
+
+			_statService.GetValue("C").Should().Be(0);
+		}
+
 		#endregion
 	}
 }
