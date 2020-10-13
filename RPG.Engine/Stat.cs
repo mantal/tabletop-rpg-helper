@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using RPG.Engine.Ids;
-using RPG.Engine.Modifiers;
 using RPG.Engine.Parser;
 using RPG.Engine.Utils;
 
@@ -15,20 +14,7 @@ namespace RPG.Engine
 		public readonly StatId Id;
 		//TODO exposer un IEnumerable + garder IList en private pour rester immutable
 		public IList<NamedExpression> Expressions { get; }
-
-		public RoundingMethod RoundingMethod
-		{
-			get => _roundingMethod;
-			set
-			{
-				if (value == RoundingMethod.None) 
-					throw new ArgumentOutOfRangeException(nameof(RoundingMethod), value, "Stat must be converted to int");
-				_roundingMethod = value;
-			}
-		}
-
-		private RoundingMethod _roundingMethod = RoundingMethod.Ceiling;
-
+		
 		public readonly IDictionary<VariableId, double> Variables = new Dictionary<VariableId, double>();
 		private readonly VariableId _lastValueId;
 
