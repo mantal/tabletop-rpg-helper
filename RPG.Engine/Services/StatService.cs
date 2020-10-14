@@ -197,35 +197,27 @@ namespace RPG.Engine.Services
 		private IEnumerable<string> IsRecursive(Stat stat, Stack<StatId> stack)
 		{
 			if (stack.Contains(stat.Id))
-				return new[] { $"Circular dependency detected: {stack.Aggregate("", (res, id) => $"->{id}")}" };
+				return new[] { $"Circular dependency detected: {string.Join("->", stack.Prepend(stat.Id).Reverse())}" };
 
 			stack.Push(stat.Id);
 
-			var ids = stat.Expressions
+			var errors = stat.Expressions
 						  .SelectMany(e => e.Nodes)
-						  .SelectMany(node => node switch
-												 {
-													 StatNode statNode => new[] { statNode.Id },
-													 VariableNode varNode when varNode.Id.StatId != stat.Id
-														=> new[] { varNode.Id.StatId },
-													 FunctionNode funcNode => funcNode
-																			  .Arguments.SelectMany(
-																				  a => a.Nodes.Select(n => n switch
-																										   {
-																											   StatNode statNode => statNode.Id,
-																											   VariableNode varNode when varNode.Id.StatId != stat.Id
-																											   => varNode.Id.StatId,
-																											   _ => null!,
-																										   })
-																						.Where(id => id != null)),
-													 _ => Enumerable.Empty<StatId>()
-												 })
-						  .Where(Exists)
+						  .SelectMany(n => FlattenDependencies(stat.Id, n))
 						  .SelectMany(id => IsRecursive(Stats[id], stack))
 						  .ToList();
 			stack.Pop();
 
-			return ids;
+			return errors;
 		}
+
+		private IEnumerable<StatId> FlattenDependencies(StatId statId, Node node)
+			=> node switch
+			   {
+				   StatNode statNode                                     => new[] { statNode.Id },
+				   VariableNode varNode when varNode.Id.StatId != statId => new[] { varNode.Id.StatId },
+				   FunctionNode funcNode => funcNode.Arguments.SelectMany(arg => arg.Nodes.SelectMany(n => FlattenDependencies(statId, n))),
+				   _ => Enumerable.Empty<StatId>(),
+			   };
 	}
 }

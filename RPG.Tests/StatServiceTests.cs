@@ -93,14 +93,17 @@ namespace RPG.Tests
 
         [Fact]
         public void AndNotAndDetectDeepCircularDependency()
-        {
-            _statService.Add("B", "3");
-            _statService.Add("E", "B");
-            _statService.Add("C", "E");
-            _statService.Add("F", "A");
-            _statService.Add("D", "F");
+		{
+			_statService.Add("A").Should().BeEmpty();
+			_statService.Add("B", "3").Should().BeEmpty();
+            _statService.Add("E", "B").Should().BeEmpty();
+            _statService.Add("C", "E").Should().BeEmpty();
+            _statService.Add("F", "A").Should().BeEmpty();
+            _statService.Add("D", "F").Should().BeEmpty();
 
-            _statService.Add("A", "B + C + D").Should().HaveCount(1);
+			// A->D->F->A
+			// A->F->A
+            _statService.Update("A", "B + C + D + $ABS $ABS F").Should().HaveCount(2);
         }
 
         #endregion
