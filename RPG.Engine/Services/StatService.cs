@@ -41,7 +41,7 @@ namespace RPG.Engine.Services
 			return value;
 		}
 
-		public IEnumerable<string> Add(string id, string? rawModifiers = null)
+		public IEnumerable<string> Add(string id, string? expression = null)
 		{
 			IEnumerable<string> errors = new List<string>();
 
@@ -51,10 +51,10 @@ namespace RPG.Engine.Services
 				errors = errors.Append($"Invalid stat id: {id}");
 				return errors;
 			}
-			return errors.Concat(Add((StatId) id, rawModifiers));
+			return errors.Concat(Add((StatId) id, expression));
 		}
 
-		public IEnumerable<string> Add(StatId id, string? rawModifiers = null)
+		public IEnumerable<string> Add(StatId id, string? expression = null)
 		{
 			IEnumerable<string> errors = new List<string>();
 			
@@ -65,11 +65,11 @@ namespace RPG.Engine.Services
 			{
 				StatId = id,
 			};
-			errors = errors.Concat(_parser.Parse(out var stat, context, id.ToString(), rawModifiers));
+			errors = errors.Concat(_parser.Parse(out var stat, context, id.ToString(), expression));
 			if (stat == null)
 				return errors;
 
-			errors = errors.Concat(AreModifierTargetsValid(stat));
+			errors = errors.Concat(IsRecursive(stat));
 
 			if (errors.Any())
 				return errors;
@@ -100,10 +100,10 @@ namespace RPG.Engine.Services
 			return System.Array.Empty<string>();
 		}
 
-		public IEnumerable<string> Update(string id, string? rawModifiers = null)
-			=> Update((StatId) id, rawModifiers);
+		public IEnumerable<string> Update(string id, string? expression = null)
+			=> Update((StatId) id, expression);
 
-		public IEnumerable<string> Update(StatId id, string? rawModifiers = null)
+		public IEnumerable<string> Update(StatId id, string? expression = null)
 		{
 			IEnumerable<string> errors = new List<string>();
 
@@ -114,11 +114,11 @@ namespace RPG.Engine.Services
 			{
 				StatId = id,
 			};
-			errors = errors.Concat(_parser.Parse(out var stat, context, id.ToString(), rawModifiers));
+			errors = errors.Concat(_parser.Parse(out var stat, context, id.ToString(), expression));
 			if (stat == null)
 				return errors;
 
-			errors = errors.Concat(AreModifierTargetsValid(stat));
+			errors = errors.Concat(IsRecursive(stat));
 
 			if (!errors.Any())
 			{
@@ -184,15 +184,8 @@ namespace RPG.Engine.Services
 			return Stats[id.StatId].TryGetVariable(id) != null;
 		}
 
-		private IEnumerable<string> AreModifierTargetsValid(Stat stat)
-		{
-			return IsRecursive(stat);
-		}
-
-		private IEnumerable<string> IsRecursive(Stat stat)
-		{
-			return IsRecursive(stat, new Stack<StatId>());
-		}
+		private IEnumerable<string> IsRecursive(Stat stat) 
+			=> IsRecursive(stat, new Stack<StatId>());
 
 		private IEnumerable<string> IsRecursive(Stat stat, Stack<StatId> stack)
 		{

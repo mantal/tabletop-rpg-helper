@@ -41,16 +41,16 @@ namespace RPG.Tests
 		[Fact]
 		public void AddMixed()
 		{
-			const string modifiers = "A.base + B - C * D / E + 1 - 2 * 3 / 4";
+			const string expression = "A.base + B - C * D / E + 1 - 2 * 3 / 4";
 
 			_statService.Add("B");
 			_statService.Add("C");
 			_statService.Add("D");
 			_statService.Add("E");
 
-			_statService.Add("A", modifiers).Should().BeEmpty();
+			_statService.Add("A", expression).Should().BeEmpty();
 
-			_statService.Get("A").ToString().Should().Be($"[0, {modifiers}]");
+			_statService.Get("A").ToString().Should().Be($"[0, {expression}]");
 		}
 
 		[Fact]
@@ -134,7 +134,7 @@ namespace RPG.Tests
 		[Fact]
 		public void UpdateMixed()
 		{
-			const string modifiers = "B - C * D / E + 1 - 2 * 3 / 4";
+			const string expression = "B - C * D / E + 1 - 2 * 3 / 4";
 
 			_statService.Add("A");
 			_statService.Add("B");
@@ -142,9 +142,9 @@ namespace RPG.Tests
 			_statService.Add("D");
 			_statService.Add("E");
 
-			_statService.Update("A", modifiers).Should().BeEmpty();
+			_statService.Update("A", expression).Should().BeEmpty();
 
-			_statService.Get("A").ToString().Should().Be($"[0, {modifiers}]");
+			_statService.Get("A").ToString().Should().Be($"[0, {expression}]");
 		}
 
 		[Fact]
