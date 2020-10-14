@@ -1,25 +1,38 @@
 ﻿using System.Collections.Generic;
+using RPG.Engine.Services;
 
 namespace RPG.Engine.Parser
 {
 	public class AdditionOperatorNode : BinaryOperatorNode
 	{
-		public AdditionOperatorNode(string text, NodeType type) 
+		private readonly FunctionService _functionService;
+
+		public AdditionOperatorNode(FunctionService functionService, string text, NodeType type) 
 			: base(text, type, 2)
-		{ }
+		{
+			_functionService = functionService;
+		}
 
 		public override LinkedListNode<Node> OnBeforeValidation(LinkedListNode<Node> node)
 		{
-			var isUnary = node.Previous == null || !node.Previous.Value.IsValidLeftOperand();
-			if (!isUnary)
+			var previous = node.Previous?.Value;
+			var isUnary = previous == null || !previous.IsValidLeftOperand();
+
+			if (previous is FunctionNode functionNode
+				&& _functionService.Exists(functionNode.Id))
+			{
+				isUnary = _functionService.Get(functionNode.Id).RequiredParameterNumber <= 0;
+			}
+
+			if (!isUnary) 
 				return node;
 
 			var type = Type == NodeType.PlusOperator ? NodeType.UnaryPlusOperator : NodeType.UnaryMinusOperator;
 
-			var newNode = node.List!.AddAfter(node, new UnaryAdditionOperatorNode(Text, type));
+			var resultNode = node.List!.AddAfter(node, new UnaryAdditionOperatorNode(Text, type));
 			node.List!.Remove(node);
 
-			return newNode;
+			return resultNode;
 		}
 		
 		public override LinkedListNode<Node> Apply(LinkedListNode<Node> node)
@@ -38,6 +51,6 @@ namespace RPG.Engine.Parser
 			return result;
 		}
 		
-		public override Node Clone() => new AdditionOperatorNode(Text, Type);
+		public override Node Clone() => new AdditionOperatorNode(_functionService, Text, Type);
 	}
 }

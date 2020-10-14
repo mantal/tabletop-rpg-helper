@@ -48,9 +48,9 @@ namespace RPG.Engine.Parser
 			if (text.IsEquivalentTo("}"))
 				return new GrammarNode(text, NodeType.RightBracket, -1);
 			if (text.IsEquivalentTo("+"))
-				return new AdditionOperatorNode(text, NodeType.PlusOperator);
+				return new AdditionOperatorNode(context.FunctionService, text, NodeType.PlusOperator);
 			if (text.IsEquivalentTo("-"))
-				return new AdditionOperatorNode(text, NodeType.MinusOperator);
+				return new AdditionOperatorNode(context.FunctionService, text, NodeType.MinusOperator);
 			if (text.IsEquivalentTo("*"))
 				return new MultiplierOperatorNode(text, NodeType.MultiplierOperator);
 			if (text.IsEquivalentTo("/"))
@@ -158,7 +158,7 @@ namespace RPG.Engine.Parser
 		public override IEnumerable<string> IsValid(LinkedListNode<Node> node)
 		{
 			// Only check the left to prevent producing too many errors 
-			if (node.Previous == null || !node.Previous.Value.IsValidLeftOperand())
+			if (node.Previous == null || !node.Previous.Value.IsValidLeftOperand() || node.Previous.Value is FunctionNode)
 				return Enumerable.Empty<string>();
 			return new[] {$"missing operator or argument separator around value {node.Value}"};
 		}

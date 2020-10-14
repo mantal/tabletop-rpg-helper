@@ -31,7 +31,7 @@ namespace RPG.Engine.Parser
 			if (_argumentCount < function.RequiredParameterNumber
 				|| (function.MaxParameterNumber != null
 					&& _argumentCount > function.MaxParameterNumber))
-				return new[] { $"Function {Id} should have {GetArgumentNumberErrorMessage(function)} but found {_argumentCount}" };
+				//TODO ajouter un warning quand un argument requis et le node suivant est + ou - incitant a ajouter des {}, ex: $ABS -2 devrait etre $ABS{-2}
 			if (function.ParameterBatchSize != null && (_argumentCount - function.RequiredParameterNumber) % function.ParameterBatchSize != 0)
 				return new[] { $"Function {Id} have an invalid number of arguments ({_argumentCount}. Arguments after the {function.RequiredParameterNumber}th should come in batch of {function.ParameterBatchSize}" };
 
@@ -108,8 +108,9 @@ namespace RPG.Engine.Parser
 			if (_argumentCount == 0 || Arguments.Length == 0)
 				return Id.ToString();
 			if (_argumentCount == 1
-				&& (!(Arguments[0].Nodes.First!.Value is FunctionNode f)
-					|| f.Arguments.Length == 0))
+				&& (Arguments[0].Nodes.First!.Value is not FunctionNode f
+					|| f.Arguments.Length == 0
+					|| f.Arguments[0].Nodes.Count != 0))
 				return $"{Id} {Arguments[0]}";
 
 			return $"{Id}{{{string.Join(", ", Arguments.Select(a => a.ToString()))}}}";
