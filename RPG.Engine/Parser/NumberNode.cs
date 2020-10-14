@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
+﻿using System.Globalization;
 
 namespace RPG.Engine.Parser
 {
@@ -19,10 +17,7 @@ namespace RPG.Engine.Parser
 		{
 			_value = value;
 		}
-
-		public override IEnumerable<string> IsValid(LinkedListNode<Node> node)
-			=> Enumerable.Empty<string>();
-
+		
 		public override double GetValue() => _value;
 
 		public override string ToString() => _value.ToString(CultureInfo.InvariantCulture);

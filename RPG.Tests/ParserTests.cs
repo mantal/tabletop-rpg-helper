@@ -1,4 +1,4 @@
-﻿using FluentAssertions;
+using FluentAssertions;
 using RPG.Engine.Ids;
 using RPG.Engine.Parser;
 using RPG.Engine.Services;
@@ -95,9 +95,9 @@ namespace RPG.Tests
 		[Fact]
 		public void ParseMixedFunction()
 		{
-			_parser.Parse(out var expression, "$MAX{$ABS 1, $ZERO, $ABS{$MIN{0,1}}}", _parsingContext).Should().BeEmpty();
+			_parser.Parse(out var expression, "$MAX{$ABS 1, $ZERO, $ABS{$MIN{0,1}}, $ABS $ABS {--$ZERO}}", _parsingContext).Should().BeEmpty();
 
-			expression!.ToString().Should().Be("$MAX{$ABS 1, $ZERO, $ABS{$MIN{0, 1}}}");
+			expression!.ToString().Should().Be("$MAX{$ABS 1, $ZERO, $ABS $MIN{0, 1}, $ABS $ABS --$ZERO}");
 		}
 
 		[Fact]

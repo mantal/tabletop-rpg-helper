@@ -22,8 +22,10 @@ namespace RPG.Engine.Parser
 
 		public override IEnumerable<string> IsValid(LinkedListNode<Node> node)
 		{
+			var errors = base.IsValid(node).ToList();
+
 			if (!_functionService.Exists(Id)) 
-				return new [] { $"Undefined function {Id}" };
+				return errors.Append($"Undefined function {Id}");
 
 			var function = _functionService.Get(Id);
 
@@ -32,10 +34,11 @@ namespace RPG.Engine.Parser
 				|| (function.MaxParameterNumber != null
 					&& _argumentCount > function.MaxParameterNumber))
 				//TODO ajouter un warning quand un argument requis et le node suivant est + ou - incitant a ajouter des {}, ex: $ABS -2 devrait etre $ABS{-2}
-			if (function.ParameterBatchSize != null && (_argumentCount - function.RequiredParameterNumber) % function.ParameterBatchSize != 0)
-				return new[] { $"Function {Id} have an invalid number of arguments ({_argumentCount}. Arguments after the {function.RequiredParameterNumber}th should come in batch of {function.ParameterBatchSize}" };
+				errors.Add($"Function {Id} should have {GetArgumentNumberErrorMessage(function)} but found {_argumentCount}");
+			else if (function.ParameterBatchSize != null && (_argumentCount - function.RequiredParameterNumber) % function.ParameterBatchSize != 0)
+				errors.Add($"Function {Id} have an invalid number of arguments ({_argumentCount}. Arguments after the {function.RequiredParameterNumber}th should come in batch of {function.ParameterBatchSize}");
 
-			return base.IsValid(node);
+			return errors;
 		}
 
 		public override LinkedListNode<Node>? OnAfterValidation(LinkedListNode<Node> start)
@@ -52,7 +55,9 @@ namespace RPG.Engine.Parser
 				if (_argumentCount == 0)
 					return start;
 
+				node = node.Value.OnAfterValidation(node)!;
 				var arg = new LinkedList<Node>(new []{ node.Value });
+				
 				Arguments[0] = new Expression(arg);
 
 				node.List!.Remove(node);
