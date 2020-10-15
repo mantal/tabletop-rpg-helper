@@ -55,7 +55,34 @@ namespace RPG.Engine.Utils
 
 		private Node ParseProperty()
 		{
-			var node = new Node(ReadLine());
+			var property = "";
+
+			var parenthesisCount = 0;
+			var bracketCount = 0;
+			for (int c;
+				 (c = _reader.Peek()) != -1;)
+			{
+				if (c == '}' && bracketCount == 0)
+					break;
+
+				Read();
+
+				if (c == '(')
+					parenthesisCount++;
+				else if (c == ')')
+					parenthesisCount--;
+				else if (c == '{')
+					bracketCount++;
+				else if (c == '}')
+					bracketCount--;
+				else if (parenthesisCount == 0
+						 && bracketCount == 0
+						 && c == '\n')
+					break;
+				property += (char) c;
+			}
+
+			var node = new Node(property);
 
 			if (int.TryParse(node.Value, NumberStyles.Integer, null, out _))
 				node.Type = NodeType.Integer;
