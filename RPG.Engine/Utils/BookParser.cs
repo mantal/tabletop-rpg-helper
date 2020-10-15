@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -160,6 +160,17 @@ namespace RPG.Engine.Utils
 			}
 
 			public Node() {}
+
+			public override string ToString()
+				=> Type switch
+				   {
+					   NodeType.ObjectIdentifier   => $"{Value} {{\n{string.Join('\n', Children.Select(c => c.ToString()))}\n}}",
+					   NodeType.PropertyIdentifier => $"{Value}: {Children.First()}",
+					   NodeType.Float              => Value,
+					   NodeType.Integer            => Value,
+					   NodeType.String             => Value,
+					   _                           => throw new ArgumentOutOfRangeException(nameof(Type)),
+				   };
 		}
 
 		public enum NodeType
