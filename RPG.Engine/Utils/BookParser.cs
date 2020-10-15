@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -57,6 +57,9 @@ namespace RPG.Engine.Utils
 		{
 			var property = "";
 
+			var line = _lineNumber;
+			var position = _linePosition;
+
 			var parenthesisCount = 0;
 			var bracketCount = 0;
 			for (int c;
@@ -82,7 +85,11 @@ namespace RPG.Engine.Utils
 				property += (char) c;
 			}
 
-			var node = new Node(property);
+			var node = new Node(property)
+			{
+				LineNumber = line,
+				LinePosition = position,
+			};
 
 			if (int.TryParse(node.Value, NumberStyles.Integer, null, out _))
 				node.Type = NodeType.Integer;
@@ -97,6 +104,8 @@ namespace RPG.Engine.Utils
 		private Node ParseIdentifier()
 		{
 			var id = "";
+			var line = _lineNumber;
+			var position = _linePosition;
 
 			for (int c;
 				 (c = _reader.Peek()) != -1
@@ -131,10 +140,11 @@ namespace RPG.Engine.Utils
 
 			SkipWhitespaces();
 
-			return new Node
+			return new Node(id)
 			{
 				Type = type,
-				Value = id,
+				LineNumber = line,
+				LinePosition = position,
 			};
 		}
 
@@ -161,33 +171,23 @@ namespace RPG.Engine.Utils
 			return c;
 		}
 
-		private string ReadLine()
-		{
-			var line = "";
-			
-			for (int c; (c = Read()) != -1 && c != '\n';)
-				line += (char)c;
-
-			return line;
-		}
-
 		private BookFormatException BuildException(string message) 
 			=> new BookFormatException(_lineNumber, _linePosition, message);
 
 		[DebuggerDisplay("({Type}) {Value}")]
 		public class Node
 		{
+			public int LineNumber { get; set; }
+			public int LinePosition { get; set; }
 			public NodeType Type { get; set; }
-			public string Value { get; set; }
+			public string Value { get; }
 			public IEnumerable<Node> Children { get; set; } = Enumerable.Empty<Node>();
 
 			public Node(string value)
 			{
 				Value = value;
 			}
-
-			public Node() {}
-
+			
 			public override string ToString()
 				=> Type switch
 				   {

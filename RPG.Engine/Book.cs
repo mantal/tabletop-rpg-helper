@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -48,7 +48,7 @@ namespace RPG.Engine
 			var context = new ParsingContext(_statService, _functionService);
 
 			if (!node.Children.Any())
-				return new[] { "error: empty book" };
+				return new[] { "empty book" };
 
 			errors = errors.Concat(AddSection(node, context, null)).ToList();
 
@@ -267,15 +267,14 @@ namespace RPG.Engine
 		public static void Add(this IList<string> errors, Node node, string error)
 		{
 			//TODO file name
-			//errors.Add($"error: {reader.LineNumber}:{reader.LinePosition} {error}");
-			errors.Add($"error: todo:todo {error}"); //TODO
+			errors.Add($"error: {node.LineNumber}:{node.LinePosition} {error}");
 		}
 
 		public static IEnumerable<string> FormatErrors(this IEnumerable<string> errors, Node node)
 		{
 			//TODO file name
-			//return errors.Select(e => $"error: {reader.LineNumber}:{reader.LinePosition} {e}");
-			return errors.Select(e => $"error: todo:todo {e}"); //TODO
+			//TODO more precise line number / position
+			return errors.Select(e => $"error: {node.LineNumber}:{node.LinePosition} {e}");
 		}
 
 		public static bool IsValidSectionId(this string s)
