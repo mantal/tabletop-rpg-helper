@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using RPG.Engine.Ids;
+using RPG.Engine.Utils;
 
 namespace RPG.Engine.Services
 {
@@ -34,15 +35,19 @@ namespace RPG.Engine.Services
 				new Function(new FunctionId("$CEILING"), 1, 1, parameters => Math.Ceiling(parameters[0]))
 			},
 			{
-				//TODO gerer des cas plus complexes que l'égalité / ajouter une valeur par défaut
-				new FunctionId("$IFZ"),
-				new Function(new FunctionId("$IFZ"), 3, null, 2, 
+				new FunctionId("$IF"),
+				new Function(new FunctionId("$IF"), 2, null, null, 
 							 args =>
 							 {
-								 var v = args[0];
-								 for (var i = 1; i < args.Length; i += 2)
+								 var i = 0;
+								 for (; i < args.Length; i += 2)
 								 {
-									 if (Math.Abs(v - args[i]) < 0.0001)
+									 // is this an else statement
+									 if (i == args.Length - 1)
+										 return args[i];
+
+									 var condition = args[i];
+									 if (condition.ToBool())
 										 return args[i + 1];
 								 }
 

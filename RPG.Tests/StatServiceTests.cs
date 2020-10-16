@@ -257,20 +257,36 @@ namespace RPG.Tests
 
 		//TODo ,ove
 		[Fact]
-		public void ResolveFunctionIfzYes()
+		public void ResolveSimpleIfYes()
 		{
-			_statService.Add("A", "$IFZ{3, 3, 1}");
+			_statService.Add("A", "$IF {1 = 1, 17}");
 
-			_statService.GetValue("A").Should().Be(1);
+			_statService.GetValue("A").Should().Be(17);
 		}
 
 		//TODo ,ove
 		[Fact]
-		public void ResolveFunctionIfzNo()
+		public void ResolveSimpleIfNo()
 		{
-			_statService.Add("A", "$IFZ{1, 3, 1}");
+			_statService.Add("A", "$IF {1 = 0, 17}");
 
 			_statService.GetValue("A").Should().Be(0);
+		}
+
+		[Fact]
+		public void ResolveSimpleIfElseIf()
+		{
+			_statService.Add("A", "$IF {1 = 0, -22, 1 = 1, 17}");
+
+			_statService.GetValue("A").Should().Be(17);
+		}
+
+		[Fact]
+		public void ResolveSimpleIfElseIfElse()
+		{
+			_statService.Add("A", "$IF {1 = 0, -22, 1 = 0, -40, 17}");
+
+			_statService.GetValue("A").Should().Be(17);
 		}
 
 		[Fact]
