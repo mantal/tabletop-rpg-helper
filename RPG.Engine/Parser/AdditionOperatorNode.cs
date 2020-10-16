@@ -21,7 +21,7 @@ namespace RPG.Engine.Parser
 			if (previous is FunctionNode functionNode
 				&& _functionService.Exists(functionNode.Id))
 			{
-				isUnary = _functionService.Get(functionNode.Id).RequiredParameterNumber <= 0;
+				isUnary = _functionService.Get(functionNode.Id).RequiredParameterNumber > 0;
 			}
 
 			if (!isUnary) 
