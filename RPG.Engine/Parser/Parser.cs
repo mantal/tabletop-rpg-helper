@@ -90,7 +90,7 @@ namespace RPG.Engine.Parser
 			}
 			
 			if (nodes.First == null)
-				return new[] { $"Empty expression: '{s}'" };
+				return new[] { $"expected empty expression" }; //TODO use context to say which stat or function this expression belongs
 
 			for (var node = nodes.First; node != null; node = node?.Next)
 				node = node.Value.OnBeforeValidation(node);

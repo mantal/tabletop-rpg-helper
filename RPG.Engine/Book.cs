@@ -225,7 +225,7 @@ namespace RPG.Engine
 						if (extraNodes.Any())
 						{
 							// TODO add stat.expression path to error
-							errors.Add(expressionId, $"Unknown properties ({string.Join(',', $"'{extraNodes.Select(n => n.Value)}'")}) will be ignored. Allowed properties are 'expression' and 'position'");
+							errors.Add(expressionId, $"unknown properties ({string.Join(',', $"'{string.Join("", extraNodes.Select(n => n.Value))}'")}) will be ignored. Allowed properties are 'expression' and 'position'. Did you forget an '#' at the start of a parent section name?");
 						}
 
 						// TODO rename to 'value'

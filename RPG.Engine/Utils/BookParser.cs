@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -119,13 +119,13 @@ namespace RPG.Engine.Utils
 				id += (char) Read();
 
 			if (id == "")
-				throw BuildException("Missing identifier");
+				throw BuildException($"missing identifier: expected section, stat or function name, but got '{(char)_reader.Peek()}'");
 
 			SkipWhitespaces();
 
 			var next = _reader.Peek();
 			if (next == -1)
-				throw BuildException("unexpected end of file"); // TODO better
+				throw BuildException($"expected property start ':' or object start '{{' but the file ended");
 
 			NodeType type;
 			if (next == ':')

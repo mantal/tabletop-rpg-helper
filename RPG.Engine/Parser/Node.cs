@@ -160,7 +160,7 @@ namespace RPG.Engine.Parser
 			// Only check the left to prevent producing too many errors 
 			if (node.Previous == null || !node.Previous.Value.IsValidLeftOperand() || node.Previous.Value is FunctionNode)
 				return Enumerable.Empty<string>();
-			return new[] {$"missing operator or argument separator around value {node.Value}"};
+			return new[] { $"missing operator or argument separator around value {node.Value}" };
 		}
 
 		public override bool IsValidLeftOperand() => true;
@@ -174,7 +174,7 @@ namespace RPG.Engine.Parser
 		{ }
 
 		public override IEnumerable<string> IsValid(LinkedListNode<Node> node)
-			=> new[] { $"Invalid node: {Text}" };
+			=> new[] { @$"invalid expression ""{Text}"". Valid expression are number, stat, variable or function name, and operators" };
 
 		public override LinkedListNode<Node> Apply(LinkedListNode<Node> node) 
 			=> throw new InvalidOperationException();
