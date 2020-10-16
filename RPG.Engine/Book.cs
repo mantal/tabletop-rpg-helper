@@ -102,7 +102,20 @@ namespace RPG.Engine
 		{
 			var errors = new List<string>();
 
-			errors.Add("custom functions are not implemented yet");
+			if (node.Type == NodeType.PropertyIdentifier)
+			{
+				var expressionNode = node.Children.First();
+				errors = _parser.Parse(out var expression, expressionNode.Value, context).FormatErrors(expressionNode).ToList();
+				if (errors.Any())
+					return errors;
+
+				return _functionService.Add(new Function(new FunctionId(node.Value), expression!, _functionService)).FormatErrors(node);
+			}
+			else
+			{
+				errors.Add(node, "no"); //TODO
+			}
+
 			return errors;
 		}
 
@@ -123,14 +136,14 @@ namespace RPG.Engine
 			var errors = ParseStat(node, context, sectionId, out var stat);
 
 			if (!errors.Any())
-				errors = errors.Concat(_statService.Add(stat!).FormatErrors(node));
+				errors = errors.Concat(_statService.Add(stat).FormatErrors(node));
 			if (!errors.Any())
 				_sections[sectionId].Stats.Add(stat!);
 
 			return errors;
 		}
 
-		private IEnumerable<string> ParseStat(Node statNode, ParsingContext context, string sectionId, out Stat? stat)
+		private IEnumerable<string> ParseStat(Node statNode, ParsingContext context, string sectionId, out Stat stat)
 		{
 			var errors = new List<string>();
 
@@ -289,8 +302,7 @@ namespace RPG.Engine
 					|| node.Type == NodeType.ObjectIdentifier);
 
 		public static bool IsFunction(this Node node)
-			=> node.Value.IsValidFunctionId()
-			   && false;
+			=> node.Value.IsValidFunctionId();
 
 		public static bool IsSection(this Node node)
 			=> node.Type == NodeType.ObjectIdentifier

@@ -6,8 +6,8 @@ using Xunit;
 
 namespace RPG.Tests
 {
-    public class BookTests
-    {
+	public class BookTests
+	{
 		private readonly FunctionService _functionService;
 		private readonly StatService _statService;
 		private readonly Book _book;
@@ -147,7 +147,7 @@ namespace RPG.Tests
 			_book.Populate(@"{}")
 				 .Should().HaveCount(1);
 		}
-		
+
 		[Fact]
 		public void HandleDuplicateStats()
 		{
@@ -183,7 +183,7 @@ namespace RPG.Tests
 			_book.Populate("F°R: { val: 2\n }")
 				 .Should().HaveCount(1);
 		}
-		
+
 		[Fact]
 		public void IgnoreCaseInExpressionProperties()
 		{
@@ -192,7 +192,7 @@ namespace RPG.Tests
 			_statService.GetValue("FOR").Should().Be(1);
 		}
 
-		[Fact(Skip = "needs continue after error")] 
+		[Fact(Skip = "needs continue after error")]
 		public void HandleUnnamedSection()
 		{
 			_book.Populate("{ }")
@@ -227,6 +227,29 @@ namespace RPG.Tests
 				 .Should().HaveCount(1);
 		}
 
-		#endregion
+#endregion
+
+		[Fact]
+		public void HandleUserFunction()
+		{
+			_book.Populate("$foo: 17\nFOR: $foo")
+				 .Should().BeEmpty();
+			_statService.GetValue("FOR").Should().Be(17);
+		}
+
+		[Fact]
+		public void HandleUserFunctionWithInvalidArgument()
+		{
+			_book.Populate("$foo: $0 + 7")
+				 .Should().HaveCount(1);
+		}
+
+		[Fact]
+		public void HandleUserFunctionWithArgument()
+		{
+			_book.Populate("$foo: $1 + 7\nFOR: $foo 10")
+				 .Should().BeEmpty();
+			_statService.GetValue("FOR").Should().Be(17);
+		}
 	}
 }

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using RPG.Engine.Ids;
@@ -10,7 +11,7 @@ namespace RPG.Engine.Parser
 		public FunctionId Id { get; }
 		private readonly FunctionService _functionService;
 		private int _argumentCount = -1;
-		public Expression[] Arguments { get; private set; } = new Expression[0];
+		public Expression[] Arguments { get; private set; } = Array.Empty<Expression>();
 
 		//todo quand impl: update une fonction ne peut pas changer son numbre d'args
 		public FunctionNode(FunctionService functionService, string id)

@@ -85,11 +85,27 @@ namespace RPG.Tests
 		}
 
 		[Fact]
+		public void ParseZeroParameterFunctionWithShorthandFollowedByUnaryOperator()
+		{
+			_parser.Parse(out var expression, "$ZERO - 1", _parsingContext).Should().BeEmpty();
+
+			expression!.ToString().Should().Be("$ZERO - 1");
+		}
+
+		[Fact]
 		public void ParseOneParameterFunctionWithShorthand()
 		{
 			_parser.Parse(out var expression, "$ABS 1", _parsingContext).Should().BeEmpty();
 
 			expression!.ToString().Should().Be("$ABS 1");
+		}
+
+		[Fact]
+		public void ParseOneParameterFunctionWithShorthandFollowedByUnaryOperator()
+		{
+			_parser.Parse(out var expression, "$ABS -1", _parsingContext).Should().BeEmpty();
+
+			expression!.ToString().Should().Be("$ABS - 1");//TODO fix expression with unary operator to string
 		}
 
 		[Fact]

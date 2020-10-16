@@ -114,7 +114,8 @@ namespace RPG.Engine.Utils
 						|| (char)c == '_'
 						|| (char)c == '-'
 						|| (char)c == '#'
-						);) 
+						|| (char)c == '$'
+					);) 
 				id += (char) Read();
 
 			if (id == "")

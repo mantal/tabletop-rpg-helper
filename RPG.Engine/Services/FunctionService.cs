@@ -7,7 +7,7 @@ namespace RPG.Engine.Services
 {
 	public class FunctionService
 	{
-		private readonly IDictionary<FunctionId, Function> _functions = new Dictionary<FunctionId, Function>()
+		private readonly IDictionary<FunctionId, Function> _functions = new Dictionary<FunctionId, Function>
 		{
 			{
 				new FunctionId("$ZERO"),
@@ -51,10 +51,35 @@ namespace RPG.Engine.Services
 			},
 		};
 
-		public Function Get(FunctionId id) => _functions[id];
+		public Function Get(FunctionId id)
+		{
+			if (Function.ArgumentRegex.IsMatch(id.Id)) 
+				AddArgumentFunction(int.Parse(id.Id[1..]), 0);
+			return _functions[id];
+		}
+
+		public IEnumerable<string> Add(Function function)
+		{
+			if (Exists(function.Id))
+				return new[] { $"function already exists {function.Id}" };
+			_functions[function.Id] = function;
+
+			return Enumerable.Empty<string>();
+		}
+
+		public void AddArgumentFunction(int n, double value)
+			=> _functions[new FunctionId($"${n}")] = new Function(new FunctionId($"${n}"), 
+				   0,
+				   0,
+				   _ => value);
 
 		public double Execute(FunctionId id, params double[] parameters) => _functions[id].Execute(parameters);
 
-		public bool Exists(FunctionId id) => _functions.ContainsKey(id);
+		public bool Exists(FunctionId id)
+		{
+			if (Function.ArgumentRegex.IsMatch(id.Id))
+				return true;
+			return _functions.ContainsKey(id);
+		}
 	}
 }
