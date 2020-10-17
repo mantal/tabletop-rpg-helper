@@ -8,6 +8,7 @@ namespace RPG.Engine.Services
 {
 	public class FunctionService
 	{
+		private static readonly Random _random = new Random();
 		private readonly IDictionary<FunctionId, Function> _functions = new Dictionary<FunctionId, Function>
 		{
 			{
@@ -52,6 +53,20 @@ namespace RPG.Engine.Services
 								 }
 
 								 return 0;
+							 })
+			},
+			{
+				new FunctionId("$D"),
+				new Function(new FunctionId("$D"), 1, 2, null,
+							 args =>
+							 {
+								 //TODO generate a warning on runtime if one argument is not an integer
+								 var number = args.Length == 1 ? 1 : (int)args[0];
+								 var dice = args.Length == 1 ? (int)args[0] : (int)args[1];
+
+								 return Enumerable.Range(1, number)
+												  .Select(_ => _random.Next(1, dice + 1))
+												  .Sum();
 							 })
 			},
 		};

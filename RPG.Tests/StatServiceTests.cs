@@ -290,6 +290,22 @@ namespace RPG.Tests
 		}
 
 		[Fact]
+		public void ResolveDie()
+		{
+			_statService.Add("A", "$D 100").Should().BeEmpty();
+
+			_statService.GetValue("A").Should().BeInRange(1, 100);
+		}
+
+		[Fact]
+		public void ResolveDice()
+		{
+			_statService.Add("A", "$D{ 100, 2 }").Should().BeEmpty();
+
+			_statService.GetValue("A").Should().BeInRange(100, 200);
+		}
+
+		[Fact]
 		public void ResolveMixed()
 		{
 			_statService.Add("A", "5");
@@ -309,6 +325,6 @@ namespace RPG.Tests
 			_statService.GetValue("C").Should().Be(0);
 		}
 
-		#endregion
+#endregion
 	}
 }
