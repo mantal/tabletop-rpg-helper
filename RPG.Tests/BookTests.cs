@@ -1,4 +1,5 @@
-﻿using FluentAssertions;
+﻿using System;
+using FluentAssertions;
 using RPG.Engine;
 using RPG.Engine.Ids;
 using RPG.Engine.Services;
@@ -14,7 +15,7 @@ namespace RPG.Tests
 
 		public BookTests()
 		{
-			_functionService = new FunctionService();
+			_functionService = new FunctionService(new Random());
 			_statService = new StatService(_functionService);
 			_book = new Book(_statService, _functionService);
 		}

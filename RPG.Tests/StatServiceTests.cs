@@ -1,3 +1,5 @@
+using System;
+using FakeItEasy;
 using FluentAssertions;
 using RPG.Engine.Functions;
 using RPG.Engine.Ids;
@@ -14,7 +16,7 @@ namespace RPG.Tests
 
 		public StatServiceTests()
 		{
-			_functionService = new FunctionService();
+			_functionService = new FunctionService(new Random());
 			_statService = new StatService(_functionService);
 		}
 
@@ -326,6 +328,25 @@ namespace RPG.Tests
 			_functionService.Add(new UserFunction(new FunctionId("$F"), expression!, _functionService)).Should().BeEmpty();
 			_statService.Add("A", "$F 0").Should().BeEmpty();
 			_statService.GetValue("A").Should().Be(0);
+		}
+
+		[Fact]
+		public void ParseDiceWithReroll()
+		{
+			var rand = A.Fake<Random>();
+			A.CallTo(rand)
+			 .WithReturnType<int>()
+			 .ReturnsNextFromSequence(100, 17);
+			var functionService = new FunctionService(rand);
+			var statService = new StatService(functionService);
+			new Parser().Parse(out var expression,
+							   @"$D{ 1, 100, $IF{ $1 >= 50, $F{ 0, $1 + $2 }, $1 + $2}", //reroll while rolling 50+
+							   new ParsingContext(_statService, functionService) { FunctionId = new FunctionId("$F") }
+			).Should().BeEmpty();
+
+			functionService.Add(new UserFunction(new FunctionId("$F"), expression!, functionService)).Should().BeEmpty();
+			statService.Add("A", "$F{ 0, $1 }").Should().BeEmpty();
+			statService.GetValue("A").Should().Be(117);
 		}
 		[Fact]
 		public void ResolveMixed()

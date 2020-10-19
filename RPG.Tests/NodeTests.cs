@@ -1,4 +1,5 @@
-﻿using FluentAssertions;
+﻿using System;
+using FluentAssertions;
 using RPG.Engine.Ids;
 using RPG.Engine.Parser;
 using RPG.Engine.Services;
@@ -12,7 +13,7 @@ namespace RPG.Tests
 
 		public NodeTests()
 		{
-			var functionService = new FunctionService();
+			var functionService = new FunctionService(new Random());
 			_context = new ParsingContext(new StatService(functionService), functionService);
 		}
 

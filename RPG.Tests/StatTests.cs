@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using FluentAssertions;
 using RPG.Engine;
 using RPG.Engine.Ids;
@@ -15,7 +16,7 @@ namespace RPG.Tests
 
 		public StatTests()
 		{
-			var functionService = new FunctionService();
+			var functionService = new FunctionService(new Random());
 			_context = new ParsingContext(new StatService(functionService), functionService);
 		}
 
