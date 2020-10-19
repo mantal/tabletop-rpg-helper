@@ -1,12 +1,22 @@
-﻿using FluentAssertions;
+using FluentAssertions;
+using RPG.Engine.Functions;
+using RPG.Engine.Ids;
+using RPG.Engine.Parser;
 using RPG.Engine.Services;
 using Xunit;
 
 namespace RPG.Tests
 {
     public class StatServiceTests
-    {
-        private readonly StatService _statService = new StatService(new FunctionService());
+	{
+		private readonly FunctionService _functionService;
+        private readonly StatService _statService;
+
+		public StatServiceTests()
+		{
+			_functionService = new FunctionService();
+			_statService = new StatService(_functionService);
+		}
 
 #region Add
         [Fact]
@@ -305,6 +315,18 @@ namespace RPG.Tests
 			_statService.GetValue("A").Should().BeInRange(100, 200);
 		}
 
+		[Fact]
+		public void ParseRecursiveFunction()
+		{
+			new Parser().Parse(out var expression,
+							   @"$IF{ $1 <= 0, 0, $F{$1 - 1}",
+							   new ParsingContext(_statService, _functionService) { FunctionId = new FunctionId("$F") }
+			).Should().BeEmpty();
+
+			_functionService.Add(new UserFunction(new FunctionId("$F"), expression!, _functionService)).Should().BeEmpty();
+			_statService.Add("A", "$F 0").Should().BeEmpty();
+			_statService.GetValue("A").Should().Be(0);
+		}
 		[Fact]
 		public void ResolveMixed()
 		{

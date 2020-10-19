@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using RPG.Engine.Functions;
 using RPG.Engine.Ids;
 using RPG.Engine.Services;
 
@@ -113,9 +114,29 @@ namespace RPG.Engine.Parser
 
 		public override double GetValue()
 		{
-			var args = Arguments.Select(a => a.Resolve()).ToArray();
+			var function = _functionService.Get(Id);
+			IEnumerable<object> args = new List<object>();
+			if (Arguments.Length > function.RequiredParameterNumber)
+			{
+				args = function.ParameterTypes.Take(Arguments.Length)
+								   .Select((type, i) => ConvertArgument(type, Arguments[i]))
+								   .ToList();
 
-			return _functionService.Execute(Id, args);
+
+				if (args.Count() < Arguments.Length)
+				{
+					var batch = function.ParameterTypes.Skip(args.Count() - (function.ParameterBatchSize ?? 1)).ToArray();
+					args = args.Concat(Arguments.Skip(args.Count())
+												.Select((arg, i) => ConvertArgument(batch[i % batch.Length], arg)))
+							   .ToList();
+				}
+			}
+			else
+			{
+				args = Arguments.Select((e, i) => function.ParameterTypes[i] == typeof(double) ? (object)e.Resolve() : e);
+			}
+
+			return _functionService.Execute(Id, args.ToArray());
 		}
 
 		public override string ToString()
@@ -182,5 +203,10 @@ namespace RPG.Engine.Parser
 
 			return argCount;
 		}
+
+		private object ConvertArgument(Type type, Expression arg)
+			=> type == typeof(double)
+				   ? (object) arg.Resolve()
+				   : arg;
 	}
 }

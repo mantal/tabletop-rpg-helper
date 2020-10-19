@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using RPG.Engine.Functions;
 using RPG.Engine.Ids;
 using RPG.Engine.Parser;
 using RPG.Engine.Services;
@@ -111,7 +112,9 @@ namespace RPG.Engine
 				if (errors.Any())
 					return errors;
 
-				return _functionService.Add(new Function(new FunctionId(node.Value), expression!, _functionService)).FormatErrors(node);
+				errors = errors.Concat(_functionService.Add(new UserFunction(context.FunctionId, expression!, _functionService)).FormatErrors(node))
+							   .FormatErrors(expressionNode)
+							   .ToList();
 			}
 			else
 			{
