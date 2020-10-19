@@ -317,6 +317,14 @@ namespace RPG.Tests
 			_statService.GetValue("A").Should().BeInRange(100, 200);
 		}
 
+		[Fact(Skip = "TODO don't cache")]
+		public void DiceIgnoreCache()
+		{
+			_statService.Add("A", "$D 2").Should().BeEmpty();
+
+			_statService.GetValue("A").Should().BeInRange(1, 2);
+		}
+
 		[Fact]
 		public void ParseRecursiveFunction()
 		{

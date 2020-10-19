@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using RPG.Engine.Ids;
 using RPG.Engine.Parser;
@@ -37,7 +38,7 @@ namespace RPG.Engine.Services
 
 			var value = Stats[id].Resolve();
 
-			_cache.Add(id, value);
+			//_cache.Add(id, value);
 			return value;
 		}
 
@@ -166,6 +167,14 @@ namespace RPG.Engine.Services
 			_cache.Remove(id);
 
 			return errors;
+		}
+
+		public void Remove(VariableId variableId)
+		{
+			if (!Exists(variableId))
+				throw new ArgumentOutOfRangeException(nameof(variableId));
+			//TODO check if used
+			Stats[variableId.StatId].Variables.Remove(variableId);
 		}
 
 		public bool Exists(string id)
