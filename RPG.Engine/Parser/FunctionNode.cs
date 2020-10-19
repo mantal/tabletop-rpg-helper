@@ -9,28 +9,37 @@ namespace RPG.Engine.Parser
 	public class FunctionNode : ValueNode
 	{
 		public FunctionId Id { get; }
-		private readonly FunctionService _functionService;
-		private int _argumentCount = -1;
 		public Expression[] Arguments { get; private set; } = Array.Empty<Expression>();
 
-		//todo quand impl: update une fonction ne peut pas changer son numbre d'args
-		public FunctionNode(FunctionService functionService, string id)
+		private readonly FunctionService _functionService;
+		private int _argumentCount = -1;
+		private FunctionId? _parentId;
+		
+		//todo quand impl: update une fonction ne peut pas changer son nombre d'args
+		public FunctionNode(FunctionService functionService, string id, FunctionId? parentId)
 			: base(id, NodeType.Function, 1)
 		{
 			_functionService = functionService;
 			Id = new FunctionId(id);
+			_parentId = parentId;
 		}
 
 		public override IEnumerable<string> IsValid(LinkedListNode<Node> node)
 		{
 			var errors = base.IsValid(node).ToList();
 
-			if (!_functionService.Exists(Id)) 
-				return errors.Append($"Undefined function {Id}");
+			_argumentCount = CountArguments(node.Next);
+
+			if (!_functionService.Exists(Id))
+			{
+				if (Id == _parentId)
+					return errors;
+
+				errors.Add($"Undefined function {Id}");
+			}
 
 			var function = _functionService.Get(Id);
-
-			_argumentCount = CountArguments(node.Next);
+			
 			if (_argumentCount < function.RequiredParameterNumber
 				|| (function.MaxParameterNumber != null
 					&& _argumentCount > function.MaxParameterNumber))
@@ -42,7 +51,7 @@ namespace RPG.Engine.Parser
 			return errors;
 		}
 
-		public override LinkedListNode<Node>? OnAfterValidation(LinkedListNode<Node> start)
+		public override LinkedListNode<Node> OnAfterValidation(LinkedListNode<Node> start)
 		{
 			Arguments = new Expression[_argumentCount];
 
@@ -122,7 +131,7 @@ namespace RPG.Engine.Parser
 			return $"{Id}{{{string.Join(", ", Arguments.Select(a => a.ToString()))}}}";
 		}
 
-		public override Node Clone() => new FunctionNode(_functionService, Id.Id);
+		public override Node Clone() => new FunctionNode(_functionService, Id.Id, _parentId);
 
 		private string GetArgumentNumberErrorMessage(Function function)
 		{

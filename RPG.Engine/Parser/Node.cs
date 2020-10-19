@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -78,7 +78,7 @@ namespace RPG.Engine.Parser
 			if (text.IsEquivalentTo("~"))
 				return new NotOperatorNode(text, NodeType.UnaryNotOperator);
 			if (text.IsValidFunctionId())
-				return new FunctionNode(context.FunctionService, text);
+				return new FunctionNode(context.FunctionService, text, context.FunctionId);
 			if (text.IsValidVariableId())
 				return new VariableNode(context.StatService, text, context.StatId);
 			if (double.TryParse(text, NumberStyles.Float, null, out _))

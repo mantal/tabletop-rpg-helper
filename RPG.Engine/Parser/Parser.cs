@@ -113,6 +113,7 @@ namespace RPG.Engine.Parser
 	public class ParsingContext
 	{
 		public StatId? StatId { get; set; }
+		public FunctionId? FunctionId { get; set; }
 		public StatService StatService { get; }
 		public FunctionService FunctionService { get; }
 

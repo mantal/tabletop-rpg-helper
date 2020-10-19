@@ -102,6 +102,8 @@ namespace RPG.Engine
 		{
 			var errors = new List<string>();
 
+			context.FunctionId = new FunctionId(node.Value);
+
 			if (node.Type == NodeType.PropertyIdentifier)
 			{
 				var expressionNode = node.Children.First();
@@ -115,6 +117,8 @@ namespace RPG.Engine
 			{
 				errors.Add(node, "no"); //TODO
 			}
+
+			context.FunctionId = null;
 
 			return errors;
 		}
