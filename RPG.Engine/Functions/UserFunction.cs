@@ -29,10 +29,7 @@ namespace RPG.Engine.Functions
 		{
 			if (args.Length < RequiredParameterNumber)
 				throw new ArgumentException($"not enough argument to call function {Id}, required {RequiredParameterNumber} but got {args.Length}", nameof(args));
-
-
-			_functionService.PrepareUserFunctionCall(args.ToDouble());
-
+			
 			var result = _expression.Resolve();
 
 			return result;

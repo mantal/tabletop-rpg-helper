@@ -11,10 +11,12 @@ namespace RPG.Engine.Services
 	{
 		private readonly Random _random;
 		private readonly IDictionary<FunctionId, Function> _functions;
+		private readonly Stack<object[]> _stack;
 
 		public FunctionService(Random random)
 		{
 			_random = random;
+			_stack = new Stack<object[]>(new[] { Array.Empty<object>() }); // don't let the stack be empty
 			_functions = new Dictionary<FunctionId, Function>
 			{
 				{
@@ -83,11 +85,8 @@ namespace RPG.Engine.Services
 																	.Select(_ => _random.Next(1, dice + 1))
 																	.Sum();
 
-											 if (args.Length == 3)
-											 {
-												 PrepareUserFunctionCall(result);
+											 if (args.Length == 3) 
 												 result = ((Expression) args[2]).Resolve();
-											 }
 
 											 return result;
 										 })
@@ -98,7 +97,8 @@ namespace RPG.Engine.Services
 		public Function Get(FunctionId id)
 		{
 			if (!_functions.ContainsKey(id) && Function.ArgumentRegex.IsMatch(id.Id)) 
-				AddUserFunctionArgument(int.Parse(id.Id[1..]), 0);
+				AddUserFunctionArgument(int.Parse(id.Id[1..]));
+
 			return _functions[id];
 		}
 
@@ -111,22 +111,21 @@ namespace RPG.Engine.Services
 			return Enumerable.Empty<string>();
 		}
 
-		//TODO we need a proper stack! + named arguments
-
-		public void PrepareUserFunctionCall(params double[] args)
+		public double Execute(FunctionId id, object[] parameters)
 		{
-			for (var i = 0; i < args.Length; i++)
-				AddUserFunctionArgument(i + 1, args[i]);
+			var function = _functions[id];
+
+			if (function is InMemoryFunction)
+				return function.Execute(parameters);
+
+			_stack.Push(parameters.Concat(_stack.Peek().Skip(parameters.Length)).ToArray());
+
+			var result = function.Execute(parameters);
+
+			_stack.Pop();
+
+			return result;
 		}
-
-		public void AddUserFunctionArgument(int n, double value)
-			=> _functions[new FunctionId($"${n}")] = new InMemoryFunction(new FunctionId($"${n}"), 
-																		  0,
-																		  0,
-																		  _ => value);
-
-		public double Execute(FunctionId id, object[] parameters) 
-			=> _functions[id].Execute(parameters);
 
 		public bool Exists(FunctionId id)
 		{
@@ -134,6 +133,12 @@ namespace RPG.Engine.Services
 				return true;
 			return _functions.ContainsKey(id);
 		}
+
+		private void AddUserFunctionArgument(int n)
+			=> _functions[new FunctionId($"${n}")] = new InMemoryFunction(new FunctionId($"${n}"), 
+																		  0,
+																		  0,
+																		  _ => (double)_stack.Peek()[n - 1]);
 	}
 
 	public static class FunctionServiceExtensions
