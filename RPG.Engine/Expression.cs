@@ -27,18 +27,16 @@ namespace RPG.Engine
 			var priority = Node.MaxPriority;
 			while (nodes.Count > 1)
 			{
-				var node = nodes.First;
-				while (node != null && node.Value.Priority < priority)
-					node = node.Next;
-				if (node?.Next == null)
+				var node = nodes.FirstOrDefault(n => n.Priority == priority);
+
+				if (node == null)
 				{
 					priority--;
 					if (priority < Node.MinPriority)
 						break;
 					continue;
 				}
-
-				node.Value.Apply(node);
+				node.Apply(nodes.Find(node)!);
 			}
 
 			nodes.First!.Value.Apply(nodes.First!);
