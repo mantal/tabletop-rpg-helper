@@ -267,6 +267,14 @@ namespace RPG.Tests
 			_statService.GetValue("A").Should().Be(1);
 		}
 
+		[Fact]
+		public void ResolveFunctionWithOneUnaryOperatorArgument()
+		{
+			_statService.Add("A", "$ABS -1");
+
+			_statService.GetValue("A").Should().Be(1);
+		}
+
 		//TODo ,ove
 		[Fact]
 		public void ResolveSimpleIfYes()

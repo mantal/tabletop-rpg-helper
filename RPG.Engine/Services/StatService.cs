@@ -218,7 +218,7 @@ namespace RPG.Engine.Services
 			   {
 				   StatNode statNode                                     => new[] { statNode.Id },
 				   VariableNode varNode when varNode.Id.StatId != statId => new[] { varNode.Id.StatId },
-				   FunctionNode funcNode => funcNode.Arguments.SelectMany(arg => arg.Nodes.SelectMany(n => FlattenDependencies(statId, n))),
+				   IParentNode parentNode => parentNode.Children.SelectMany(arg => arg.Nodes.SelectMany(n => FlattenDependencies(statId, n))),
 				   _ => Enumerable.Empty<StatId>(),
 			   };
 	}

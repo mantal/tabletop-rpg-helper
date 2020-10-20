@@ -52,8 +52,7 @@ namespace RPG.Engine
 			for (var node = Nodes.First; node != null; node = node.Next)
 			{
 				s += node.Value.ToString();
-				if (node.Next != null
-					&& !(node.Value is UnaryOperatorNode))
+				if (node.Next != null)
 					s += ' ';
 			}
 

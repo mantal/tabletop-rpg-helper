@@ -55,10 +55,11 @@ namespace RPG.Engine.Functions
 
 		private IEnumerable<FunctionNode> FlattenFunctionDependencies(Expression expression)
 		{
-			foreach (var node in expression.Nodes.OfType<FunctionNode>())
+			foreach (var node in expression.Nodes.OfType<IParentNode>())
 			{
-				yield return node;
-				foreach (var functionNode in node.Arguments.SelectMany(FlattenFunctionDependencies))
+				if (node is FunctionNode)
+					yield return (FunctionNode) node;
+				foreach (var functionNode in node.Children.SelectMany(FlattenFunctionDependencies))
 					yield return functionNode;
 			}
 		}

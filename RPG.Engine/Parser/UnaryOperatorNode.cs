@@ -3,8 +3,12 @@ using System.Linq;
 
 namespace RPG.Engine.Parser
 {
-	public abstract class UnaryOperatorNode : Node
+	public abstract class UnaryOperatorNode : Node, IParentNode
 	{
+		public IEnumerable<Expression> Children => new[] { Operand };
+
+		protected Expression? Operand { get; set; }
+
 		protected UnaryOperatorNode(string text, NodeType type) 
 			: base(text, type, 8)
 		{ }
@@ -27,6 +31,16 @@ namespace RPG.Engine.Parser
 			return Enumerable.Empty<string>();
 		}
 
+		public override LinkedListNode<Node> OnAfterValidation(LinkedListNode<Node> node)
+		{
+			var next = node.Next!.Value.OnAfterValidation(node.Next!);
+			Operand = new Expression(new LinkedList<Node>(new [] { next!.Value }));
+
+			node.List!.Remove(node.Next!);
+
+			return node;
+		}
+
 		public override bool IsValidLeftOperand() => false;
 
 		public override bool IsValidRightOperand() => true;
@@ -35,12 +49,14 @@ namespace RPG.Engine.Parser
 		{
 			var value = new NumberNode(result);
 
-			var resultNode = node.List!.AddAfter(node.Next!, value);
+			var resultNode = node.List!.AddAfter(node, value);
 
-			resultNode.List!.Remove(resultNode.Previous!.Previous!);
-			resultNode.List!.Remove(resultNode.Previous!);
+			node.List!.Remove(node);
 
 			return resultNode;
 		}
+
+		public override string ToString()
+			=> Text + (Operand?.ToString() ?? "");
 	}
 }

@@ -10,25 +10,10 @@ namespace RPG.Engine.Parser
 
 		public override LinkedListNode<Node> Apply(LinkedListNode<Node> node)
 		{
-			// unary plus is always a no op
-			if (Type == NodeType.UnaryPlusOperator)
-			{
-				var next = node.Next!;
-				node.List!.Remove(node);
+			var result = Operand!.Resolve();
+			result = Type == NodeType.UnaryPlusOperator ? result : -result;
 
-				return next;
-			}
-
-			var b = ((ValueNode)node.Next!.Value).GetValue();
-
-			var value = new NumberNode(-b);
-
-			var result = node.List!.AddAfter(node.Next!, value);
-
-			result.List!.Remove(result.Previous!.Previous!);
-			result.List!.Remove(result.Previous!);
-
-			return result;
+			return ReplaceSelfWithResult(node, result);
 		}
 
 		public override Node Clone() => new UnaryAdditionOperatorNode(Text, Type);

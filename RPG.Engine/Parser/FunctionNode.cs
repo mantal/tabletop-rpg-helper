@@ -7,11 +7,12 @@ using RPG.Engine.Services;
 
 namespace RPG.Engine.Parser
 {
-	public class FunctionNode : ValueNode
+	public class FunctionNode : ValueNode, IParentNode
 	{
 		public FunctionId Id { get; }
-		public Expression[] Arguments { get; private set; } = Array.Empty<Expression>();
-
+		public IEnumerable<Expression> Children => _arguments;
+		
+		private Expression[] _arguments = Array.Empty<Expression>();
 		private readonly FunctionService _functionService;
 		private int _argumentCount = -1;
 		private FunctionId? _parentId;
@@ -54,7 +55,7 @@ namespace RPG.Engine.Parser
 
 		public override LinkedListNode<Node> OnAfterValidation(LinkedListNode<Node> start)
 		{
-			Arguments = new Expression[_argumentCount];
+			_arguments = new Expression[_argumentCount];
 
 			var node = start.Next;
 
@@ -69,7 +70,7 @@ namespace RPG.Engine.Parser
 				node = node.Value.OnAfterValidation(node)!;
 				var arg = new LinkedList<Node>(new []{ node.Value });
 				
-				Arguments[0] = new Expression(arg);
+				_arguments[0] = new Expression(arg);
 
 				node.List!.Remove(node);
 
@@ -98,7 +99,7 @@ namespace RPG.Engine.Parser
 				if (node != null && node.Value.Type == NodeType.ArgumentDivider) 
 					node = node.Consume();
 
-				Arguments[i] = new Expression(arg);
+				_arguments[i] = new Expression(arg);
 				i++;
 			}
 
@@ -116,24 +117,24 @@ namespace RPG.Engine.Parser
 		{
 			var function = _functionService.Get(Id);
 			IEnumerable<object> args = new List<object>();
-			if (Arguments.Length > function.RequiredParameterNumber)
+			if (_arguments.Length > function.RequiredParameterNumber)
 			{
-				args = function.ParameterTypes.Take(Arguments.Length)
-								   .Select((type, i) => ConvertArgument(type, Arguments[i]))
+				args = function.ParameterTypes.Take(_arguments.Length)
+								   .Select((type, i) => ConvertArgument(type, _arguments[i]))
 								   .ToList();
 
 
-				if (args.Count() < Arguments.Length)
+				if (args.Count() < _arguments.Length)
 				{
 					var batch = function.ParameterTypes.Skip(args.Count() - (function.ParameterBatchSize ?? 1)).ToArray();
-					args = args.Concat(Arguments.Skip(args.Count())
+					args = args.Concat(_arguments.Skip(args.Count())
 												.Select((arg, i) => ConvertArgument(batch[i % batch.Length], arg)))
 							   .ToList();
 				}
 			}
 			else
 			{
-				args = Arguments.Select((e, i) => function.ParameterTypes[i] == typeof(double) ? (object)e.Resolve() : e);
+				args = _arguments.Select((e, i) => function.ParameterTypes[i] == typeof(double) ? (object)e.Resolve() : e);
 			}
 
 			return _functionService.Execute(Id, args.ToArray());
@@ -141,15 +142,15 @@ namespace RPG.Engine.Parser
 
 		public override string ToString()
 		{
-			if (_argumentCount == 0 || Arguments.Length == 0)
+			if (_argumentCount == 0 || _arguments.Length == 0)
 				return Id.ToString();
 			if (_argumentCount == 1
-				&& (Arguments[0].Nodes.First!.Value is not FunctionNode f
-					|| f.Arguments.Length == 0
-					|| f.Arguments[0].Nodes.Count != 0))
-				return $"{Id} {Arguments[0]}";
+				&& (_arguments[0].Nodes.First!.Value is not FunctionNode f
+					|| f._arguments.Length == 0
+					|| f._arguments[0].Nodes.Count != 0))
+				return $"{Id} {_arguments[0]}";
 
-			return $"{Id}{{{string.Join(", ", Arguments.Select(a => a.ToString()))}}}";
+			return $"{Id}{{{string.Join(", ", _arguments.Select(a => a.ToString()))}}}";
 		}
 
 		public override Node Clone() => new FunctionNode(_functionService, Id.Id, _parentId);

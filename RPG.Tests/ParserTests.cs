@@ -106,7 +106,7 @@ namespace RPG.Tests
 		{
 			_parser.Parse(out var expression, "$ABS -1", _parsingContext).Should().BeEmpty();
 
-			expression!.ToString().Should().Be("$ABS - 1");//TODO fix expression with unary operator to string
+			expression!.ToString().Should().Be("$ABS -1");
 		}
 
 		[Fact]

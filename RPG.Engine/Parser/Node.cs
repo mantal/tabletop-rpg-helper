@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -7,6 +7,11 @@ using RPG.Engine.Utils;
 
 namespace RPG.Engine.Parser
 {
+	public interface IParentNode
+	{
+		IEnumerable<Expression> Children { get; }
+	}
+
     public abstract class Node
 	{
 		public const int MinPriority = 0;
@@ -42,7 +47,7 @@ namespace RPG.Engine.Parser
 			if (text.IsEquivalentTo("("))
 				return new GrammarNode(text, NodeType.LeftParenthesis, 8);
 			if (text.IsEquivalentTo(")"))
-				return new GrammarNode(text, NodeType.RightParenthesis, -1);
+				return new GrammarNode(text, NodeType.RightParenthesis, 8); //TODO tmp
 			if (text.IsEquivalentTo("{"))
 				return new GrammarNode(text, NodeType.LeftBracket, -1);
 			if (text.IsEquivalentTo("}"))
