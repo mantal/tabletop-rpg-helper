@@ -45,9 +45,9 @@ namespace RPG.Engine.Parser
 			if (text.IsEquivalentTo(","))
 				return new GrammarNode(text, NodeType.ArgumentDivider, -1);
 			if (text.IsEquivalentTo("("))
-				return new GrammarNode(text, NodeType.LeftParenthesis, 8);
+				return new ParenthesisNode(text, NodeType.LeftParenthesis);
 			if (text.IsEquivalentTo(")"))
-				return new GrammarNode(text, NodeType.RightParenthesis, 8); //TODO tmp
+				return new GrammarNode(text, NodeType.RightParenthesis, -1);
 			if (text.IsEquivalentTo("{"))
 				return new GrammarNode(text, NodeType.LeftBracket, -1);
 			if (text.IsEquivalentTo("}"))

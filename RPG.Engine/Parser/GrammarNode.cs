@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -14,8 +14,7 @@ namespace RPG.Engine.Parser
 			=> Type == NodeType.RightBracket
 			   || Type == NodeType.RightParenthesis;
 
-		public override bool IsValidRightOperand()
-			=> Type == NodeType.LeftParenthesis;
+		public override bool IsValidRightOperand() => false;
 		
 		public override IEnumerable<string> IsValid(LinkedListNode<Node> node)
 			=> Enumerable.Empty<string>();
