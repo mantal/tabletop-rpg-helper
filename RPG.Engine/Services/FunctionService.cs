@@ -86,7 +86,7 @@ namespace RPG.Engine.Services
 																	.Sum();
 
 											 if (args.Length == 3) 
-												 result = ((Expression) args[2]).Resolve();
+												 result = Execute((Expression) args[2], new [] { (object) result });
 
 											 return result;
 										 })
@@ -121,6 +121,17 @@ namespace RPG.Engine.Services
 			_stack.Push(parameters.Concat(_stack.Peek().Skip(parameters.Length)).ToArray());
 
 			var result = function.Execute(parameters);
+
+			_stack.Pop();
+
+			return result;
+		}
+
+		public double Execute(Expression expression, object[] parameters)
+		{
+			_stack.Push(parameters.Concat(_stack.Peek().Skip(parameters.Length)).ToArray());
+
+			var result = expression.Resolve();
 
 			_stack.Pop();
 
