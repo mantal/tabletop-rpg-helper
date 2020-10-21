@@ -10,7 +10,7 @@ namespace RPG.Engine.Parser
 		protected Expression? Operand { get; set; }
 
 		protected UnaryOperatorNode(string text, NodeType type) 
-			: base(text, type, 8)
+			: base(text, type, 7)
 		{ }
 		
 		public override IEnumerable<string> IsValid(LinkedListNode<Node> node)

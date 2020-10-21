@@ -14,19 +14,18 @@ namespace RPG.Engine.Parser
 
     public abstract class Node
 	{
-		public const int MinPriority = 0;
+		public const int MinPriority = 1;
 		public const int MaxPriority = 8;
 
 		/// <summary>
 		/// 8  parenthesis
-		/// 7  function
-		/// 6  unary operators: + - ~
-		/// 5  * / %
-		/// 4  + -
-		/// 3  stats and variables
-		/// 2  relational operators: <![CDATA[ > >= < <= = ]]>
-		/// 1  and operator: &
-		/// 0  or and xor operators: | ^
+		/// 7  unary operators: + - ~
+		/// 6  * / %
+		/// 5  + -
+		/// 4  relational operators: <![CDATA[ > >= < <= = ]]>
+		/// 3  and operator: &
+		/// 2  or and xor operators: | ^
+		/// 1  function, stats and variables
 		/// </summary>
 		public int Priority { get; }
 		public NodeType Type { get; }

@@ -11,7 +11,7 @@ namespace RPG.Engine.Parser
 		private readonly StatService _statService;
 
 		public StatNode(StatService statService, string id)
-			: base(id, NodeType.Variable, 0)
+			: base(id, NodeType.Variable, 1)
 		{
 			_statService = statService;
 			Id = new StatId(id);

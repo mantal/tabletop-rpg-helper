@@ -8,7 +8,7 @@ namespace RPG.Engine.Parser
 		private readonly FunctionService _functionService;
 
 		public AdditionOperatorNode(FunctionService functionService, string text, NodeType type) 
-			: base(text, type, 2)
+			: base(text, type, 5)
 		{
 			_functionService = functionService;
 		}

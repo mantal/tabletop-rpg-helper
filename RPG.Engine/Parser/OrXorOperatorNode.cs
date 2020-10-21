@@ -7,7 +7,7 @@ namespace RPG.Engine.Parser
 	public class OrXorOperatorNode : BinaryOperatorNode
 	{
 		public OrXorOperatorNode(string text, NodeType type)
-			: base(text, type, 1)
+			: base(text, type, 2)
 		{ }
 
 		public override LinkedListNode<Node> Apply(LinkedListNode<Node> node)

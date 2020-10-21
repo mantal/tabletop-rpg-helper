@@ -6,7 +6,7 @@ namespace RPG.Engine.Parser
 	public class MultiplierOperatorNode : BinaryOperatorNode
 	{
 		public MultiplierOperatorNode(string text, NodeType type) 
-			: base(text, type, 3)
+			: base(text, type, 6)
 		{ }
 		
 		public override LinkedListNode<Node> Apply(LinkedListNode<Node> node)

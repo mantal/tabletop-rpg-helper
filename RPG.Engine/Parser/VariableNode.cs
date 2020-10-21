@@ -12,7 +12,7 @@ namespace RPG.Engine.Parser
 		private readonly StatService _statService;
 
 		public VariableNode(StatService statService, string id, StatId? parentId)
-			: base(id, NodeType.Stat, 0)
+			: base(id, NodeType.Stat, 1)
 		{
 			_statService = statService;
 			Id = new VariableId(id, parentId);

@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using RPG.Engine.Services;
 using RPG.Engine.Utils;
 
 namespace RPG.Engine.Parser
@@ -7,7 +6,7 @@ namespace RPG.Engine.Parser
 	public class AndOperatorNode : BinaryOperatorNode
 	{
 		public AndOperatorNode(string text, NodeType type)
-			: base(text, type, 2)
+			: base(text, type, 3)
 		{ }
 
 		public override LinkedListNode<Node> Apply(LinkedListNode<Node> node)

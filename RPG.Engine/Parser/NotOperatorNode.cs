@@ -11,7 +11,7 @@ namespace RPG.Engine.Parser
 
 		public override LinkedListNode<Node> Apply(LinkedListNode<Node> node)
 		{
-			var result = !Operand.Resolve().ToBool();
+			var result = !Operand!.Resolve().ToBool();
 
 			return ReplaceSelfWithResult(node, result.ToDouble());
 		}

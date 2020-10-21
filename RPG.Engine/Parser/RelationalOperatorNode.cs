@@ -7,7 +7,7 @@ namespace RPG.Engine.Parser
 	public class RelationalOperatorNode : BinaryOperatorNode
 	{
 		public RelationalOperatorNode(string text, NodeType type) 
-			: base(text, type, 2)
+			: base(text, type, 4)
 		{ }
 		
 		public override LinkedListNode<Node> Apply(LinkedListNode<Node> node)

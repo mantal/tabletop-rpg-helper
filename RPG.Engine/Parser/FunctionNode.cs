@@ -116,7 +116,8 @@ namespace RPG.Engine.Parser
 		public override double GetValue()
 		{
 			var function = _functionService.Get(Id);
-			IEnumerable<object> args = new List<object>();
+
+			IEnumerable<object> args;
 			if (_arguments.Length > function.RequiredParameterNumber)
 			{
 				args = function.ParameterTypes.Take(_arguments.Length)
