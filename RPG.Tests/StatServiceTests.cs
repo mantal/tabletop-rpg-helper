@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using FakeItEasy;
 using FluentAssertions;
 using RPG.Engine.Functions;
@@ -366,6 +366,53 @@ namespace RPG.Tests
 			statService.Add("A", "$F{ 0, 0 }").Should().BeEmpty();
 			statService.GetValue("A").Should().Be(117);
 		}
+
+		[Fact]
+		public void ANIMA_DICE_WHOOOOOO()
+		{
+			var rand = A.Fake<Random>();
+			A.CallTo(rand)
+			 .WithReturnType<int>()
+			 .ReturnsNextFromSequence(
+				 50, // simple roll
+				 1, 100,       // critical failure
+				 95, 96, 95    // two critical success
+				 );
+
+			var functionService = new FunctionService(rand);
+			var statService = new StatService(functionService);
+
+			new Parser().Parse(out var expression,
+							   @"
+(
+$IF{			$1 >= 95 + $2, 
+					$1 + $D{1, 100, $ANIMA_DICE{$1, $IF {$2 = 5, 5, $2 + 1}}},
+				$1 < 5,
+					$1 - $D{1, 100},
+
+					$1
+			 }
+)
+",
+							   new ParsingContext(statService, functionService) { FunctionId = new FunctionId("$ANIMA_DICE") }
+			).Should().BeEmpty();
+			functionService.Add(new UserFunction(new FunctionId("$ANIMA_DICE"), expression!, functionService));
+
+			statService.Add("ROLL", "$D {1, 100, $ANIMA_DICE{$1, 0}}").Should().BeEmpty();
+
+			statService.GetValue("ROLL").Should().Be(50);
+			statService.GetValue("ROLL").Should().Be(-99);
+			statService.GetValue("ROLL").Should().Be(286);
+		}
+
+		[Fact]
+		public void ResolveWithParenthesis()
+		{
+			_statService.Add("A", "3 * (1 - 1)");
+
+			_statService.GetValue("A").Should().Be(0);
+		}
+
 		[Fact]
 		public void ResolveMixed()
 		{
