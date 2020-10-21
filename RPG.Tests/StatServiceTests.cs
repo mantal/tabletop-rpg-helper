@@ -353,15 +353,17 @@ namespace RPG.Tests
 			A.CallTo(rand)
 			 .WithReturnType<int>()
 			 .ReturnsNextFromSequence(100, 17);
+
 			var functionService = new FunctionService(rand);
 			var statService = new StatService(functionService);
+
 			new Parser().Parse(out var expression,
 							   @"$D{ 1, 100, $IF{ $1 >= 50, $F{ 0, $1 + $2 }, $1 + $2}", //reroll while rolling 50+
 							   new ParsingContext(_statService, functionService) { FunctionId = new FunctionId("$F") }
 			).Should().BeEmpty();
 
 			functionService.Add(new UserFunction(new FunctionId("$F"), expression!, functionService)).Should().BeEmpty();
-			statService.Add("A", "$F{ 0, $1 }").Should().BeEmpty();
+			statService.Add("A", "$F{ 0, 0 }").Should().BeEmpty();
 			statService.GetValue("A").Should().Be(117);
 		}
 		[Fact]
