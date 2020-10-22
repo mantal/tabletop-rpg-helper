@@ -42,7 +42,7 @@ namespace RPG.Engine.Parser
 		public static Node FromString(string text, ParsingContext context)
 		{
 			if (text.IsEquivalentTo(","))
-				return new GrammarNode(text, NodeType.ArgumentDivider, -1);
+				return new ArgumentSeparatorNode(text, NodeType.ArgumentDivider);
 			if (text.IsEquivalentTo("("))
 				return new ParenthesisNode(text, NodeType.LeftParenthesis);
 			if (text.IsEquivalentTo(")"))

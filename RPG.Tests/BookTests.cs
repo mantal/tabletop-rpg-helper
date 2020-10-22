@@ -214,13 +214,6 @@ namespace RPG.Tests
 				 .Should().HaveCount(1);
 		}
 
-		[Fact(Skip = "TODO")]
-		public void HandleExtraClosingBracket()
-		{
-			_book.Populate("FOR: 1\n }")
-				 .Should().HaveCount(1);
-		}
-
 		[Fact]
 		public void HandleUnexpectedObject()
 		{

@@ -155,6 +155,23 @@ namespace RPG.Tests
 			_parser.Parse(out _, "$ABS}", _parsingContext).Should().HaveCount(1);
 		}
 
+		[Fact]
+		public void AllowArgumentListWithTrailingComma()
+		{
+			_parser.Parse(out _, "$MIN{0,1,}", _parsingContext).Should().BeEmpty();
+		}
+
+		[Fact]
+		public void HandleFunctionWithEmptyArgument()
+		{
+			_parser.Parse(out _, "$MIN{0,,}", _parsingContext).Should().HaveCount(1);
+		}
+
+		[Fact]
+		public void HandleArgumentSeparatorOutsideOfArgumentList()
+		{
+			_parser.Parse(out _, ",", _parsingContext).Should().HaveCount(1);
+		}
 #endregion
 
 		[Fact]
