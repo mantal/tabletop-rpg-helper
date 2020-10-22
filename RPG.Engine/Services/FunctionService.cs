@@ -113,6 +113,9 @@ namespace RPG.Engine.Services
 
 		public double Execute(FunctionId id, object[] parameters)
 		{
+			if (_stack.Count > 99)
+				throw new Exception("stack overflow"); // don't throw a stackoverflow as that breaks the test runner
+
 			var function = _functions[id];
 
 			if (function is InMemoryFunction)
@@ -127,7 +130,7 @@ namespace RPG.Engine.Services
 			return result;
 		}
 
-		public double Execute(Expression expression, object[] parameters)
+		private double Execute(Expression expression, object[] parameters)
 		{
 			_stack.Push(parameters.Concat(_stack.Peek().Skip(parameters.Length)).ToArray());
 

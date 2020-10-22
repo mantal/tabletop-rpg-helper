@@ -30,9 +30,19 @@ namespace RPG.Tests
 			_statService.GetValue("A").Should().Be(3);
 		}
 
+		[Fact]
+		public void HandleStackOverflows()
+		{
+			AddFunction("$F", "$F");
+			_statService.Add("A", "$F").Should().BeEmpty();
+			Action a = () => _statService.GetValue("A");
+			a.Should().Throw<Exception>();
+		}
+
 		private IEnumerable<string> AddFunction(string functionId, string functionBody, ParsingContext? context = null)
 		{
 			context ??= new ParsingContext(new StatService(_functionService), _functionService);
+			context.FunctionId = new FunctionId(functionId);
 
 			var errors = new Parser().Parse(out var expression, functionBody, context);
 			if (errors.Any())
