@@ -100,7 +100,7 @@ namespace RPG.Engine.Parser
 		/// Transform nodes before validation happen
 		/// </summary>
 		/// <returns>the current node or the one that replaced it</returns>
-		public virtual LinkedListNode<Node>? OnBeforeValidation(LinkedListNode<Node> node) => node;
+		public virtual LinkedListNode<Node> OnBeforeValidation(LinkedListNode<Node> node) => node;
 
 		public abstract IEnumerable<string> IsValid(LinkedListNode<Node> node);
 
@@ -108,7 +108,7 @@ namespace RPG.Engine.Parser
 		/// Transform nodes after validation happen
 		/// </summary>
 		/// <returns>the current node or the one that replaced it</returns>
-		public virtual LinkedListNode<Node>? OnAfterValidation(LinkedListNode<Node> node) => node;
+		public virtual LinkedListNode<Node> OnAfterValidation(LinkedListNode<Node> node) => node;
 
 		public abstract LinkedListNode<Node> Apply(LinkedListNode<Node> node);
 

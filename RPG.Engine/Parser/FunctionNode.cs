@@ -15,7 +15,7 @@ namespace RPG.Engine.Parser
 		private Expression[] _arguments = Array.Empty<Expression>();
 		private readonly FunctionService _functionService;
 		private int _argumentCount = -1;
-		private FunctionId? _parentId;
+		private readonly FunctionId? _parentId;
 		
 		//todo quand impl: update une fonction ne peut pas changer son nombre d'args
 		public FunctionNode(FunctionService functionService, string id, FunctionId? parentId)
@@ -123,7 +123,6 @@ namespace RPG.Engine.Parser
 				args = function.ParameterTypes.Take(_arguments.Length)
 								   .Select((type, i) => ConvertArgument(type, _arguments[i]))
 								   .ToList();
-
 
 				if (args.Count() < _arguments.Length)
 				{

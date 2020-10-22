@@ -7,7 +7,7 @@ namespace RPG.Engine.Parser
 {
 	public class VariableNode : ValueNode
 	{
-		public readonly VariableId Id;
+		public VariableId Id { get; }
 		private readonly StatId? _parentId;
 		private readonly StatService _statService;
 
