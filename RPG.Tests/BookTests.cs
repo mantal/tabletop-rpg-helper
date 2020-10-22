@@ -218,7 +218,7 @@ namespace RPG.Tests
 		public void HandleUnexpectedObject()
 		{
 			_book.Populate("FOR: { expr: 1\n }")
-				 .Should().HaveCount(1);
+				 .Should().HaveCount(2);
 		}
 
 #endregion

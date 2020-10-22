@@ -150,9 +150,21 @@ namespace RPG.Tests
 		}
 
 		[Fact]
-		public void ParseFunctionWithUnbalancedRightBracket()
+		public void HandleFunctionWithUnbalancedRightBracket()
 		{
 			_parser.Parse(out _, "$ABS}", _parsingContext).Should().HaveCount(1);
+		}
+
+		[Fact]
+		public void HandleLoneLeftBracket()
+		{
+			_parser.Parse(out _, "{", _parsingContext).Should().HaveCount(1);
+		}
+
+		[Fact]
+		public void HandleLoneRightBracket()
+		{
+			_parser.Parse(out _, "}", _parsingContext).Should().HaveCount(1);
 		}
 
 		[Fact]
@@ -180,6 +192,12 @@ namespace RPG.Tests
 			_parsingContext.StatService.Add("A");
 			_parsingContext.StatService.Add("B");
 			_parser.Parse(out _, "A A.b $ZERO $ABS 1 $MIN{0,1}", _parsingContext).Should().HaveCount(5);
+		}
+
+		[Fact]
+		public void HandleEmptyParenthesis()
+		{
+			_parser.Parse(out _, "()", _parsingContext).Should().HaveCount(1);
 		}
 	}
 }

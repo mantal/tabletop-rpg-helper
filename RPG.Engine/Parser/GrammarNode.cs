@@ -17,7 +17,11 @@ namespace RPG.Engine.Parser
 		public override bool IsValidRightOperand() => false;
 		
 		public override IEnumerable<string> IsValid(LinkedListNode<Node> node)
-			=> Enumerable.Empty<string>();
+		{
+			if (node.Previous == null)
+				return new[] { $"Expected expression before {Text} but found nothing" };
+			return Enumerable.Empty<string>();
+		}
 
 		public override LinkedListNode<Node> Apply(LinkedListNode<Node> node)
 			=> throw new InvalidOperationException($"{nameof(Apply)} should not be called on {nameof(GrammarNode)}");

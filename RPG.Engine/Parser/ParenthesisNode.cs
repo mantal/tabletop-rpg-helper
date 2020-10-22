@@ -24,6 +24,10 @@ namespace RPG.Engine.Parser
 			{ }
 			else
 				errors.Add($"missing operator or argument separator around value {start.Value}");
+			if (start.Next == null)
+				return new[] { $"Expected expression after left parenthesis '(' but found nothing" };
+			if (start.Next.Value.Type == NodeType.RightParenthesis)
+				return new[] { $"Expected expression after left parenthesis '(' but found right parenthesis ')'" };
 
 			var node = start.Next;
 			var parenthesisCount = 1;
