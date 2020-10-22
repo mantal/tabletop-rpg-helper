@@ -56,6 +56,11 @@ namespace RPG.Engine
 
 			return s;
 		}
+
+		public IEnumerable<Node> FlatNodes
+			=> Nodes.SelectMany(n => n is not IParentNode pn 
+										 ? new[] { n } 
+										 : pn.Children.SelectMany(c => c.FlatNodes).Prepend(n));
 	}
 
 	public class NamedExpression : Expression

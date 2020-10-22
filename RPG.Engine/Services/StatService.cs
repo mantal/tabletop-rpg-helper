@@ -204,22 +204,12 @@ namespace RPG.Engine.Services
 			stack.Push(stat.Id);
 
 			var errors = stat.Expressions
-						  .SelectMany(e => e.Nodes)
-						  .SelectMany(n => FlattenDependencies(stat.Id, n))
+						  .SelectMany(e => e.FlatNodes.OfType<StatNode>().Select(n => n.Id))
 						  .SelectMany(id => IsRecursive(Stats[id], stack))
 						  .ToList();
 			stack.Pop();
 
 			return errors;
 		}
-
-		private IEnumerable<StatId> FlattenDependencies(StatId statId, Node node)
-			=> node switch
-			   {
-				   StatNode statNode                                     => new[] { statNode.Id },
-				   VariableNode varNode when varNode.Id.StatId != statId => new[] { varNode.Id.StatId },
-				   IParentNode parentNode => parentNode.Children.SelectMany(arg => arg.Nodes.SelectMany(n => FlattenDependencies(statId, n))),
-				   _ => Enumerable.Empty<StatId>(),
-			   };
 	}
 }

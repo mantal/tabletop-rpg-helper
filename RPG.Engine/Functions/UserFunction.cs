@@ -10,11 +10,8 @@ namespace RPG.Engine.Functions
 	public class UserFunction : Function
 	{
 		private readonly Expression _expression;
-		private readonly FunctionService _functionService;
 
-		public UserFunction(FunctionId id,
-							Expression expression,
-							FunctionService functionService)
+		public UserFunction(FunctionId id, Expression expression)
 			: base(id)
 		{
 			RequiredParameterNumber = GetArgumentCount(expression);
@@ -22,7 +19,6 @@ namespace RPG.Engine.Functions
 			ParameterBatchSize = null;
 			ParameterTypes = Enumerable.Repeat(typeof(double), RequiredParameterNumber).ToList().AsReadOnly();
 			_expression = expression;
-			_functionService = functionService;
 		}
 
 		public override double Execute(object[] args)
@@ -37,28 +33,16 @@ namespace RPG.Engine.Functions
 
 		private int GetArgumentCount(Expression expression)
 		{
-			var a = FlattenFunctionDependencies(expression).ToList();
-			var args = a
-					   .Where(node => ArgumentRegex.IsMatch(node.Id.Id))
-					   .Select(node => int.Parse(node.Id.Id[1..]))
-					   .OrderBy(i => i)
-					   .Distinct();
+			var args = expression.FlatNodes.OfType<FunctionNode>()
+								 .Where(node => ArgumentRegex.IsMatch(node.Id.Id))
+								 .Select(node => int.Parse(node.Id.Id[1..]))
+								 .OrderBy(i => i)
+								 .Distinct();
 
 			//TODO handle errors: $0
 			//TODO handle errors: $1 $2 $4
 
 			return args.Any() ? args.Max(i => i) : 0;
-		}
-
-		private IEnumerable<FunctionNode> FlattenFunctionDependencies(Expression expression)
-		{
-			foreach (var node in expression.Nodes.OfType<IParentNode>())
-			{
-				if (node is FunctionNode)
-					yield return (FunctionNode) node;
-				foreach (var functionNode in node.Children.SelectMany(FlattenFunctionDependencies))
-					yield return functionNode;
-			}
 		}
 	}
 }

@@ -48,7 +48,7 @@ namespace RPG.Tests
 			if (errors.Any())
 				return errors;
 
-			return _functionService.Add(new UserFunction(new FunctionId(functionId), expression!, _functionService));
+			return _functionService.Add(new UserFunction(new FunctionId(functionId), expression!));
 		}
 	}
 }

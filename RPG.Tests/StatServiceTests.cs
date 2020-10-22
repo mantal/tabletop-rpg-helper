@@ -341,7 +341,7 @@ namespace RPG.Tests
 							   new ParsingContext(_statService, _functionService) { FunctionId = new FunctionId("$F") }
 			).Should().BeEmpty();
 
-			_functionService.Add(new UserFunction(new FunctionId("$F"), expression!, _functionService)).Should().BeEmpty();
+			_functionService.Add(new UserFunction(new FunctionId("$F"), expression!)).Should().BeEmpty();
 			_statService.Add("A", "$F 0").Should().BeEmpty();
 			_statService.GetValue("A").Should().Be(0);
 		}
@@ -362,7 +362,7 @@ namespace RPG.Tests
 							   new ParsingContext(_statService, functionService) { FunctionId = new FunctionId("$F") }
 			).Should().BeEmpty();
 
-			functionService.Add(new UserFunction(new FunctionId("$F"), expression!, functionService)).Should().BeEmpty();
+			functionService.Add(new UserFunction(new FunctionId("$F"), expression!)).Should().BeEmpty();
 			statService.Add("A", "$F{ 0, 0 }").Should().BeEmpty();
 			statService.GetValue("A").Should().Be(117);
 		}
@@ -396,7 +396,7 @@ $IF{			$1 >= 95 + $2,
 ",
 							   new ParsingContext(statService, functionService) { FunctionId = new FunctionId("$ANIMA_DICE") }
 			).Should().BeEmpty();
-			functionService.Add(new UserFunction(new FunctionId("$ANIMA_DICE"), expression!, functionService));
+			functionService.Add(new UserFunction(new FunctionId("$ANIMA_DICE"), expression!));
 
 			statService.Add("ROLL", "$D {1, 100, $ANIMA_DICE{$1, 0}}").Should().BeEmpty();
 
