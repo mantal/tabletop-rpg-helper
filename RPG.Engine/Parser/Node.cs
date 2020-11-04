@@ -81,6 +81,8 @@ namespace RPG.Engine.Parser
 				return new OrXorOperatorNode(text, NodeType.XorOperator);
 			if (text.IsEquivalentTo("~"))
 				return new NotOperatorNode(text, NodeType.UnaryNotOperator);
+			if (text.StartsWith('"'))
+				return new StringNode(text);
 			if (text.IsValidFunctionId())
 				return new FunctionNode(context.FunctionService, text, context.FunctionId);
 			if (text.IsValidVariableId())
@@ -118,6 +120,7 @@ namespace RPG.Engine.Parser
 		{
 			Invalid,
 			Number,
+			String,
 			PlusOperator,
 			MinusOperator,
 			MultiplierOperator,

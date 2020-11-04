@@ -46,17 +46,34 @@ namespace RPG.Engine.Parser
 
 			var nodes = new LinkedList<Node>();
 			var last = 0;
-
+			var isInQuote = false;
 
 			for (var i = 0; i <= s.Length; i++)
 			{
-				if (i == s.Length
+				if (isInQuote && i < s.Length && s[i] != '"')
+				{ }
+				else if (i == s.Length
 					|| IsTokenStart(s[i]))
                 {
-                    var token = s[last..i].Trim();
+					var token = s[last..i].Trim();
                     if (token.Length > 0)
                         nodes.AddLast(Node.FromString(token, context));
 					last = i;
+					if (isInQuote && s[i] != '"')
+						errors.Add("Missing end quote");
+				}
+				else if (s[i] == '"')
+				{
+					isInQuote = !isInQuote;
+					if (isInQuote)
+						last = i;
+					else
+					{
+						var token = s[last..(i + 1)].Trim();
+						if (token.Length > 0)
+							nodes.AddLast(Node.FromString(token, context));
+						last = i + 1;
+					}
 				}
 				else if (IsSingleToken(s[i]))
                 {

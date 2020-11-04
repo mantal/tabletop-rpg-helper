@@ -59,6 +59,14 @@ namespace RPG.Tests
 			expression!.ToString().Should().Be("~(-2 + $MIN{0, 1})");
 		}
 
+		[Fact]
+		public void ParseString()
+		{
+			_parser.Parse(out var expression, "\"string\"", _parsingContext).Should().BeEmpty();
+
+			expression!.ToString().Should().Be("\"string\"");
+		}
+
 #region Function
 
 		[Fact]

@@ -60,17 +60,20 @@ namespace RPG.Engine.Utils
 			var line = _lineNumber;
 			var position = _linePosition;
 
+			var isInQuote = false;
 			var parenthesisCount = 0;
 			var bracketCount = 0;
 			for (int c;
 				 (c = _reader.Peek()) != -1;)
 			{
-				if (c == '}' && bracketCount == 0)
+				if (c == '}' && bracketCount == 0 && isInQuote == false)
 					break;
 
 				Read();
 
-				if (c == '(')
+				if (c == '"')
+					isInQuote = !isInQuote;
+				else if (c == '(')
 					parenthesisCount++;
 				else if (c == ')')
 					parenthesisCount--;
@@ -80,6 +83,7 @@ namespace RPG.Engine.Utils
 					bracketCount--;
 				else if (parenthesisCount == 0
 						 && bracketCount == 0
+						 && isInQuote == false
 						 && c == '\n')
 					break;
 				property += (char) c;
