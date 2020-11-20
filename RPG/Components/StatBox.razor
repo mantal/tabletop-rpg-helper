@@ -23,9 +23,9 @@
         if (Stat == null)
             throw new ArgumentNullException(nameof(Stat));
 
-        _baseId = new VariableId(":base", Stat.Id);
+        _baseId = new VariableId(".base", Stat.Id);
         _base = Stat.GetVariable(_baseId);
-        _readOnly = Stat.GetVariable(new VariableId(":cost", Stat.Id)) <= 0;
+        _readOnly = Stat.GetVariable(new VariableId(".cost", Stat.Id)) <= 0;
         StateHasChanged();
     }
 
