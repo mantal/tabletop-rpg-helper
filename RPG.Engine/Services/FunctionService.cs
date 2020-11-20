@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using RPG.Engine.Functions;
@@ -34,6 +34,10 @@ namespace RPG.Engine.Services
 				{
 					new FunctionId("$MAX"),
 					new InMemoryFunction(new FunctionId("$MAX"), 2, parameters => parameters.ToDouble().Max())
+				},
+				{
+					new FunctionId("$LOG10"),
+					new InMemoryFunction(new FunctionId("$LOG10"), 1, 1, parameters => Math.Log10((double)parameters[0]))
 				},
 				{
 					new FunctionId("$FLOOR"),
