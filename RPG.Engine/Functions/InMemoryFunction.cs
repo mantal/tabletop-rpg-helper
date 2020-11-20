@@ -5,7 +5,7 @@ using RPG.Engine.Ids;
 
 namespace RPG.Engine.Functions
 {
-	public class InMemoryFunction : Function
+	public record InMemoryFunction : Function
 	{
 		private readonly Func<object[], double> _apply;
 
@@ -27,7 +27,7 @@ namespace RPG.Engine.Functions
 								int requiredParameterNumber,
 								int? maxParameterNumber,
 								int? parameterBatchSize,
-								IEnumerable<Type>? parametersTypes,
+								IEnumerable<ArgumentType>? parametersTypes,
 								Func<object[], double> apply)
 			: base(id)
 		{
@@ -38,7 +38,7 @@ namespace RPG.Engine.Functions
 			MaxParameterNumber = maxParameterNumber;
 			ParameterBatchSize = parameterBatchSize;
 			ParameterTypes = parametersTypes?.ToList().AsReadOnly() ?? Enumerable
-																	   .Repeat(typeof(double),
+																	   .Repeat(ArgumentType.Number,
 																			   MaxParameterNumber
 																			   ?? ParameterBatchSize
 																			   ?? RequiredParameterNumber)

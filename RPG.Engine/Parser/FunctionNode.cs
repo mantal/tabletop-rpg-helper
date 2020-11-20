@@ -134,7 +134,7 @@ namespace RPG.Engine.Parser
 			}
 			else
 			{
-				args = _arguments.Select((e, i) => function.ParameterTypes[i] == typeof(double) ? (object)e.Resolve() : e);
+				args = _arguments.Select((e, i) => function.ParameterTypes[i] == ArgumentType.Number ? (object)e.Resolve() : e);
 			}
 
 			return _functionService.Execute(Id, args.ToArray());
@@ -205,8 +205,8 @@ namespace RPG.Engine.Parser
 			return argCount;
 		}
 
-		private object ConvertArgument(Type type, Expression arg)
-			=> type == typeof(double)
+		private object ConvertArgument(ArgumentType type, Expression arg)
+			=> type == ArgumentType.Number
 				   ? (object) arg.Resolve()
 				   : arg;
 	}

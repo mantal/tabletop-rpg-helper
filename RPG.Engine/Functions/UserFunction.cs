@@ -1,13 +1,11 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using RPG.Engine.Ids;
 using RPG.Engine.Parser;
-using RPG.Engine.Services;
 
 namespace RPG.Engine.Functions
 {
-	public class UserFunction : Function
+	public record UserFunction : Function
 	{
 		private readonly Expression _expression;
 
@@ -17,7 +15,7 @@ namespace RPG.Engine.Functions
 			RequiredParameterNumber = GetArgumentCount(expression);
 			MaxParameterNumber = RequiredParameterNumber;
 			ParameterBatchSize = null;
-			ParameterTypes = Enumerable.Repeat(typeof(double), RequiredParameterNumber).ToList().AsReadOnly();
+			ParameterTypes = Enumerable.Repeat(ArgumentType.Number, RequiredParameterNumber).ToList().AsReadOnly();
 			_expression = expression;
 		}
 

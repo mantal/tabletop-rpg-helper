@@ -5,7 +5,7 @@ using RPG.Engine.Ids;
 
 namespace RPG.Engine.Functions
 {
-	public abstract class Function
+	public abstract record Function
 	{
 		public static readonly Regex ArgumentRegex =
 			new Regex("^\\$[1-9]\\d?$", RegexOptions.Compiled | RegexOptions.Singleline);
@@ -14,7 +14,7 @@ namespace RPG.Engine.Functions
 		public int RequiredParameterNumber { get; protected init; }
 		public int? MaxParameterNumber { get; protected init; }
 		public int? ParameterBatchSize { get; protected init; }
-		public IReadOnlyList<Type> ParameterTypes { get; protected init; }
+		public IReadOnlyList<ArgumentType> ParameterTypes { get; protected init; }
 
 		protected Function(FunctionId id)
 		{

@@ -56,7 +56,7 @@ namespace RPG.Engine.Services
 					new InMemoryFunction(new FunctionId("$IF"), 2, null, null,
 										 // use Expression for the condition argument because we can't yet express the optional final else argument being a number
 										 // use Expression for branch arguments because they must no be evaluate if they are not taken as that would break recursion
-										 new [] { typeof(Expression), typeof(Expression) },
+										 new [] { ArgumentType.Expression, ArgumentType.Expression, },
 										 args =>
 										 {
 											 var i = 0;
@@ -77,7 +77,7 @@ namespace RPG.Engine.Services
 				{
 					new FunctionId("$D"),
 					new InMemoryFunction(new FunctionId("$D"), 1, 3, null,
-										 new [] { typeof(double), typeof(double), typeof(Expression), },
+										 new [] { ArgumentType.Number, ArgumentType.Number, ArgumentType.Expression, },
 										 args =>
 										 {
 											 var dArgs = args.Take(2).ToDouble();
@@ -120,7 +120,7 @@ namespace RPG.Engine.Services
 			if (_stack.Count > 99)
 				throw new Exception("stack overflow"); // don't throw a stackoverflow as that breaks the test runner
 
-			var function = _functions[id];
+			var function = Get(id);
 
 			if (function is InMemoryFunction)
 				return function.Execute(parameters);
