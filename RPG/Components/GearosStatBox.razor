@@ -1,0 +1,67 @@
+﻿@using RPG.Engine
+@using RPG.Engine.Ids
+@using RPG.Engine.Services
+@inject FunctionService FunctionService
+
+    @Stat.Id:
+    <input type="number" size="2" required @onchange="@OnChangeEvent" value="@_base" readonly="@_readOnly" /> (@_cost)
+
+    @code {
+#nullable disable // checked in OnInitialized
+        [Parameter]
+        public Stat Stat { get; set; }
+#nullable restore
+
+#nullable disable // set in OnInitialized
+        private VariableId _baseId;
+#nullable restore
+
+        private int _base = 0;
+        private int _cost = 0;
+        private bool _readOnly;
+
+        protected override void OnInitialized()
+        {
+            base.OnInitialized();
+
+            if (Stat == null)
+                throw new ArgumentNullException(nameof(Stat));
+
+            _baseId = new VariableId(".base", Stat.Id);
+            _base = (int)Stat.GetVariable(_baseId);
+            _cost = XpCost(_base); // todo calculer vrai cout
+            _readOnly = false;
+            StateHasChanged();
+        }
+
+        [Parameter]
+        public Action<int> OnChange { get; set; }
+
+        private void OnChangeEvent(ChangeEventArgs e)
+        {
+            var newBase = int.Parse((string) e.Value);
+
+            if (newBase < 1)
+                newBase = 1;
+
+            int cost;
+            if (newBase > _base)
+                cost = XpChange(_base, newBase);
+            else
+                cost = -XpChange(newBase, _base);
+            
+            OnChange(cost);
+            _base = newBase;
+            Stat.AddOrUpdateVariable(_baseId, _base);
+            _cost = XpCost(_base);
+            //todo event statService
+        }
+
+        private int XpChange(int currentSkill, int newSkill)
+            => Enumerable.Range(currentSkill, Math.Abs(newSkill - currentSkill))
+                         .Select(XpCost)
+                         .Sum();
+
+        private int XpCost(int currentSkill)
+            => (int)FunctionService.Execute(new FunctionId("$XP"), new object[] { (double)currentSkill });
+}

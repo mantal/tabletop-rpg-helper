@@ -1,0 +1,86 @@
+﻿@page "/gearos"
+@using RPG.Engine.Services
+@using RPG.Engine
+@using RPG.Engine.Ids
+@using RPG.Components
+@using Blazorise
+@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
+@inject StatService StatService
+@inject FunctionService FunctionService
+
+<h3>gearos</h3>
+
+<div style="background-color: red">
+    @foreach (var e in _errors)
+    {
+        <div>@e</div>
+    }
+</div>
+
+XP: @_xp
+
+<GearosSectionBox Book="@_book" SectionName="#CAC" OnChange="@OnChange"></GearosSectionBox>
+
+<MemoEdit Rows="20" @bind-Text="@_json" />
+<button @onclick="Reload">Load</button>
+<button @onclick="Save">Save</button>
+
+@code {
+
+    private IEnumerable<string> _errors = Enumerable.Empty<string>();
+    private string _json = "";
+#nullable disable
+    private Book _book;
+#nullable restore
+
+    private bool isFirstRender = true;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        _book = new Book(StatService, FunctionService);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (isFirstRender && await LocalStorage.ContainKeyAsync("gearos"))
+        {
+            _json = await LocalStorage.GetItemAsync<string>("gearos");
+            Reload(null);
+        }
+        isFirstRender = false;
+    }
+
+    private void Reload(MouseEventArgs _)
+    {
+        try
+        {
+            var file = _json;
+
+            _book = new Book(StatService, FunctionService);
+            StatService.Stats.Clear();//todo
+            FunctionService.Clear();
+            _errors = _book.Populate(file);
+            StateHasChanged();
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            _errors = new[] { e.Message };
+        }
+    }
+
+    private void Save()
+    {
+        LocalStorage.SetItemAsync("gearos", _json);
+        //TODO save state
+    }
+
+    private int _xp = 0;
+
+    private void OnChange(int xpChange)
+    {
+        _xp += xpChange;
+        StateHasChanged();
+    }
+}

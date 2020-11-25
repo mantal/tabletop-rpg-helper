@@ -1,3 +1,5 @@
+using System;
+using Blazored.LocalStorage;
 using Blazorise;
 using Blazorise.Bulma;
 using Blazorise.Icons.FontAwesome;
@@ -25,6 +27,7 @@ namespace RPG
         {
             services.AddRazorPages();
             services.AddServerSideBlazor();
+			services.AddBlazoredLocalStorage();
 
             services.AddBlazorise(options =>
 					{

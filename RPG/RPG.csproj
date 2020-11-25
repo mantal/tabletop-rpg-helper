@@ -10,6 +10,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Blazored.LocalStorage" Version="3.0.0" />
     <PackageReference Include="Blazorise.Bulma" Version="0.9.1.2" />
     <PackageReference Include="Blazorise.Icons.FontAwesome" Version="0.9.1.2" />
     <PackageReference Include="Hjson" Version="3.0.0" />

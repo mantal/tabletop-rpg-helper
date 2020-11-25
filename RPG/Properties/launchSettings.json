@@ -18,7 +18,7 @@
     "RPG": {
       "commandName": "Project",
       "launchBrowser": true,
-      "launchUrl": "https://localhost:5001/charactersheet",
+      "launchUrl": "https://localhost:5001/gearos",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },
