@@ -104,6 +104,7 @@ namespace RPG.Engine.Services
 		public IEnumerable<string> Update(string id, string? expression = null)
 			=> Update((StatId) id, expression);
 
+		//TODO move to an extension method in tests
 		public IEnumerable<string> Update(StatId id, string? expression = null)
 		{
 			IEnumerable<string> errors = new List<string>();
@@ -128,6 +129,21 @@ namespace RPG.Engine.Services
 			}
 
 			return errors;
+		}
+
+		public IEnumerable<string> Update(Stat stat)
+		{
+			if (!Exists(stat.Id)) 
+				return new [] { $"{stat.Id} does not exists" };
+
+			var errors = IsRecursive(stat);
+			if (errors.Any())
+				return errors;
+
+			Stats[stat.Id] = stat;
+			_cache.Clear();
+
+			return Enumerable.Empty<string>();
 		}
 
 		public IEnumerable<string> Remove(string id, bool cascade = false)

@@ -1,4 +1,4 @@
-﻿@page "/gearos"
+@page "/gearos"
 @using RPG.Engine.Services
 @using RPG.Engine
 @using RPG.Engine.Ids
@@ -51,16 +51,19 @@ XP: @_xp
         isFirstRender = false;
     }
 
-    private void Reload(MouseEventArgs _)
+    private void Reload(MouseEventArgs? _)
     {
         try
         {
             var file = _json;
 
-            _book = new Book(StatService, FunctionService);
-            StatService.Stats.Clear();//todo
-            FunctionService.Clear();
-            _errors = _book.Populate(file);
+            if (_ == null) //todo better
+            {
+                _book = new Book(StatService, FunctionService);
+                _errors = _book.Populate(file);
+            }
+            else
+                _errors = _book.Update(file);
             StateHasChanged();
         }
         catch (Exception e)

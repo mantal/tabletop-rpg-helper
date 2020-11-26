@@ -22,6 +22,8 @@ namespace RPG.Tests
 
 		//TODO test errors
 
+#region Stats
+
 		[Fact]
 		public void ImportIntStat()
 		{
@@ -116,6 +118,36 @@ namespace RPG.Tests
 		}
 
 		[Fact]
+		public void DefaultShouldCascade()
+		{
+			_book.Populate("_default: 2\n #section { FOR: .value + 2\n }")
+				 .Should().BeEmpty();
+			_statService.GetValue("FOR").Should().Be(4);
+		}
+
+		[Fact]
+		public void UpdateStat()
+		{
+			_book.Populate(@"FOR: -1").Should().BeEmpty();
+			_book.Update("FOR: 17").Should().BeEmpty();
+
+			_statService.GetValue("FOR").Should().Be(17);
+		}
+
+		[Fact]
+		public void UpdateStatVariable()
+		{
+			_book.Populate(@"FOR: .base").Should().BeEmpty();
+			_book.Update("FOR.base: 17").Should().BeEmpty();
+
+			_statService.GetValue("FOR").Should().Be(17);
+		}
+
+#endregion Stats
+
+#region Sections
+
+		[Fact]
 		public void ImportSection()
 		{
 			_book.Populate("#section { FOR: 2\n } }")
@@ -126,12 +158,17 @@ namespace RPG.Tests
 		}
 
 		[Fact]
-		public void DefaultShouldCascade()
+		public void UpdateSection()
 		{
-			_book.Populate("_default: 2\n #section { FOR: .value + 2\n }")
+			_book.Populate("#section { FOR: -1\n } }")
 				 .Should().BeEmpty();
-			_statService.GetValue("FOR").Should().Be(4);
+			_book.Update("#section { FOR: 17\n } }")
+				 .Should().BeEmpty();
+
+			_statService.GetValue("FOR").Should().Be(17);
 		}
+
+#endregion
 
 #region Errors
 
@@ -223,6 +260,8 @@ namespace RPG.Tests
 
 #endregion
 
+#region Functions
+
 		[Fact]
 		public void HandleUserFunction()
 		{
@@ -245,5 +284,17 @@ namespace RPG.Tests
 				 .Should().BeEmpty();
 			_statService.GetValue("FOR").Should().Be(17);
 		}
+
+		[Fact]
+		public void UpdateFunction()
+		{
+			_book.Populate("$foo: -1\nFOR: $foo")
+				 .Should().BeEmpty();
+			_book.Update("$foo: 17");
+			_statService.GetValue("FOR").Should().Be(17);
+		}
+
+#endregion
+
 	}
 }

@@ -34,7 +34,19 @@ namespace RPG.Engine
 		{
 			try
 			{
-				return Populate(new BookParser(new StringReader(json)).Parse());
+				return Populate(new BookParser(new StringReader(json)).Parse(), false);
+			}
+			catch (Exception e)
+			{
+				return new[] { e.Message }; //TODO better
+			}
+		}
+
+		public IEnumerable<string> Update(string json)
+		{
+			try
+			{
+				return Populate(new BookParser(new StringReader(json)).Parse(), true);
 			}
 			catch (Exception e)
 			{
@@ -43,7 +55,7 @@ namespace RPG.Engine
 		}
 
 		//TODO static? / DI
-		public IEnumerable<string> Populate(Node node)
+		public IEnumerable<string> Populate(Node node, bool isAnUpdate)
 		{
 			var errors = new List<string>();
 			var context = new ParsingContext(_statService, _functionService);
@@ -51,7 +63,7 @@ namespace RPG.Engine
 			if (!node.Children.Any())
 				return new[] { "empty book" };
 
-			errors = errors.Concat(AddSection(node, context, null)).ToList();
+			errors = errors.Concat(AddOrUpdateSection(node, context, null, isAnUpdate)).ToList();
 
 			//TODO tant qu'on ne continue pas apres une erreur on ne peut pas verifier si on a atteint la fin du fichier
 			//if (_jsonHasNext && reader.ReadSkipComments())
@@ -60,32 +72,37 @@ namespace RPG.Engine
 			return errors;
 		}
 
-		private IEnumerable<string> AddSection(Node node, ParsingContext context, string? parentSectionId)
+		private IEnumerable<string> AddOrUpdateSection(Node node, ParsingContext context, string? parentSectionId, bool isAnUpdate)
 		{
 			var errors = new List<string>();
 
-			if (_sections.ContainsKey(node.Value))
+			if (!isAnUpdate && _sections.ContainsKey(node.Value))
 			{
 				//TODO continue after error
 				errors.Add(node, $"section already exists: {node.Value}");
 				return errors;
 			}
 
-			if (parentSectionId == null)
-				_sections[node.Value] = new Section(node.Value);
-			else
-				_sections[node.Value] = new Section(node.Value, _sections[parentSectionId].Default);
+			if (!isAnUpdate)
+			{
+				if (parentSectionId == null)
+					_sections[node.Value] = new Section(node.Value);
+				else
+					_sections[node.Value] = new Section(node.Value, _sections[parentSectionId].Default);
+			}
 
 			foreach(var child in node.Children)
 			{
 				if (child.IsFunction())
-					errors = errors.Concat(AddFunction(child, context)).ToList();
+					errors = errors.Concat(AddOrUpdateFunction(child, context, isAnUpdate)).ToList();
 				else if (child.IsSection())
-					errors = errors.Concat(AddSection(child, context, node.Value)).ToList();
+					errors = errors.Concat(AddOrUpdateSection(child, context, node.Value, isAnUpdate)).ToList();
 				else if (child.Value.IsEquivalentTo("_default"))
-					errors = errors.Concat(SetDefault(child, context, node.Value, parentSectionId)).ToList();
+					errors = errors.Concat(SetDefault(child, context, node.Value)).ToList();
 				else if (child.IsStat())
-					errors = errors.Concat(AddStat(child, context, node.Value)).ToList();
+					errors = errors.Concat(AddOrUpdateStat(child, context, node.Value, isAnUpdate)).ToList();
+				else if (child.IsVariable())
+					errors = errors.Concat(SetVariable(child)).ToList();
 				else
 				{
 					errors.Add(child, $"expected a valid function, stat or section id but found '{child.Value}'");
@@ -99,7 +116,7 @@ namespace RPG.Engine
 			return errors;
 		}
 
-		private IEnumerable<string> AddFunction(Node node, ParsingContext context)
+		private IEnumerable<string> AddOrUpdateFunction(Node node, ParsingContext context, bool isUpdate)
 		{
 			var errors = new List<string>();
 
@@ -112,9 +129,18 @@ namespace RPG.Engine
 				if (errors.Any())
 					return errors;
 
-				errors = errors.Concat(_functionService.Add(new UserFunction(context.FunctionId, expression!, _functionService)).FormatErrors(node))
-							   .FormatErrors(expressionNode)
-							   .ToList();
+				if (!isUpdate)
+				{
+					errors = errors.Concat(_functionService.Add(new UserFunction(context.FunctionId, expression!)).FormatErrors(node))
+								   .FormatErrors(expressionNode)
+								   .ToList();
+				}
+				else
+				{
+					errors = errors.Concat(_functionService.Update(new UserFunction(context.FunctionId, expression!)).FormatErrors(node))
+								   .FormatErrors(expressionNode)
+								   .ToList();
+				}
 			}
 			else
 			{
@@ -126,7 +152,7 @@ namespace RPG.Engine
 			return errors;
 		}
 
-		private IEnumerable<string> SetDefault(Node node, ParsingContext context, string sectionId, string? parentSectionId)
+		private IEnumerable<string> SetDefault(Node node, ParsingContext context, string sectionId)
 		{
 			var errors = ParseStat(node, context, sectionId, out var stat).ToList();
 
@@ -138,16 +164,41 @@ namespace RPG.Engine
 			return errors;
 		}
 
-		private IEnumerable<string> AddStat(Node node, ParsingContext context, string sectionId)
+		private IEnumerable<string> AddOrUpdateStat(Node node, ParsingContext context, string sectionId, bool isUpdate)
 		{
 			var errors = ParseStat(node, context, sectionId, out var stat);
 
 			if (!errors.Any())
-				errors = errors.Concat(_statService.Add(stat).FormatErrors(node));
+			{
+				if (isUpdate)
+					errors = errors.Concat(_statService.Update(stat).FormatErrors(node));
+				else
+					errors = errors.Concat(_statService.Add(stat).FormatErrors(node));
+			}
 			if (!errors.Any())
-				_sections[sectionId].Stats.Add(stat!);
+			{
+				if (!isUpdate)
+					_sections[sectionId].Stats.Add(stat!);
+				else
+					_sections[sectionId].Stats[_sections[sectionId].Stats.IndexOf(stat)] = stat!;
+			}
 
 			return errors;
+		}
+
+		private IEnumerable<string> SetVariable(Node node)
+		{
+			if (node.Value[0] == '.')
+				return new[] { $"Can not use shorthand variable name ({node.Value})" }; //TODO better msg
+
+			var variableId = new VariableId(node.Value);
+			var rawValue = node.Children.First().Value;
+			if (!double.TryParse(rawValue, out var value))
+				return new[] { $"expected variable value but '{rawValue}' is not a number" };
+			
+			_statService.Get(variableId.StatId).AddOrUpdateVariable(variableId, value);
+
+			return Enumerable.Empty<string>();
 		}
 
 		private IEnumerable<string> ParseStat(Node statNode, ParsingContext context, string sectionId, out Stat stat)
@@ -307,6 +358,10 @@ namespace RPG.Engine
 			=> node.Value.IsValidStatId()
 			   && (node.Type == NodeType.PropertyIdentifier
 					|| node.Type == NodeType.ObjectIdentifier);
+
+		public static bool IsVariable(this Node node)
+			=> node.Value.IsValidVariableId()
+			   && node.Type == NodeType.PropertyIdentifier;
 
 		public static bool IsFunction(this Node node)
 			=> node.Value.IsValidFunctionId();

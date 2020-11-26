@@ -115,6 +115,16 @@ namespace RPG.Engine.Services
 			return Enumerable.Empty<string>();
 		}
 
+		public IEnumerable<string> Update(Function function)
+		{
+			if (!Exists(function.Id))
+				return new[] { $"Cannot update function {function.Id}: it does not exists" };
+
+			_functions[function.Id] = function;
+
+			return Enumerable.Empty<string>();
+		}
+
 		public double Execute(FunctionId id, object[] parameters)
 		{
 			if (_stack.Count > 99)

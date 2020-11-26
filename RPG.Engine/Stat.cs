@@ -149,6 +149,18 @@ namespace RPG.Engine
 		//TODO
 		public override string ToString() => Expressions.Select(e => e.ToString()).Join();
 
+		public override bool Equals(object? obj)
+		{
+			if (obj is not Stat stat)
+				return false;
+			return Id == stat.Id;
+		}
+
+		public override int GetHashCode()
+		{
+			return Id.GetHashCode();
+		}
+
 		private void AddVariables(Expression expression)
 		{
 			foreach (var node in expression.Nodes)
