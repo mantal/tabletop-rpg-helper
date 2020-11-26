@@ -1,4 +1,4 @@
-@page "/gearos"
+﻿@page "/gearos"
 @using RPG.Engine.Services
 @using RPG.Engine
 @using RPG.Engine.Ids
@@ -19,14 +19,20 @@
 
 XP: @_xp
 
-<GearosSectionBox Book="@_book" SectionName="#CAC" OnChange="@OnChange"></GearosSectionBox>
+<GearosSectionBox Book="@_book" SectionName="#CAC" OnChange="@OnChange" OnRolled="@OnRolled"></GearosSectionBox>
 
 <MemoEdit Rows="20" @bind-Text="@_json" />
 <button @onclick="Reload">Load</button>
 <button @onclick="Save">Save</button>
 
+@foreach (var log in _logs)
+{
+    <div>@log</div>
+}
+
 @code {
 
+    private List<string> _logs = new();
     private IEnumerable<string> _errors = Enumerable.Empty<string>();
     private string _json = "";
 #nullable disable
@@ -84,6 +90,12 @@ XP: @_xp
     private void OnChange(int xpChange)
     {
         _xp += xpChange;
+        StateHasChanged();
+    }
+
+    private void OnRolled(int successCount)
+    {
+        _logs.Add($"rolled {successCount}");
         StateHasChanged();
     }
 }

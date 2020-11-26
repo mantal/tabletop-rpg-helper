@@ -6,7 +6,7 @@
         <div>@SectionName.Substring(1)</div>
         @foreach (var stat in Book.Sections[SectionName].Stats)
         {
-            <GearosStatBox Stat="@stat" OnChange="@OnChangeEvent"/>
+            <GearosStatBox Stat="@stat" OnChange="@OnChangeEvent" OnRolled="@OnRolled"/>
             <br />
         }
     }
@@ -16,9 +16,10 @@
 #nullable disable
     [Parameter]
     public Book Book { get; set; }
-
     [Parameter]
     public string SectionName { get; set; }
+    [Parameter]
+    public Action<int> OnRolled { get; set; }
 #nullable restore
 
     protected override void OnInitialized()
@@ -27,9 +28,11 @@
             throw new ArgumentNullException(nameof(Book));
         if (SectionName == null)
             throw new ArgumentNullException(nameof(SectionName));
+        if (OnRolled == null)
+            throw new ArgumentNullException(nameof(OnRolled));
     }
 
-    [Parameter] 
+    [Parameter]
     public Action<int> OnChange { get; set; }
 
     private void OnChangeEvent(int xp)

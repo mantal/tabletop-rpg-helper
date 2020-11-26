@@ -1,67 +1,116 @@
 ﻿@using RPG.Engine
 @using RPG.Engine.Ids
 @using RPG.Engine.Services
+@using System.Runtime.CompilerServices
 @inject FunctionService FunctionService
+@inject Random Random
 
-    @Stat.Id:
-    <input type="number" size="2" required @onchange="@OnChangeEvent" value="@_base" readonly="@_readOnly" /> (@_cost)
+@Stat.Id:
+<input type="number" size="2" required @onchange="@OnChangeEvent" value="@_base" readonly="@_readOnly" /> (@_cost) <button @onclick="Roll">roll</button>
 
-    @code {
+@code {
 #nullable disable // checked in OnInitialized
-        [Parameter]
-        public Stat Stat { get; set; }
+    [Parameter]
+    public Stat Stat { get; set; }
+    [Parameter]
+    public Action<int> OnChange { get; set; }
+    [Parameter]
+    public Action<int> OnRolled { get; set; }
+
+    private VariableId _baseId;
 #nullable restore
 
-#nullable disable // set in OnInitialized
-        private VariableId _baseId;
-#nullable restore
+    private int _base = 0;
+    private int _cost = 0;
+    private bool _readOnly;
 
-        private int _base = 0;
-        private int _cost = 0;
-        private bool _readOnly;
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
 
-        protected override void OnInitialized()
+        if (Stat == null)
+            throw new ArgumentNullException(nameof(Stat));
+        if (OnChange == null)
+            throw new ArgumentNullException(nameof(OnChange));
+        if (OnRolled == null)
+            throw new ArgumentNullException(nameof(OnRolled));
+
+        _baseId = new VariableId(".base", Stat.Id);
+        _base = (int)Stat.GetVariable(_baseId);
+        _cost = XpCost(_base); // todo calculer vrai cout
+        _readOnly = false;
+        StateHasChanged();
+    }
+
+
+
+    private void OnChangeEvent(ChangeEventArgs e)
+    {
+        var newBase = int.Parse((string)e.Value);
+
+        if (newBase < 1)
         {
-            base.OnInitialized();
-
-            if (Stat == null)
-                throw new ArgumentNullException(nameof(Stat));
-
-            _baseId = new VariableId(".base", Stat.Id);
-            _base = (int)Stat.GetVariable(_baseId);
-            _cost = XpCost(_base); // todo calculer vrai cout
-            _readOnly = false;
+            newBase = 1;
             StateHasChanged();
         }
 
-        [Parameter]
-        public Action<int> OnChange { get; set; }
+        int cost;
+        if (newBase > _base)
+            cost = XpChange(_base, newBase);
+        else
+            cost = -XpChange(newBase, _base);
 
-        private void OnChangeEvent(ChangeEventArgs e)
+        OnChange(cost);
+        _base = newBase;
+        Stat.AddOrUpdateVariable(_baseId, _base);
+        _cost = XpCost(_base);
+        //todo event statService
+    }
+
+    private int XpChange(int currentSkill, int newSkill)
+        => Enumerable.Range(currentSkill, Math.Abs(newSkill - currentSkill))
+                     .Select(XpCost)
+                     .Sum();
+
+    private int XpCost(int currentSkill)
+        => (int)FunctionService.Execute(new FunctionId("$XP"), new object[] { (double)currentSkill });
+
+    private void Roll(MouseEventArgs e)
+    {
+        var skill = (int)Stat.Resolve();
+        var ability = 1; //TODO
+
+        var canExplode = ability >= 2;
+        var target = ability > 0 ? 11 - ability : 10;
+
+        var dices = ExplodingDice(skill, canExplode).ToList();
+
+        if (ability >= 4)
         {
-            var newBase = int.Parse((string) e.Value);
-
-            if (newBase < 1)
-                newBase = 1;
-
-            int cost;
-            if (newBase > _base)
-                cost = XpChange(_base, newBase);
-            else
-                cost = -XpChange(newBase, _base);
-            
-            OnChange(cost);
-            _base = newBase;
-            Stat.AddOrUpdateVariable(_baseId, _base);
-            _cost = XpCost(_base);
-            //todo event statService
+            var nines = dices.Count(d => d == 9);
+            dices.AddRange(ExplodingDice(nines / 2, canExplode));
         }
 
-        private int XpChange(int currentSkill, int newSkill)
-            => Enumerable.Range(currentSkill, Math.Abs(newSkill - currentSkill))
-                         .Select(XpCost)
-                         .Sum();
+        var success = dices.Count(d => d >= target);
+        if (ability <= 0)
+            success -= dices.Count(d => d <= 1 + ability);
 
-        private int XpCost(int currentSkill)
-            => (int)FunctionService.Execute(new FunctionId("$XP"), new object[] { (double)currentSkill });
+        OnRolled(success);
+    }
+
+    private IEnumerable<int> ExplodingDice(int count, bool canExplode)
+        => Enumerable.Range(0, count)
+                     .SelectMany(_ => ExplodingDie(canExplode));
+
+    private IEnumerable<int> ExplodingDie(bool canExplode)
+    {
+        int roll;
+        while ((roll = Random.Next(1, 11)) == 10 && canExplode)
+            yield return roll;
+        yield return roll;
+    }
+
+    private int RollDie()
+        => (int) FunctionService.Execute(new FunctionId("$GD"), new object[] { (double) 1 });
+
 }
