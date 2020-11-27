@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using FluentAssertions;
 using RPG.Engine;
@@ -11,7 +12,7 @@ namespace RPG.Tests
 {
 	public class StatTests
 	{
-		private static readonly Parser _parser = new Parser();
+		private static readonly Parser _parser = new ();
 		private readonly ParsingContext _context;
 
 		public StatTests()
@@ -76,8 +77,8 @@ namespace RPG.Tests
 
 			var namedExpressions = new NamedExpression[]
 			{
-				new NamedExpression("0", expressions[0].Nodes), 
-				new NamedExpression("1", expressions[1].Nodes),
+				new ("0", expressions[0].Nodes), 
+				new ("1", expressions[1].Nodes),
 			};
 			new Stat(new StatId("FOR"), namedExpressions.ToList())
 				.ToString()
@@ -150,6 +151,19 @@ namespace RPG.Tests
 			stat!.AddExpression(expression!, "expr2").Should().BeEmpty();
 
 			stat!.Resolve().Should().Be(4);
+		}
+
+		[Fact]
+		public void HandleVariableWithCircularDependency()
+		{
+			var statService = new StatService(new FunctionService(new Random()));
+
+			statService.Add("FOR", ".var").Should().BeEmpty();
+			var stat = statService.Get("FOR");
+
+			stat.AddOrUpdateVariable(new VariableId("FOR.var"),
+									 new Expression(new LinkedList<Node>(new[] { new StatNode(statService, "FOR") })))
+				.Should().HaveCount(1);
 		}
 	}
 }

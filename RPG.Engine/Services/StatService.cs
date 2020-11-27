@@ -219,10 +219,9 @@ namespace RPG.Engine.Services
 
 			stack.Push(stat.Id);
 
-			var errors = stat.Expressions
-						  .SelectMany(e => e.FlatNodes.OfType<StatNode>().Select(n => n.Id))
-						  .SelectMany(id => IsRecursive(Stats[id], stack))
-						  .ToList();
+			var errors = stat.FlatNodes.OfType<StatNode>().Select(n => n.Id)
+							 .SelectMany(id => IsRecursive(Stats[id], stack))
+							 .ToList();
 			stack.Pop();
 
 			return errors;

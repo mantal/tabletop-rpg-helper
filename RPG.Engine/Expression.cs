@@ -6,7 +6,10 @@ namespace RPG.Engine
 {
 	public class Expression
 	{
-		public static Expression Default { get; } = new Expression(new LinkedList<Node>(new [] { new NumberNode(0), }));
+		/// <summary>
+		/// 0
+		/// </summary>
+		public static Expression Default { get; } = new (new LinkedList<Node>(new [] { new NumberNode(0), }));
 
 		public LinkedList<Node> Nodes { get; }
 
@@ -18,6 +21,11 @@ namespace RPG.Engine
 		public Expression(Expression expression)
 		{
 			Nodes = new LinkedList<Node>(expression.Nodes.Select(n => n.Clone()));
+		}
+
+		public Expression(double value)
+		{
+			Nodes = new LinkedList<Node>(new [] { new NumberNode(value) });
 		}
 
 		public double Resolve()

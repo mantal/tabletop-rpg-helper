@@ -64,11 +64,7 @@ namespace RPG.Engine
 				return new[] { "empty book" };
 
 			errors = errors.Concat(AddOrUpdateSection(node, context, null, isAnUpdate)).ToList();
-
-			//TODO tant qu'on ne continue pas apres une erreur on ne peut pas verifier si on a atteint la fin du fichier
-			//if (_jsonHasNext && reader.ReadSkipComments())
-			//	errors.Add(reader, "multiple root sections detected");
-
+			
 			return errors;
 		}
 
@@ -102,7 +98,7 @@ namespace RPG.Engine
 				else if (child.IsStat())
 					errors = errors.Concat(AddOrUpdateStat(child, context, node.Value, isAnUpdate)).ToList();
 				else if (child.IsVariable())
-					errors = errors.Concat(SetVariable(child)).ToList();
+					errors = errors.Concat(SetVariable(child, context)).ToList();
 				else
 				{
 					errors.Add(child, $"expected a valid function, stat or section id but found '{child.Value}'");
@@ -186,17 +182,19 @@ namespace RPG.Engine
 			return errors;
 		}
 
-		private IEnumerable<string> SetVariable(Node node)
+		private IEnumerable<string> SetVariable(Node node, ParsingContext context)
 		{
 			if (node.Value[0] == '.')
 				return new[] { $"Can not use shorthand variable name ({node.Value})" }; //TODO better msg
 
 			var variableId = new VariableId(node.Value);
-			var rawValue = node.Children.First().Value;
-			if (!double.TryParse(rawValue, out var value))
-				return new[] { $"expected variable value but '{rawValue}' is not a number" };
+			var variableExpressionNode = node.Children.First();
+
+			var errors = _parser.Parse(out var expression, variableExpressionNode.Value, context).FormatErrors(variableExpressionNode).ToList();
+			if (errors.Any())
+				return errors;
 			
-			_statService.Get(variableId.StatId).AddOrUpdateVariable(variableId, value);
+			_statService.Get(variableId.StatId).AddOrUpdateVariable(variableId, expression!);
 
 			return Enumerable.Empty<string>();
 		}
@@ -237,14 +235,11 @@ namespace RPG.Engine
 						}
 
 						var expressionNode = expressionId.Children.First();
-						if (!expressionNode.IsNumber())
-						{
-							errors.Add(expressionId, $"{expressionId.Value} looks like a variable declaration (starts with '.') but it's value ({expressionNode.Value}) is not a number");
-							continue;
-						}
+						var parseErrors = _parser.Parse(out var expression, expressionNode.Value, context).FormatErrors(expressionNode).ToList();
+						if (parseErrors.Any())
+							return errors.Concat(parseErrors);
 
-						var value = double.Parse(expressionNode.Value, NumberStyles.Float);
-						stat.AddOrUpdateVariable(new VariableId(expressionId.Value, stat.Id), value);
+						stat.AddOrUpdateVariable(new VariableId(expressionId.Value, stat.Id), expression!);
 					}
 					else if (expressionId.Type == NodeType.PropertyIdentifier)
 					{

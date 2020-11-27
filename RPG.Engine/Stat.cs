@@ -11,15 +11,15 @@ namespace RPG.Engine
 	[DebuggerDisplay("{Id} = {ToString()}")]
 	public class Stat
 	{
-		public readonly StatId Id;
+		public StatId Id { get; }
 		//TODO exposer un IEnumerable + garder IList en private pour rester immutable
 		public IList<NamedExpression> Expressions { get; }
-		
-		public readonly IDictionary<VariableId, double> Variables = new Dictionary<VariableId, double>();
+		public IDictionary<VariableId, Expression> Variables { get; } = new Dictionary<VariableId, Expression>();
+
 		private readonly VariableId _lastValueId;
 
 		public Stat(StatId id, Expression expression)
-			: this(id, new List<NamedExpression> { new NamedExpression("0", expression.Nodes) })
+			: this(id, new List<NamedExpression> { new ("0", expression.Nodes) })
 		{ }
 
 		public Stat(StatId id, List<NamedExpression> expressions)
@@ -27,12 +27,12 @@ namespace RPG.Engine
 			Id = id;
 			Expressions = expressions;
 			_lastValueId = new VariableId(".value", Id);
-			Variables[_lastValueId] = 0;
+			Variables[_lastValueId] = Expression.Default;
 			foreach (var node in Expressions.SelectMany(e => e.Nodes))
 			{
 				if (node is VariableNode variableNode
 					&& variableNode.Id.StatId.Equals(id))
-					AddOrUpdateVariable(variableNode.Id, 0);
+					AddOrUpdateVariable(variableNode.Id, Expression.Default);
 			}
 		}
 
@@ -58,17 +58,17 @@ namespace RPG.Engine
 
 		public double Resolve()
 		{
-			Variables[_lastValueId] = 0;
+			Variables[_lastValueId] = Expression.Default;
 			foreach (var expression in Expressions)
 			{
 				var result = expression.Resolve();
 				if (UseLastValue(expression))
-					Variables[_lastValueId] = result;
+					Variables[_lastValueId] = new Expression(result);
 				else
-					Variables[_lastValueId] = Variables[_lastValueId] + result;
+					Variables[_lastValueId] = new Expression(Variables[_lastValueId].Resolve() + result);
 			}
 
-			return Variables[_lastValueId];
+			return Variables[_lastValueId].Resolve();
 		}
 
 		public bool Exists(string expressionName) => Expressions.Any(e => e.Name == expressionName);
@@ -141,11 +141,24 @@ namespace RPG.Engine
 		{
 			if (!Variables.ContainsKey(id))
 				return null;
-			return Variables[id];
+			return Variables[id].Resolve();
 		}
 
-		public void AddOrUpdateVariable(VariableId id, double value) => Variables[id] = value;
-		
+		public IEnumerable<string> AddOrUpdateVariable(VariableId id, double value) => AddOrUpdateVariable(id, new Expression(value));
+
+		public IEnumerable<string> AddOrUpdateVariable(VariableId id, Expression value)
+		{
+			if (value.FlatNodes.Any(n => n is StatNode statNode && statNode.Id == Id))
+				return new[] { $"circular dependency detected {value}->{Id}.{id}" };//TODO better msg
+			Variables[id] = value;
+
+			return Enumerable.Empty<string>();
+		}
+
+		public IEnumerable<Node> FlatNodes
+			=> Expressions.SelectMany(e => e.FlatNodes)
+						  .Concat(Variables.SelectMany(v => v.Value.FlatNodes));
+
 		//TODO
 		public override string ToString() => Expressions.Select(e => e.ToString()).Join();
 
@@ -168,8 +181,7 @@ namespace RPG.Engine
 				if (node is VariableNode variableNode
 					&& variableNode.Id.StatId == Id
 					&& !Variables.ContainsKey(variableNode.Id))
-					AddOrUpdateVariable(variableNode.Id, 0);
-
+					AddOrUpdateVariable(variableNode.Id, Expression.Default);
 			}
 		}
 
