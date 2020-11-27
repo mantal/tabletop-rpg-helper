@@ -19,6 +19,8 @@
 
 XP: @_xp
 
+<GearosSectionBox Book="@_book" SectionName="#Characteristiques" OnChange="@OnChange" OnRolled="@OnRolled"></GearosSectionBox>
+@*<GearosSectionBox Book="@_book" SectionName="#PV" OnChange="@OnChange" OnRolled="@OnRolled"></GearosSectionBox>*@
 <GearosSectionBox Book="@_book" SectionName="#CAC" OnChange="@OnChange" OnRolled="@OnRolled"></GearosSectionBox>
 
 <MemoEdit Rows="20" @bind-Text="@_json" />
@@ -49,9 +51,11 @@ XP: @_xp
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (isFirstRender && await LocalStorage.ContainKeyAsync("gearos"))
+        if (isFirstRender)
         {
-            _json = await LocalStorage.GetItemAsync<string>("gearos");
+            _json = await LocalStorage.GetItemAsync<string?>("gearos") ?? "";
+            if (string.IsNullOrEmpty(_json))
+                _json = "stat: 0";
             Reload(null);
         }
         isFirstRender = false;

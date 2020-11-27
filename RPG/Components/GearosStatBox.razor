@@ -78,7 +78,7 @@
     private void Roll(MouseEventArgs e)
     {
         var skill = (int)Stat.Resolve();
-        var ability = 1; //TODO
+        var ability = Stat.GetVariable(new VariableId(".caracteristique", Stat.Id)); //TODO
 
         var canExplode = ability >= 2;
         var target = ability > 0 ? 11 - ability : 10;
