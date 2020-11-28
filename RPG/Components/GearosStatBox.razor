@@ -1,28 +1,30 @@
 ﻿@using RPG.Engine
 @using RPG.Engine.Ids
 @using RPG.Engine.Services
-@using System.Runtime.CompilerServices
+@using RPG.Data
 @inject FunctionService FunctionService
 @inject Random Random
+@inject Chat Chat
 
 @Stat.Id:
-<input type="number" size="2" required @onchange="@OnChangeEvent" value="@_base" readonly="@_readOnly" /> (@_cost) <button @onclick="Roll">roll</button>
+<input type="number" size="2" required @onchange="@OnChangeEvent" value="@_base" readonly="@_readOnly" /> @_cost @if (OnRolled != null) { <button @onclick="Roll">roll</button> }
 
 @code {
 #nullable disable // checked in OnInitialized
     [Parameter]
     public Stat Stat { get; set; }
-    [Parameter]
-    public Action<int> OnChange { get; set; }
-    [Parameter]
-    public Action<int> OnRolled { get; set; }
 
-    private VariableId _baseId;
 #nullable restore
+
+    [Parameter]
+    public Action<int>? OnChange { get; set; }
+    [Parameter]
+    public Action<int>? OnRolled { get; set; }
 
     private int _base = 0;
     private int _cost = 0;
     private bool _readOnly;
+    private VariableId? _baseId;
 
     protected override void OnInitialized()
     {
@@ -30,22 +32,23 @@
 
         if (Stat == null)
             throw new ArgumentNullException(nameof(Stat));
-        if (OnChange == null)
-            throw new ArgumentNullException(nameof(OnChange));
-        if (OnRolled == null)
-            throw new ArgumentNullException(nameof(OnRolled));
 
-        _baseId = new VariableId(".base", Stat.Id);
-        _base = (int)Stat.GetVariable(_baseId);
-        _cost = XpCost(_base); // todo calculer vrai cout
-        _readOnly = false;
+        _readOnly = OnChange == null;
+        if (!_readOnly)
+        {
+            _baseId = new VariableId(".base", Stat.Id);
+            _base = (int)Stat.GetVariable(_baseId);
+            _cost = XpCost(_base); // todo calculer vrai cout
+        }
+
         StateHasChanged();
     }
 
-
-
     private void OnChangeEvent(ChangeEventArgs e)
     {
+        if (OnChange == null)
+            return;
+
         var newBase = int.Parse((string)e.Value);
 
         if (newBase < 1)
@@ -78,7 +81,7 @@
     private void Roll(MouseEventArgs e)
     {
         var skill = (int)Stat.Resolve();
-        var ability = Stat.GetVariable(new VariableId(".caracteristique", Stat.Id)); //TODO
+        var ability = (int)Stat.GetVariable(new VariableId(".caracteristique", Stat.Id)); //TODO
 
         var canExplode = ability >= 2;
         var target = ability > 0 ? 11 - ability : 10;
@@ -95,6 +98,7 @@
         if (ability <= 0)
             success -= dices.Count(d => d <= 1 + ability);
 
+        Chat.Log($"{Stat.Id} {string.Join(" ", dices)} ({success} succès)");
         OnRolled(success);
     }
 
@@ -111,6 +115,6 @@
     }
 
     private int RollDie()
-        => (int) FunctionService.Execute(new FunctionId("$GD"), new object[] { (double) 1 });
+        => (int)FunctionService.Execute(new FunctionId("$GD"), new object[] { (double)1 });
 
 }

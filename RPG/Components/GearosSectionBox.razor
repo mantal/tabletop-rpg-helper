@@ -3,7 +3,7 @@
 <div>
     @if (Book.Sections.ContainsKey(SectionName))
     {
-        <div>@SectionName.Substring(1)</div>
+        <h2>@SectionName.Substring(1)</h2>
         @foreach (var stat in Book.Sections[SectionName].Stats)
         {
             <GearosStatBox Stat="@stat" OnChange="@OnChangeEvent" OnRolled="@OnRolled"/>
@@ -19,6 +19,8 @@
     [Parameter]
     public string SectionName { get; set; }
     [Parameter]
+    public Action<int> OnChange { get; set; }
+    [Parameter]
     public Action<int> OnRolled { get; set; }
 #nullable restore
 
@@ -28,12 +30,11 @@
             throw new ArgumentNullException(nameof(Book));
         if (SectionName == null)
             throw new ArgumentNullException(nameof(SectionName));
+        if (OnChange == null)
+            throw new ArgumentNullException(nameof(OnChange));
         if (OnRolled == null)
             throw new ArgumentNullException(nameof(OnRolled));
     }
-
-    [Parameter]
-    public Action<int> OnChange { get; set; }
 
     private void OnChangeEvent(int xp)
     {

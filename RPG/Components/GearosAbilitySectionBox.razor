@@ -1,0 +1,48 @@
+﻿@using RPG.Engine
+
+<div>
+    @if (Book.Sections.ContainsKey(SectionName) && Book.Sections.ContainsKey("#Physique") && Book.Sections.ContainsKey("#Esprit"))
+    {
+        <h2>@SectionName.Substring(1)</h2>
+        <div class="columns">
+            <div class="column">
+                @foreach (var stat in Book.Sections["#Physique"].Stats)
+                {
+                    <GearosStatBox Stat="@stat" OnChange="@OnChangeEvent"/>
+                    <br/>
+                }
+            </div>
+            <div class="column">
+                @foreach (var stat in Book.Sections["#Esprit"].Stats)
+                {
+                    <GearosStatBox Stat="@stat" OnChange="@OnChangeEvent"/>
+                    <br />
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+#nullable disable
+    [Parameter]
+    public Book Book { get; set; }
+    [Parameter]
+    public Action<int> OnChange { get; set; }
+#nullable restore
+
+    private const string SectionName = "#Characteristiques";
+
+    protected override void OnInitialized()
+    {
+        if (Book == null)
+            throw new ArgumentNullException(nameof(Book));
+        if (OnChange == null)
+            throw new ArgumentNullException(nameof(OnChange));
+    }
+
+    private void OnChangeEvent(int xp)
+    {
+        OnChange(xp);
+    }
+}

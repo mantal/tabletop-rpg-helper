@@ -4,9 +4,11 @@
 @using RPG.Engine.Ids
 @using RPG.Components
 @using Blazorise
+@using RPG.Data
 @inject Blazored.LocalStorage.ILocalStorageService LocalStorage
 @inject StatService StatService
 @inject FunctionService FunctionService
+@inject Chat Chat
 
 <h3>gearos</h3>
 
@@ -19,29 +21,40 @@
 
 XP: @_xp
 
-<GearosSectionBox Book="@_book" SectionName="#Characteristiques" OnChange="@OnChange" OnRolled="@OnRolled"></GearosSectionBox>
-@*<GearosSectionBox Book="@_book" SectionName="#PV" OnChange="@OnChange" OnRolled="@OnRolled"></GearosSectionBox>*@
+<GearosAbilitySectionBox Book="@_book" OnChange="@OnChange"></GearosAbilitySectionBox>
+<GearosHealthSectionBox Book="@_book" SectionName="#PV"></GearosHealthSectionBox>
 <GearosSectionBox Book="@_book" SectionName="#CAC" OnChange="@OnChange" OnRolled="@OnRolled"></GearosSectionBox>
 
-<MemoEdit Rows="20" @bind-Text="@_json" />
-<button @onclick="Reload">Load</button>
-<button @onclick="Save">Save</button>
+<Button @onclick="@(_ => _showRules = !_showRules)">toggle</Button>
+@if (_showRules)
+{
+    <MemoEdit Rows="20" @bind-Text="@Json"/>
+}
 
-@foreach (var log in _logs)
+@foreach (var log in Chat.Logs)
 {
     <div>@log</div>
 }
 
 @code {
 
-    private List<string> _logs = new();
     private IEnumerable<string> _errors = Enumerable.Empty<string>();
     private string _json = "";
+    private string Json
+    {
+        get => _json;
+        set 
+        {
+            _json = value;
+            Reload();
+        }
+    }
 #nullable disable
     private Book _book;
 #nullable restore
 
-    private bool isFirstRender = true;
+    private bool _isFirstRender = true;
+    private bool _showRules = false;
 
     protected override void OnInitialized()
     {
@@ -51,29 +64,23 @@ XP: @_xp
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (isFirstRender)
+        if (_isFirstRender)
         {
-            _json = await LocalStorage.GetItemAsync<string?>("gearos") ?? "";
-            if (string.IsNullOrEmpty(_json))
-                _json = "stat: 0";
-            Reload(null);
+            Json = await LocalStorage.GetItemAsync<string?>("gearos") ?? "";
         }
-        isFirstRender = false;
+        _isFirstRender = false;
     }
 
-    private void Reload(MouseEventArgs? _)
+    private void Reload(MouseEventArgs? _ = null)
     {
         try
         {
-            var file = _json;
+            var file = Json;
 
-            if (_ == null) //todo better
-            {
-                _book = new Book(StatService, FunctionService);
-                _errors = _book.Populate(file);
-            }
-            else
-                _errors = _book.Update(file);
+            _errors = Enumerable.Empty<string>();
+            _errors = _book.Update(file);
+            SaveRules();
+
             StateHasChanged();
         }
         catch (Exception e)
@@ -83,10 +90,9 @@ XP: @_xp
         }
     }
 
-    private void Save()
+    private void SaveRules()
     {
-        LocalStorage.SetItemAsync("gearos", _json);
-        //TODO save state
+        LocalStorage.SetItemAsync("gearos", Json);
     }
 
     private int _xp = 0;
@@ -99,7 +105,6 @@ XP: @_xp
 
     private void OnRolled(int successCount)
     {
-        _logs.Add($"rolled {successCount}");
         StateHasChanged();
     }
 }

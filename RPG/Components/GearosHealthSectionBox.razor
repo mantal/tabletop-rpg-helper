@@ -1,0 +1,31 @@
+﻿@using RPG.Engine
+
+<div>
+    @if (Book.Sections.ContainsKey(SectionName))
+    {
+        <h2>@SectionName.Substring(1)</h2>
+        <div class="columns">
+            @foreach (var stat in Book.Sections[SectionName].Stats)
+            {
+                <div class="column">@stat.Id<span>:</span><span>@stat.Resolve()</span></div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+#nullable disable
+    [Parameter]
+    public Book Book { get; set; }
+    [Parameter]
+    public string SectionName { get; set; }
+#nullable restore
+
+    protected override void OnInitialized()
+    {
+        if (Book == null)
+            throw new ArgumentNullException(nameof(Book));
+        if (SectionName == null)
+            throw new ArgumentNullException(nameof(SectionName));
+    }
+}
