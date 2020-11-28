@@ -90,6 +90,9 @@ namespace RPG.Engine.Services
 			return Enumerable.Empty<string>();
 		}
 
+		public IEnumerable<string> AddOrUpdate(Stat stat) 
+			=> Exists(stat.Id) ? Update(stat) : Add(stat);
+
 		public IEnumerable<string> AddOrUpdate(VariableId id, double value = 0)
 		{
 			var stat = Stats[id.StatId];

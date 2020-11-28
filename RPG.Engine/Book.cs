@@ -79,7 +79,7 @@ namespace RPG.Engine
 				return errors;
 			}
 
-			if (!isAnUpdate)
+			if (!isAnUpdate || !_sections.ContainsKey(node.Value))
 			{
 				if (parentSectionId == null)
 					_sections[node.Value] = new Section(node.Value);
@@ -133,7 +133,7 @@ namespace RPG.Engine
 				}
 				else
 				{
-					errors = errors.Concat(_functionService.Update(new UserFunction(context.FunctionId, expression!)).FormatErrors(node))
+					errors = errors.Concat(_functionService.AddOrUpdate(new UserFunction(context.FunctionId, expression!)).FormatErrors(node))
 								   .FormatErrors(expressionNode)
 								   .ToList();
 				}
@@ -167,13 +167,13 @@ namespace RPG.Engine
 			if (!errors.Any())
 			{
 				if (isUpdate)
-					errors = errors.Concat(_statService.Update(stat).FormatErrors(node));
+					errors = errors.Concat(_statService.AddOrUpdate(stat).FormatErrors(node));
 				else
 					errors = errors.Concat(_statService.Add(stat).FormatErrors(node));
 			}
 			if (!errors.Any())
 			{
-				if (!isUpdate)
+				if (!isUpdate || !_sections[sectionId].Stats.Contains(stat))
 					_sections[sectionId].Stats.Add(stat!);
 				else
 					_sections[sectionId].Stats[_sections[sectionId].Stats.IndexOf(stat)] = stat!;

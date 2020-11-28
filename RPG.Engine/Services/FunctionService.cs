@@ -125,6 +125,13 @@ namespace RPG.Engine.Services
 			return Enumerable.Empty<string>();
 		}
 
+		public IEnumerable<string> AddOrUpdate(Function function)
+		{
+			if (Exists(function.Id))
+				return Update(function);
+			return Add(function);
+		}
+
 		public double Execute(FunctionId id, object[] parameters)
 		{
 			if (_stack.Count > 99)
