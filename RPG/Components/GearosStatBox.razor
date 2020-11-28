@@ -7,13 +7,15 @@
 @inject Chat Chat
 
 @Stat.Id:
-<input type="number" size="2" required @onchange="@OnChangeEvent" value="@_base" readonly="@_readOnly" /> @_cost @if (OnRolled != null) { <button @onclick="Roll">roll</button> }
+<input type="number" size="2" required @onchange="@OnChangeEvent" value="@((int)Stat.GetVariable(_baseId))" readonly="@_readOnly" /> @_cost @if (OnRolled != null)
+{<button @onclick="Roll">roll</button>}
 
 @code {
 #nullable disable // checked in OnInitialized
     [Parameter]
     public Stat Stat { get; set; }
 
+    private VariableId _baseId;
 #nullable restore
 
     [Parameter]
@@ -21,10 +23,8 @@
     [Parameter]
     public Action<int>? OnRolled { get; set; }
 
-    private int _base = 0;
     private int _cost = 0;
     private bool _readOnly;
-    private VariableId? _baseId;
 
     protected override void OnInitialized()
     {
@@ -37,8 +37,7 @@
         if (!_readOnly)
         {
             _baseId = new VariableId(".base", Stat.Id);
-            _base = (int)Stat.GetVariable(_baseId);
-            _cost = XpCost(_base); // todo calculer vrai cout
+            _cost = XpCost((int)Stat.GetVariable(_baseId)); // todo calculer vrai cout
         }
 
         StateHasChanged();
@@ -46,6 +45,7 @@
 
     private void OnChangeEvent(ChangeEventArgs e)
     {
+        var baseValue = (int) Stat.GetVariable(_baseId);
         if (OnChange == null)
             return;
 
@@ -58,16 +58,17 @@
         }
 
         int cost;
-        if (newBase > _base)
-            cost = XpChange(_base, newBase);
+        if (newBase > baseValue)
+            cost = XpChange(baseValue, newBase);
         else
-            cost = -XpChange(newBase, _base);
+            cost = -XpChange(newBase, baseValue);
 
-        OnChange(cost);
-        _base = newBase;
-        Stat.AddOrUpdateVariable(_baseId, _base);
-        _cost = XpCost(_base);
+        baseValue = newBase;
+        Stat.AddOrUpdateVariable(_baseId, baseValue);
+        _cost = XpCost(baseValue);
+
         //todo event statService
+        OnChange(cost);
     }
 
     private int XpChange(int currentSkill, int newSkill)

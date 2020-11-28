@@ -43,7 +43,7 @@ XP: @_xp
     private string Json
     {
         get => _json;
-        set 
+        set
         {
             _json = value;
             Reload();
@@ -66,7 +66,10 @@ XP: @_xp
     {
         if (_isFirstRender)
         {
-            Json = await LocalStorage.GetItemAsync<string?>("gearos") ?? "";
+            Json = await LocalStorage.GetItemAsStringAsync("gearos") ?? "";
+            var s = await LocalStorage.GetItemAsStringAsync("gearos_var") ?? "";
+            _errors = _errors.Concat(_book.Update(s));
+            StateHasChanged();
         }
         _isFirstRender = false;
     }
@@ -77,7 +80,6 @@ XP: @_xp
         {
             var file = Json;
 
-            _errors = Enumerable.Empty<string>();
             _errors = _book.Update(file);
             SaveRules();
 
@@ -95,12 +97,21 @@ XP: @_xp
         LocalStorage.SetItemAsync("gearos", Json);
     }
 
+    private void SaveVariables()
+    {
+        var save = string.Join(Environment.NewLine,
+                               StatService.Stats.SelectMany(stat => stat.Value.Variables)
+                                          .Select(var => $"{var.Key}: {var.Value.Resolve()}"));
+        LocalStorage.SetItemAsync("gearos_var", save);
+    }
+
     private int _xp = 0;
 
     private void OnChange(int xpChange)
     {
         _xp += xpChange;
         StateHasChanged();
+        SaveVariables();
     }
 
     private void OnRolled(int successCount)
