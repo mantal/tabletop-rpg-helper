@@ -8,7 +8,6 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using RPG.Data;
 using RPG.Engine.Services;
 using RPG.Services;
 
@@ -41,6 +40,7 @@ namespace RPG
 			services.AddRpgEngine();
 
 			services.AddSingleton<Chat>();
+			services.AddSingleton<Services.Discord>();
 			services.AddSingleton<Events>();
 		}
 
