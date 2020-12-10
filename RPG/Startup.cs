@@ -10,6 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using RPG.Data;
 using RPG.Engine.Services;
+using RPG.Services;
 
 namespace RPG
 {
@@ -40,6 +41,7 @@ namespace RPG
 			services.AddRpgEngine();
 
 			services.AddSingleton<Chat>();
+			services.AddSingleton<Events>();
 		}
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

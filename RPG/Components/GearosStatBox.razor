@@ -1,10 +1,13 @@
-﻿@using RPG.Engine
+@using RPG.Engine
 @using RPG.Engine.Ids
 @using RPG.Engine.Services
 @using RPG.Data
+@using RPG.Services
+@inject StatService StatService
 @inject FunctionService FunctionService
 @inject Random Random
 @inject Chat Chat
+@inject Events Events
 
 @Stat.Id:
 <input type="number" size="2" required @onchange="@OnChangeEvent" value="@((int)Stat.GetVariable(_baseId))" readonly="@_readOnly" /> @_cost @if (OnRolled != null)
@@ -37,7 +40,28 @@
         if (!_readOnly)
         {
             _baseId = new VariableId(".base", Stat.Id);
-            _cost = XpCost((int)Stat.GetVariable(_baseId)); // todo calculer vrai cout
+        }
+
+        Events.SheetUpdated += (_, __) => OnExternalChange();
+
+        StateHasChanged();
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+            OnExternalChange();
+    }
+
+    private void OnExternalChange()
+    {
+        Stat = StatService.Get(Stat.Id);
+        if (FunctionService.Exists(new FunctionId("$XP_TOTAL")))
+        {
+            var newCost = XpTotalCost((int) Stat.GetVariable(_baseId));
+            if (newCost != _cost)
+                OnChange?.Invoke(newCost);
+            _cost = newCost;
         }
 
         StateHasChanged();
@@ -45,7 +69,7 @@
 
     private void OnChangeEvent(ChangeEventArgs e)
     {
-        var baseValue = (int) Stat.GetVariable(_baseId);
+        var baseValue = (int)Stat.GetVariable(_baseId);
         if (OnChange == null)
             return;
 
@@ -79,6 +103,9 @@
     private int XpCost(int currentSkill)
         => (int)FunctionService.Execute(new FunctionId("$XP"), new object[] { (double)currentSkill });
 
+    private int XpTotalCost(int currentSkill)
+        => (int)FunctionService.Execute(new FunctionId("$XP_TOTAL"), new object[] { (double)currentSkill, (double)0 });
+
     private void Roll(MouseEventArgs e)
     {
         var skill = (int)Stat.Resolve();
@@ -100,6 +127,7 @@
             success -= dices.Count(d => d <= 1 + ability);
 
         Chat.Log($"{Stat.Id} {string.Join(" ", dices)} ({success} succès)");
+
         OnRolled(success);
     }
 

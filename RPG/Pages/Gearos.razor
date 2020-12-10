@@ -5,10 +5,12 @@
 @using RPG.Components
 @using Blazorise
 @using RPG.Data
+@using RPG.Services
 @inject Blazored.LocalStorage.ILocalStorageService LocalStorage
 @inject StatService StatService
 @inject FunctionService FunctionService
 @inject Chat Chat
+@inject Events Events
 
 <h3>gearos</h3>
 
@@ -28,7 +30,7 @@ XP: @_xp
 <Button @onclick="@(_ => _showRules = !_showRules)">toggle</Button>
 @if (_showRules)
 {
-    <MemoEdit Rows="20" @bind-Text="@Json"/>
+    <MemoEdit Rows="20" @bind-Text="@Json" />
 }
 
 @foreach (var log in Chat.Logs)
@@ -53,7 +55,6 @@ XP: @_xp
     private Book _book;
 #nullable restore
 
-    private bool _isFirstRender = true;
     private bool _showRules = false;
 
     protected override void OnInitialized()
@@ -64,14 +65,15 @@ XP: @_xp
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (_isFirstRender)
+        if (firstRender)
         {
             Json = await LocalStorage.GetItemAsStringAsync("gearos") ?? "";
             var s = await LocalStorage.GetItemAsStringAsync("gearos_var") ?? "";
             _errors = _errors.Concat(_book.Update(s));
+            if (!_errors.Any())
+                Events.OnSheetUpdated();
             StateHasChanged();
         }
-        _isFirstRender = false;
     }
 
     private void Reload(MouseEventArgs? _ = null)
@@ -81,6 +83,8 @@ XP: @_xp
             var file = Json;
 
             _errors = _book.Update(file);
+            if (!_errors.Any())
+                Events.OnSheetUpdated();
             SaveRules();
 
             StateHasChanged();
